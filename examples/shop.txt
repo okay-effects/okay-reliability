@@ -1,0 +1,14 @@
+# a shop: one fact a line (okay-reason arch examples/shop.txt)
+web: service entry replicas 2
+checkout: service replicas 2
+reports: service
+payments: external
+payments-backup: external
+redis: cache
+db: database
+web -> checkout hard
+web -> reports soft
+checkout -> payments hard fallback payments-backup
+checkout -> redis cached
+checkout -> db hard
+reports -> db hard

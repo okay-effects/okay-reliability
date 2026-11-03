@@ -1,0 +1,24 @@
+services:
+  web:
+    image: nginx:1.27
+    ports: ["80:80"]
+    depends_on: [api]
+  api:
+    image: example/api:1.4
+    environment:
+      DATABASE_URL: postgres://db:5432/app
+      REDIS_URL: redis://cache:6379
+      AMQP_URL: amqp://broker:5672
+    deploy:
+      replicas: 3
+  worker:
+    image: example/worker:1.4
+    environment:
+      AMQP_URL: amqp://broker:5672
+      DATABASE_URL: postgres://db:5432/app
+  db:
+    image: postgres:16
+  cache:
+    image: redis:7
+  broker:
+    image: rabbitmq:3
