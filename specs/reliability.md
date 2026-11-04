@@ -375,6 +375,24 @@ Independent failures and the β-factor overstate a replicated system's availabil
 - Laws: the fault tree equals the enumeration with zones; `Life` agrees with the cut sets; a system with its two
   replicas in one zone is less available than the same with them in two.
 
+## 18. Changes as causes (BACKLOG 2, 2026-11-04)
+
+Most incidents follow a change: a deploy, a configuration. A fault that begins soon after its component changed is
+far likelier than its rate alone says; rolling the change back is then the first remedy.
+
+- **The fact**: `changed(checkout, deploy) [log:checkout:3] @2026-11-04T14:02:00Z` (or `config`). `Read` takes it
+  from the usual lines (`deployed version 1.4.2`, `Started … in … seconds`, `configuration reloaded`, Kubernetes'
+  `Scaled up replica set`, `rollout`); the generator writes it — for a fault it caused, and as a decoy elsewhere
+  (a change that broke nothing).
+- **The prior** (§9.3): a fault of a component that changed within the hour before the incident's onset — its errors
+  or slowness ×30, its being down ×5 (a deploy that breaks a service breaks it this way far more often than it
+  stops it); a change after the onset weighs nothing.
+- **The exact search** keeps its explanations, ordered: those whose faults follow a change first, said ("after
+  checkout's deploy at 14:02").
+- **Remedies**: for a component that changed, "roll back checkout's deploy (14:02)" — 10 minutes, low risk — first.
+- **Checked**: `bench --changes`: half the faults caused by a change, decoy changes elsewhere — the gold first by
+  probability with the changes read against without them.
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a
