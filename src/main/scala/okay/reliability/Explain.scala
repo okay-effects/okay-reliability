@@ -98,7 +98,7 @@ object Explain:
     !healthy.exists(contradicts(r, _)) && !alive.exists(a => r.shows(Effect(a.component, EffectKind.Down)))
 
   def apply(system: System, observations: Vector[Observation], maxSize: Int = 3, limit: Int = 50,
-    tolerance: Long = 10): Result =
+    tolerance: Long = 10, enumerate: Boolean = false): Result =
     val symptoms = observations.collect { case s: Observation.Symptom => s }.distinct
     val healthy = observations.collect { case h: Observation.Healthy => h }.distinct
     val alive = observations.collect { case a: Observation.Alive => a }.distinct
@@ -112,7 +112,9 @@ object Explain:
     val clocked = Vector.newBuilder[(Explanation, String)]
     var k = 1
     while found.isEmpty && k <= maxSize && unexplained.isEmpty do
-      found = combinations(candidates, k).filter(c => symptoms.forall(s => c.exists(_._2(s)))).flatMap { c =>
+      val sets = if enumerate then combinations(candidates, k).filter(c => symptoms.forall(s => c.exists(_._2(s))))
+        else hitting(candidates, symptoms, k)
+      found = sets.flatMap { c =>
         val faults = c.map(_._1)
         val r = Spread(system, faults)
         Option.when(consistent(r, healthy, alive) && symptoms.forall(s => matching(r, s).isDefined))(
@@ -138,6 +140,29 @@ object Explain:
     }
 
   def clock(t: Long): String = java.time.Instant.ofEpochSecond(t).toString
+
+  /**
+   * THE SETS OF EXACTLY `k` CANDIDATES THAT TOGETHER COVER EVERY SYMPTOM (spec §14): branch on the uncovered symptom
+   * with the fewest explainers, add one of them — no set twice; the cost grows with the explainers of a symptom, not
+   * with the candidates. The same sets as filtering every combination (the law)
+   */
+  def hitting[S](candidates: Vector[(Fault, Set[S])], symptoms: Vector[S], k: Int): Vector[Vector[(Fault, Set[S])]] =
+    val explainers = symptoms.map(s => s -> candidates.indices.filter(i => candidates(i)._2(s)).toVector).toMap
+    val out = scala.collection.mutable.LinkedHashSet.empty[Set[Int]]
+    val seen = scala.collection.mutable.HashSet.empty[Set[Int]]
+    def go(chosen: Set[Int]): Unit = if seen.add(chosen) then
+      val covered = chosen.flatMap(i => candidates(i)._2)
+      val open = symptoms.filterNot(covered)
+      if open.isEmpty then
+        // covered with fewer than k: a smaller set that failed when spread together (else the search had stopped
+        // there) — filled up with any other candidate, as every combination of k would be
+        if chosen.size == k then out += chosen
+        else candidates.indices.filterNot(chosen).foreach(i => go(chosen + i))
+      else if chosen.size < k then
+        val s = open.minBy(explainers(_).size)
+        explainers(s).filterNot(chosen).foreach(i => go(chosen + i))
+    go(Set.empty)
+    out.toVector.map(_.toVector.sorted.map(candidates))
 
   /** the sets of `k` of them, in order */
   def combinations[A](xs: Vector[A], k: Int): Vector[Vector[A]] =

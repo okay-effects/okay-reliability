@@ -41,3 +41,36 @@ object Bench:
        |  probable causes: the gold first  $first (${100.0 * first / total}%.0f%%); in the top 3: $top3
        |  time: $ms ms (${ms.toDouble / total}%.1f ms a scenario)
        |""".stripMargin
+
+/** THE SEARCHES ON LARGE SYSTEMS (spec §14): for each size, the time of the diagnosis (hitting sets; the enumeration
+ * beside it while it is bearable), of the probable causes, and of every entry point's numbers (the fault tree) */
+object BenchLarge:
+  private def time[A](a: => A): (A, Double) =
+    val t0 = java.lang.System.nanoTime()
+    val x = a
+    (x, (java.lang.System.nanoTime() - t0) / 1e9)
+
+  def run(sizes: Vector[Int], seeds: Int = 3, faults: Int = 2): String =
+    val b = StringBuilder(s"$faults faults a scenario, $seeds systems a size (medians)\n" +
+      "components\tevents\texplain s\tenumerate s\tprobable s\treliability s\tcuts enumerated s\tgold found\n")
+    sizes.foreach { n =>
+      val rows = (1 to seeds).map { i =>
+        val s = Generate.large(i.toLong, n)
+        val sc = Generate.scenario(s, i.toLong, faults, 0.8, byRates = true)
+        val (r, te) = time(Explain(s, sc.facts))
+        val enumerated = if n <= 60 then Some(time(Explain(s, sc.facts, enumerate = true))._2) else None
+        val (_, tp) = time(Probable(s, sc.facts))
+        val (_, tr) = time(Reliability.analyze(s))
+        val events = Rates.events(s)
+        val cutsEnum = if n <= 25 then Some(time(Reliability.cutsByEnumeration(s, s.entries.head,
+          r => Reliability.Sli.Availability.failingIn(Spread.World.Reads, r, s.entries.head), events))._2) else None
+        (events.size, te, enumerated, tp, tr, r.explanations.exists(_.faults.toSet == sc.faults.toSet), cutsEnum)
+      }
+      def med(xs: Seq[Double]) = xs.sorted.apply(xs.size / 2)
+      b ++= f"$n\t${rows.map(_._1).sum / seeds}\t${med(rows.map(_._2))}%.2f\t" +
+        rows.flatMap(_._3).headOption.fold("—")(_ => f"${med(rows.flatMap(_._3))}%.2f") +
+        f"\t${med(rows.map(_._4))}%.2f\t${med(rows.map(_._5))}%.2f\t" +
+        rows.flatMap(_._7).headOption.fold("—")(_ => f"${med(rows.flatMap(_._7))}%.1f (one entry, one SLI, reads)") +
+        f"\t${rows.count(_._6)}/$seeds\n"
+    }
+    b.toString

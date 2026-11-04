@@ -110,6 +110,9 @@ object Main:
         steps(live, "load_system" -> obj("path" -> f("arch")), "simulate" -> obj("faults" -> f("faults")))
       case Some("remedies") if f.contains("arch") && f.contains("faults") =>
         steps(live, "load_system" -> obj("path" -> f("arch")), "remedies" -> obj("faults" -> f("faults")))
+      case Some("bench") if f.contains("large") =>
+        println(BenchLarge.run(f("large").split(",").toVector.flatMap(_.trim.toIntOption)).stripSuffix("\n"))
+        0
       case Some("bench") =>
         println(Bench.run(f.get("seeds").flatMap(_.toIntOption).getOrElse(100),
           f.get("faults").flatMap(_.toIntOption).getOrElse(1), f.get("observed").flatMap(_.toDoubleOption)

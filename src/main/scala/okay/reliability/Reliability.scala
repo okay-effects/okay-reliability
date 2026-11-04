@@ -71,8 +71,9 @@ object Reliability:
       frontier = next.distinct
     seen
 
-  /** THE MINIMAL CUT SETS of a predicate over the spread: sets of events, smallest first, none containing another */
-  def cutsOf(system: System, entry: String, fails: Spread.Result => Boolean, events: Vector[(Fault, Rate)],
+  /** THE MINIMAL CUT SETS of a predicate over the spread, by enumerating every set of up to `maxSize` events: the
+   * reference the fault tree is checked against (spec §14) */
+  def cutsByEnumeration(system: System, entry: String, fails: Spread.Result => Boolean, events: Vector[(Fault, Rate)],
     maxSize: Int = 3): Vector[Cut] =
     val near = reach(system, entry)
     val relevant = events.filter((f, _) => near(f.component))
@@ -87,10 +88,19 @@ object Reliability:
     }
     found.map(c => Cut(c, c.map(q).product)).sortBy(c => (c.events.size, -c.q))
 
+  /** the minimal cut sets of an entry point's SLI in a world, by the fault tree (spec §14) */
+  def cuts(system: System, e: String, sli: Sli, w: World, events: Vector[(Fault, Rate)], maxSize: Int = 3):
+    Vector[Cut] =
+    val q = events.toMap.view.mapValues(_.q).toMap
+    FaultTree.cuts(system, e, sli, w, events.map(_._1).toSet, maxSize).toVector.map(c =>
+      Cut(c.toVector.sortBy(_.toString), c.toVector.map(q).product)).sortBy(c => (c.events.size, -c.q))
+
   def entry(system: System, e: String, sli: Sli, events: Vector[(Fault, Rate)], maxSize: Int = 3): Entry =
-    val reads = cutsOf(system, e, r => sli.failingIn(World.Reads, r, e), events, maxSize)
-    val writes = cutsOf(system, e, r => sli.failingIn(World.Writes, r, e), events, maxSize)
-    val any = cutsOf(system, e, r => sli.failing(r, e), events, maxSize)
+    val reads = cuts(system, e, sli, World.Reads, events, maxSize)
+    val writes = cuts(system, e, sli, World.Writes, events, maxSize)
+    val q = events.toMap.view.mapValues(_.q).toMap
+    val any = FaultTree.minimize((reads ++ writes).map(_.events.toSet).toSet).toVector.map(c =>
+      Cut(c.toVector.sortBy(_.toString), c.toVector.map(q).product)).sortBy(c => (c.events.size, -c.q))
     val rate = events.toMap
     val w = system.writeShare(e)
     val perHour = any.map(c => c.events.map(f => rate(f).lambda * c.events.filterNot(_ == f).map(rate(_).q).product)

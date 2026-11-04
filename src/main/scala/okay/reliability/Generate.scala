@@ -76,6 +76,50 @@ object Generate:
       else if s.component(n).exists(_.kind == Kind.Queue) then Mode.Async else Mode.Hard)))
     s
 
+  /** A LARGE SYSTEM (spec §14): `n` components in layers — two entry points, services calling 1–3 of the next
+   * layers, databases, caches, queues, externals (a third with a backup) — named s001…; seeded */
+  def large(seed: Long, n: Int): System =
+    val rnd = scala.util.Random(seed)
+    val count = n max 10
+    val kinds = Vector.tabulate(count) { i =>
+      if i < 2 then Kind.Service
+      else rnd.nextInt(20) match
+        case x if x < 11 => Kind.Service
+        case x if x < 15 => Kind.Database
+        case x if x < 17 => Kind.Cache
+        case 17 => Kind.Queue
+        case _ => Kind.External
+    }
+    val cs = kinds.zipWithIndex.map((k, i) => Component(f"s$i%03d", k, if k == Kind.Service && rnd.nextInt(3) == 0 then
+      2 else 1, entry = i < 2))
+    var s = System(cs)
+    val callers = cs.filter(_.kind == Kind.Service)
+    // each component but the entries has a caller before it; each service 1–3 callees after it
+    cs.drop(2).zipWithIndex.foreach { (c, j) =>
+      val i = j + 2
+      val before = callers.filter(x => cs.indexOf(x) < i)
+      val from = before(rnd.nextInt(before.size))
+      val mode = c.kind match
+        case Kind.Cache => Mode.Cached
+        case Kind.Queue => Mode.Async
+        case _ => if rnd.nextInt(5) == 0 then Mode.Soft else Mode.Hard
+      s = s.withDependency(Dependency(from.name, c.name, mode))
+    }
+    callers.foreach { c =>
+      val after = cs.drop(cs.indexOf(c) + 1).filter(_.kind != Kind.Queue)
+      rnd.shuffle(after).take(rnd.nextInt(3)).foreach(t => if !s.dependencies.exists(d => d.from == c.name &&
+        d.to == t.name) then s = s.withDependency(Dependency(c.name, t.name, t.kind match
+          case Kind.Cache => Mode.Cached
+          case _ => if rnd.nextInt(4) == 0 then Mode.Soft else Mode.Hard)))
+    }
+    cs.filter(_.kind == Kind.External).zipWithIndex.filter(_._2 % 3 == 0).foreach { (e, _) =>
+      s.callers(e.name).headOption.foreach { d =>
+        val alt = Component(s"${e.name}-b", Kind.External)
+        s = s.withComponent(alt).withFallback(Fallback(d.from, e.name, alt.name))
+      }
+    }
+    s
+
   // ---- A SCENARIO
 
   /**

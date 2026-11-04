@@ -386,3 +386,40 @@ class ReliabilitySuite extends munit.FunSuite:
     val est = run("estimate_from_prometheus", okay.effects.json.Json.obj(
       "url" -> okay.effects.json.Json.Str("http://p"), "window" -> okay.effects.json.Json.Str("1d")))
     assert(est.exists(_.contains("db fails down")), est.toString)
+
+  // ---- §14: LARGE SYSTEMS
+
+  test("the fault tree's cut sets are the enumeration's, every world and SLI"):
+    val systems = Vector(shop, rated, shop.degradeReads("checkout", "db"),
+      ArchText.read("web: service entry\npay: external\nq: queue\nweb -> pay hard breaker\nweb -> q hard")
+        .fold(e => fail(e), identity)) ++ (1L to 6L).map(Generate.system(_, 4)) ++ (1L to 4L).map(Generate.large(_, 12))
+    systems.foreach { s =>
+      val events = Rates.events(s)
+      s.entries.foreach(e => Reliability.Sli.values.foreach(sli => Spread.World.values.foreach { w =>
+        val tree = Reliability.cuts(s, e, sli, w, events).map(_.events.toSet).toSet
+        val all = Reliability.cutsByEnumeration(s, e, r => sli.failingIn(w, r, e), events).map(_.events.toSet).toSet
+        assertEquals(tree, all, s"$e $sli $w in\n${ArchText.print(s)}")
+      }))
+    }
+
+  test("the hitting-set search finds the enumeration's explanations"):
+    (1 to 40).foreach { i =>
+      val s = if i % 2 == 0 then Generate.system(i.toLong) else Generate.large(i.toLong, 14)
+      val sc = Generate.scenario(s, i.toLong, 1 + i % 3, 0.7)
+      val a = Explain(s, sc.facts)
+      val b = Explain(s, sc.facts, enumerate = true)
+      if b.explanations.size < 50 then
+        assertEquals(a.explanations.map(_.faults.toSet).toSet, b.explanations.map(_.faults.toSet).toSet, s"seed $i")
+    }
+
+  test("a system of 200 components: explained and its availability computed in seconds"):
+    val s = Generate.large(7, 200)
+    val sc = Generate.scenario(s, 7, 2, 0.8)
+    val t0 = java.lang.System.nanoTime()
+    val r = Explain(s, sc.facts)
+    val t1 = java.lang.System.nanoTime()
+    val rel = Reliability.entry(s, s.entries.head, Reliability.Sli.Availability, Rates.events(s))
+    val t2 = java.lang.System.nanoTime()
+    assert(r.explanations.nonEmpty, r.text)
+    assert(rel.unavailability > 0)
+    assert((t1 - t0) / 1e9 < 30 && (t2 - t1) / 1e9 < 30, s"explain ${(t1 - t0) / 1e9} s, cuts ${(t2 - t1) / 1e9} s")

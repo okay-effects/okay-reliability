@@ -289,6 +289,37 @@ okay-agent, asked "what failed, and why":
 Scored by the answer's root cause set against the gold (exact; the components named), with the time and the turns.
 The runs journaled by okay-agent; the table in this section with the date, the model, the seeds.
 
-## 14. Not yet
+## 14. Large systems (2026-11-04)
 
-A SAT formulation for large systems; okay-inlay's handler.
+Enumerating every set of up to 3 events is C(n, 3) spreads — fine for tens of components, hopeless for hundreds.
+Two standard searches instead, each checked against the enumeration on small systems (the law):
+
+- **Diagnosis as minimal hitting sets**: each symptom's explainers (the candidates whose spread alone shows it);
+  branch on the uncovered symptom with the fewest, add one of them, to a depth k — O(d^k) in the explainers d of a
+  symptom, not in n. Each set found checked by `Spread` together (a fallback can fail jointly); all at the smallest
+  k, deduplicated, counted.
+- **Cut sets by a fault tree (MOCUS)**: the rules of `Spread` as a monotone formula over the events, per world —
+  a component down or in errors if its own event is on, all its instances are down, or through a hard dependency
+  whose callee is down or in errors (slow too, behind a breaker) and whose every fallback is bad; slow likewise —
+  expanded into its minimal cut sets, truncated at k events; a cycle met on the way counts as not failing (the least
+  fixpoint, as `Spread`). The probabilities as before.
+
+`bench --large N`: random systems of N components, the time of each search.
+
+Checked (2026-11-04): the fault tree's cut sets equal the enumeration's on 14 systems, every entry point, SLI and
+world; the hitting-set search finds the enumeration's explanations in 40 scenarios (tests). `bench --large`, two
+faults a scenario, medians of 3 systems:
+
+| components | fault events | explain | probable causes | every entry's numbers | gold among the explanations |
+|---|---|---|---|---|---|
+| 25 | 92 | 0.00 s | 0.23 s | 0.01 s | 3/3 |
+| 100 | 353 | 0.03 s | 1.5 s | 0.01 s | 3/3 |
+| 200 | 705 | 0.11 s | 2.1 s | 0.02 s | 3/3 |
+| 500 | 1782 | 0.81 s | 8.6 s | 0.07 s | 3/3 |
+
+The enumeration of cut sets at 500 components would be C(1782, 3) ≈ 9·10⁸ spreads for each predicate. The probable
+causes are now the slowest part: they still enumerate sets of the 40 likeliest events (9 880 spreads).
+
+## 15. Not yet
+
+okay-inlay's handler (the exact part as transformer weights).
