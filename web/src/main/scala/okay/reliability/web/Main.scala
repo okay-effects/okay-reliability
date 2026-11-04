@@ -23,7 +23,8 @@ object Main:
   def here[R[_], Rest[_], A](p: A ! R)(using Split[Here, R, Rest]): A ! Rest =
     handle(p, Handler.tail[Here, Rest, A, A](pure)([X] => (op: Here[X]) => op match
       case Here.Address() => dom.window.location.href.takeWhile(_ != '#')
-      case Here.Fragment() => Option(dom.window.location.hash).map(_.stripPrefix("#")).filter(_.nonEmpty)))
+      case Here.Fragment() => Option(dom.window.location.hash).map(_.stripPrefix("#")).filter(_.nonEmpty)
+      case Here.Language() => Option(dom.window.navigator.language).getOrElse("en")))
 
 /** the look: okay-ui's calm skin, and the marks of the pictures and the page's bars */
 object Look:
@@ -36,6 +37,7 @@ object Look:
        |body .okay-face .okay-heading-1 { position: absolute; width: 1px; height: 1px; overflow: hidden;
        |  clip: rect(0 0 0 0); }
        |body .okay-face .okay-mark-top { display: flex; align-items: center; gap: 12px; padding: 14px 0 6px; }
+       |body .okay-face .okay-mark-top .okay-mark-slot { margin-left: auto; }
        |body .okay-face .okay-mark-brand { font-weight: 700; font-size: 1.15rem; letter-spacing: .01em; }
        |body .okay-face .okay-mark-places .okay-group { display: flex; flex-wrap: wrap; gap: 6px; }
        |body .okay-face .okay-mark-small { font-size: .88rem; opacity: .8; }

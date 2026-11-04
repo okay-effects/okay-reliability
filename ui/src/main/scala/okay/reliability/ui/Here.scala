@@ -7,16 +7,20 @@ import okay.scala3.*
 enum Here[X]:
   case Address() extends Here[String]
   case Fragment() extends Here[Option[String]]
+  /** the browser's language (`ru-RU`, `en-GB`) */
+  case Language() extends Here[String]
 
 object Here:
   def address[R[_]](using In[Here, R]): String ! R = perform[Here](Address())
   def fragment[R[_]](using In[Here, R]): Option[String] ! R = perform[Here](Fragment())
+  def language[R[_]](using In[Here, R]): String ! R = perform[Here](Language())
 
-  def at[R[_], Rest[_], A](address: String, fragment: Option[String])(p: A ! R)(
+  def at[R[_], Rest[_], A](address: String, fragment: Option[String], language: String = "en")(p: A ! R)(
     using Split[Here, R, Rest]): A ! Rest =
     handle(p, Handler.tail[Here, Rest, A, A](pure)([X] => (op: Here[X]) => op match
       case Address() => address
-      case Fragment() => fragment))
+      case Fragment() => fragment
+      case Language() => language))
 
 /** A SYSTEM AND ITS FACTS IN A LINK'S FRAGMENT: `s=` and `f=`, each base64url of its UTF-8 text */
 object Links:

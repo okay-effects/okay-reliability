@@ -59,7 +59,8 @@ object Report:
         case _ => probable.ranked.headOption.filter(_.p >= 0.5).map(_.faults)
       top.foreach { fs =>
         b ++= s"\nRemedies for ${fs.mkString(" + ")}, each checked by the model:\n\n"
-        Remedies.plan(system, fs.toSet, seen).ranked.take(5).zipWithIndex.foreach((c, i) => b ++= s"${i + 1}. ${c.text}\n")
+        Remedies.plan(system, fs.toSet, seen).ranked.take(5).zipWithIndex
+          .foreach((c, i) => b ++= s"${i + 1}. ${c.text}\n")
       }
     b ++= "\n---\nMade by okay-reliability — https://okay-effects.github.io/okay-reliability/\n"
     b.toString

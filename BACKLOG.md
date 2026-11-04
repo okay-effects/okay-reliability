@@ -36,7 +36,8 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
    sent to a server), the incident's facts too.
 8. ~~**A report**~~ — DONE 2026-11-04 (spec §24).
    the architecture, the numbers, an incident's causes and remedies as Markdown, for a postmortem.
-9. **Russian** — the page's words in English and Russian, chosen by the browser, switchable.
+9. ~~**Russian**~~ — DONE 2026-11-04 (spec §25).
+   the page's words in English and Russian, chosen by the browser, switchable.
 10. **On a phone** — okay-faces' mobile face, as okay-remote's.
 11. **Smaller** — page.js is 2.9 MB: what is linked and why, and less of it.
 

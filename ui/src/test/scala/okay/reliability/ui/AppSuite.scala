@@ -82,7 +82,7 @@ class AppSuite extends munit.FunSuite:
 
   test("no places before a system: only the field, Analyze, Examples; the places once one is loaded"):
     val first = play().at.toList.flatMap(_.buttons.map(_.label))
-    assertEquals(first, List("Analyze", "Examples"))
+    assertEquals(first, List("Русский", "Analyze", "Examples"))
     val examples = play(Act.press("Examples")).at.toList.flatMap(_.buttons.map(_.label))
     assert(examples.contains("Back") && !examples.contains("Architecture"), examples.toString)
     val loaded = play(Act.press("Examples"), Act.press("Load the shop")).at.toList.flatMap(_.buttons.map(_.label))
@@ -134,3 +134,15 @@ class AppSuite extends munit.FunSuite:
     val md = copied.last
     assert(md.startsWith("# The system") && md.contains("## Availability") && md.contains("## Weak points"), md)
     assert(md.contains("## The incident") && md.contains("Probable causes") && md.contains("okay-reliability"), md)
+
+  test("in Russian: chosen by the browser, the page's words and the core's; switched back, kept"):
+    kept.clear(); copied.clear()
+    val ru = Play(steps(keptIn(kept)(copiedTo(copied)(Here.at("https://example.org/okr/", None, "ru-RU")(
+      App.main[Row])))), Act.press("Примеры"), Act.press("Загрузить магазин"), Act.press("Что если"),
+      Act.press("Добавить сбой", "Сбой" -> "db down"))
+    val t = texts(ru)
+    assert(t.contains("Эффекты") && t.contains("перезапустить db") && t.contains("Решения, каждое"), t)
+    val back = Play(steps(keptIn(kept)(copiedTo(copied)(Here.at("https://example.org/okr/", None, "ru-RU")(
+      App.main[Row])))), Act.press("English"))
+    assert(kept.get("lang").contains("en"), kept.toString)
+    assert(back.at.exists(_.buttons.exists(_.label == "Русский")))
