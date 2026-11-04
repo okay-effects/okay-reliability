@@ -83,3 +83,21 @@ class AppSuite extends munit.FunSuite:
   test("the shop's traces load as a system"):
     val p = play(Act.press("Examples"), Act.press("Load the shop's traces"))
     assert(texts(p).contains("Loaded: 6 components"), texts(p))
+
+  test("a component chosen: what its loss does, on the picture and in words; All clears it"):
+    val p = play(Act.press("Examples"), Act.press("Load the shop"), Act.press("Show", "A component" -> "db"))
+    val t = texts(p)
+    assert(t.contains("c-root db") && t.contains("c-fail checkout") && t.contains("Losing db"), t)
+    assert(t.contains("db down → checkout errors → web errors"), t)
+    val all = play(Act.press("Examples"), Act.press("Load the shop"), Act.press("Show", "A component" -> "db"),
+      Act.press("All"))
+    assert(!texts(all).contains("Losing db"), texts(all))
+
+  test("a large system: a part shown, said; a component's part when chosen"):
+    val p = play(Act.press("Examples"), Act.press("A large one (60)"))
+    val t = texts(p)
+    assert(t.contains("Showing") && "of 6\\d components".r.findFirstIn(t).nonEmpty, t.take(600))
+    val boxes = p.at.toList.flatMap(_.parts).collect { case pic: Part.Picture => pic.shapes.count {
+      case _: Part.Shape.Box => true
+      case _ => false } }.head
+    assert(boxes < 60, boxes.toString)

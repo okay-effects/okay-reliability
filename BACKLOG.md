@@ -29,7 +29,8 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 
 ## 3. The page
 
-6. **Large systems** — the picture zoomed and grouped by layer; a component pressed shows its blast radius.
+6. ~~**Large systems**~~ — DONE 2026-11-04 (spec §22).
+   the picture zoomed and grouped by layer; a component pressed shows its blast radius.
 7. **Kept and shared with no server** — the system in `localStorage`; a link with the system in its `#` fragment (never
    sent to a server), the incident's facts too.
 8. **A report** — the architecture, the numbers, an incident's causes and remedies as Markdown, for a postmortem.

@@ -59,6 +59,33 @@ object Scheme:
     }
     Part.picture(width, height, caption)((bands ++ boxes)*)
 
+  /** A PART of a system: these components, the calls and fallbacks among them */
+  def part(s: System, keep: Set[String]): System =
+    s.copy(components = s.components.filter(c => keep(c.name)),
+      dependencies = s.dependencies.filter(d => keep(d.from) && keep(d.to)),
+      fallbacks = s.fallbacks.filter(f => keep(f.from) && keep(f.to) && keep(f.alternative)))
+
+  /** what calls `c`, directly or not: its way from the entry points */
+  def above(s: System, c: String): Set[String] =
+    var seen = Set(c)
+    var frontier = Vector(c)
+    while frontier.nonEmpty do
+      val next = frontier.flatMap(x => s.callers(x).map(_.from) ++ s.fallbacks.filter(_.alternative == x).map(_.from))
+        .filterNot(seen)
+      seen ++= next
+      frontier = next.distinct
+    seen
+
+  /** what `c` calls, `steps` down */
+  def below(s: System, c: String, steps: Int): Set[String] =
+    (1 to steps).foldLeft((Set(c), Vector(c))) { case ((seen, frontier), _) =>
+      val next = frontier.flatMap(x => s.callees(x).map(_.to)).filterNot(seen)
+      (seen ++ next, next.distinct)
+    }._1
+
+  /** over this many components a picture shows a part */
+  val large = 30
+
   /** a component's mark by what it is */
   def kindMark(s: System)(n: String): String = s.component(n).fold("c-service") { c =>
     if c.entry then "c-entry" else s"c-${c.kind.word}"

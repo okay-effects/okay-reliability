@@ -12,7 +12,7 @@ object App:
   final case class State(place: String = "system", system: Option[System] = None, source: String = "",
     problem: Option[String] = None, note: Option[String] = None, seen: Vector[Observation] = Vector.empty,
     whatIf: Vector[Fault] = Vector.empty, simulated: Option[Vector[Life.Measured]] = None,
-    training: Option[Generate.Scenario] = None, revealed: Boolean = false)
+    training: Option[Generate.Scenario] = None, revealed: Boolean = false, focus: Option[String] = None)
 
   enum Msg:
     case Go(place: String)
@@ -30,6 +30,8 @@ object App:
     case Train(seed: Long, faults: Int)
     case ReadTraining
     case Reveal
+    case Focus(component: String)
+    case Unfocus
 
   val places: List[(String, String)] = List("system" -> "System", "architecture" -> "Architecture",
     "reliability" -> "Reliability", "whatif" -> "What if", "incident" -> "Incident", "training" -> "Training")
@@ -50,7 +52,7 @@ object App:
           case Right(sys) if sys.components.isEmpty => clean.copy(problem = Some("no components in it"), source = text)
           case Right(sys) =>
             val ps = sys.problems
-            clean.copy(system = Some(sys), source = text, seen = Vector.empty, whatIf = Vector.empty,
+            clean.copy(system = Some(sys), source = text, seen = Vector.empty, whatIf = Vector.empty, focus = None,
               simulated = None, training = None, place = "architecture",
               note = Some(s"Loaded: ${sys.components.size} components, ${sys.dependencies.size} dependencies." +
                 (if ps.nonEmpty then s" Problems: ${ps.mkString("; ")}" else "") +
@@ -100,6 +102,8 @@ object App:
               note = Some(s"${found.size} facts read from the incident's logs, chat and metrics."))
           case _ => clean
       case Msg.Reveal => clean.copy(revealed = true)
+      case Msg.Focus(c) => clean.copy(focus = Some(c))
+      case Msg.Unfocus => clean.copy(focus = None)
 
   // ---- THE SCREENS
 
@@ -115,7 +119,7 @@ object App:
     val (parts, buttons) = (s.place, s.system) match
       case ("examples", _) => examples
       case ("system", _) | (_, None) => systemScreen(s)
-      case ("architecture", Some(sys)) => architecture(sys)
+      case ("architecture", Some(sys)) => architecture(s, sys)
       case ("reliability", Some(sys)) => reliability(s, sys)
       case ("whatif", Some(sys)) => whatIf(s, sys)
       case ("incident", Some(sys)) => incident(s, sys)
@@ -174,18 +178,39 @@ object App:
         Button("A large one (60)")(Msg.Random(60, java.lang.System.currentTimeMillis() % 1000): Msg).at("random")) :+
         Button("Back")(Msg.Go("system"): Msg))
 
-  def architecture(sys: System): (List[Part], List[Button[Msg]]) =
+  def architecture(s: State, sys: System): (List[Part], List[Button[Msg]]) =
     val r = Arch.analyze(sys)
     val spof = r.spofs.toSet
     val unguarded = r.unguarded.map(_.to).toSet
-    val pic = Scheme.picture(sys, n => if spof(n) then "c-spof" else if unguarded(n) then "c-warn"
-      else Scheme.kindMark(sys)(n), "the architecture: single points of failure red, unguarded dependencies amber")
+    val big = sys.components.size > Scheme.large
+    // THE PICTURE: what a component chosen takes down, or the single points of failure; a part of a large system
+    val focused = s.focus.filter(sys.names.contains)
+    val loss = focused.map(c => Spread(sys, Vector(Fault(c, FaultKind.Down))))
+    val keep: Set[String] = (focused, big) match
+      case (_, false) => sys.names.toSet
+      case (Some(c), true) => Scheme.above(sys, c) ++ Scheme.below(sys, c, 2)
+      case (None, true) => (r.spofs ++ r.unguarded.map(_.to)).flatMap(Scheme.above(sys, _)).toSet ++ sys.entries
+    val shown = Scheme.part(sys, keep)
+    val pic = loss match
+      case Some(l) => Scheme.picture(shown, Scheme.spreadMark(l), s"what losing ${focused.get} does: it dark red, " +
+          "what fails red, what degrades amber")
+      case None => Scheme.picture(shown, n => if spof(n) then "c-spof" else if unguarded(n) then "c-warn"
+          else Scheme.kindMark(sys)(n), "the architecture: single points of failure red, unguarded dependencies amber")
+    val partly = if keep.size < sys.components.size then List(Part.block("small")(Part.text(s"Showing ${keep.size} " +
+      s"of ${sys.components.size} components — choose a component to see its part."))) else Nil
+    val choose = Form.one(Field.choice("A component", sys.names.map(n => n -> n)*))
+    val chains = loss.toList.map(l => Part.section(s"Losing ${focused.get}")(
+      (Part.text(if l.failedEntries.isEmpty then "No entry point fails." else
+        s"Entry points failing: ${l.failedEntries.mkString(", ")}.") +: l.effects.toVector.sortBy(_.toString)
+        .filter(_.component != focused.get).map(e => Part.text(l.chain(e).map(_.takeWhile(_ != ':'))
+          .mkString(" → "))))*))
     val table = Table(sys.components.toList)(Column.text("component")(_.name), Column.text("kind")(_.kind.word),
       Column.text("replicas")(_.replicas.toString),
       Column.text("its loss fails")(c => r.blasts.find(_.component == c.name).map(_.entries.mkString(", "))
         .filter(_.nonEmpty).getOrElse("—")))
     val changes = Remedies.prevention(sys)
-    val parts = List(pic, Part.text(f"Resilience: ${r.score * 100}%.0f%% of (component, entry point) pairs survive " +
+    val parts = List(pic) ++ partly ++ List(choose) ++ chains ++ List(Part.text(f"Resilience: ${r.score * 100}%.0f%% " +
+      "of (component, entry point) pairs survive " +
       "the component's loss."), Part.section("Components")(table)) ++
       (if r.spofs.isEmpty then Nil else List(Part.section("Single points of failure")(r.spofs.map(n =>
         Part.text(s"$n — ${r.blasts.find(_.component == n).flatMap(_.chains.headOption).map(_.mkString(" → "))
@@ -197,7 +222,8 @@ object App:
       (if changes.isEmpty then Nil else List(Part.section("Changes that help (checked by the model)")(
         Table(changes.toList)(Column.text("change")(_.what), Column.text("saves, min a month")(c => mins(c.minutes)))
       )))
-    (parts, Nil)
+    (parts, Button.submit("Show", choose)(Msg.Focus(_): Msg) ::
+      (if focused.nonEmpty then List(Button("All")(Msg.Unfocus: Msg)) else Nil))
 
   def reliability(s: State, sys: System): (List[Part], List[Button[Msg]]) =
     val rep = Reliability.analyze(sys)

@@ -456,6 +456,15 @@ A callee is named only when its name is a component's (a host's first label: `pa
 address alone (`10.0.0.5:5432`) gives the caller's symptom only. What the reader does not recognise stays for a
 model (`assert`).
 
+## 22. Large systems on the page (BACKLOG 6, 2026-11-04)
+
+- **A component chosen** on Architecture (a choice and "Show"): the picture marks what its loss does — it dark red,
+  what fails red, what degrades amber — beside the chains; "All" clears it.
+- **A part of a large system**: over 30 components, the picture is a part — the entry points, the single points of
+  failure and the components between them; with a component chosen, its part: the components on its way from the
+  entry points, and what it calls, two steps down. Said: "showing 18 of 60 — choose a component to see its part".
+- The tables stay whole.
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a
