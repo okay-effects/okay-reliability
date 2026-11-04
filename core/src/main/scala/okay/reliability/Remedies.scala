@@ -73,9 +73,16 @@ object Remedies:
       b.toString
 
   /** the actions for these faults, each checked, best first; and the best of each fault's, done together */
-  def plan(system: System, faults: Set[Fault]): Plan =
+  def plan(system: System, faults: Set[Fault], seen: Vector[Observation] = Vector.empty): Plan =
     val sorted = faults.toVector.sortBy(_.toString)
-    val ranked = sorted.flatMap(f => actions(system, f).map(check(system, faults, _))).sortBy(rank)
+    // A CHANGE BEFORE IT (spec §18): its rollback, first — the fault gone with the change
+    def rollbacks(f: Fault): Vector[Action] = seen.collect {
+      case c: Observation.Changed if c.component == f.component && Probable.boost(f, seen) > 1 =>
+        Action(s"roll back ${c.component}'s ${c.what}" + c.at.fold("")(t => s" (${Explain.clock(t)})"), 1, 10,
+          (s, fs) => (s, fs - f))
+    }.distinctBy(_.what)
+    val ranked = sorted.flatMap(f => (rollbacks(f) ++ actions(system, f)).map(check(system, faults, _)))
+      .sortBy(c => (if c.action.what.startsWith("roll back") && c.action.what.contains("'s ") then 0 else 1, rank(c)))
     val together = Option.when(faults.size > 1) {
       val best = sorted.flatMap(f => actions(system, f).map(check(system, faults, _)).sortBy(rank).headOption
         .map(_.action))

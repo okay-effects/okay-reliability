@@ -5,10 +5,12 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 
 ## 1. The model, truer
 
-1. ~~**Zones and regions**~~ — DONE 2026-11-04 (spec §17).  `db: database replicas 2 zones a,b`, `zone a fails every 365d for 2h`: a zone's events take
+1. ~~**Zones and regions**~~ — DONE 2026-11-04 (spec §17).
+   `db: database replicas 2 zones a,b`, `zone a fails every 365d for 2h`: a zone's events take
    down every instance in it at once; the β-factor stays for the rest. Availability of replicated systems is overstated
    until then.
-2. **Changes as causes** — `deployed(checkout) @14:02`, `changed(config, checkout)`: a fault that begins after a change
+2. ~~**Changes as causes**~~ — DONE 2026-11-04 (spec §18).
+   `deployed(checkout) @14:02`, `changed(config, checkout)`: a fault that begins after a change
    of its component is far more probable (a prior by the change), and rolling it back is a remedy checked by the
    clock. The most frequent cause of incidents is missing from the model.
 3. **Capacity and load** — one replica of two lost: the other may not hold the load (`checkout capacity 60%`: the

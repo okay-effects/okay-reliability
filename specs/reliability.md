@@ -392,6 +392,9 @@ far likelier than its rate alone says; rolling the change back is then the first
 - **Remedies**: for a component that changed, "roll back checkout's deploy (14:02)" — 10 minutes, low risk — first.
 - **Checked**: `bench --changes`: half the faults caused by a change, decoy changes elsewhere — the gold first by
   probability with the changes read against without them.
+- Measured 2026-11-04 (`bench --changes true`, 200 scenarios, deploys before 60% of the errors and slowness, a decoy
+  in half): one fault — the gold first 92% with the changes read and 92% without (a lone fault is found anyway); two
+  faults — 44% against 29%: the change makes the second fault, hidden behind the first, the likelier story.
 
 ## 15. Not yet
 

@@ -109,7 +109,8 @@ object Main:
       case Some("bench") =>
         println(Bench.run(f.get("seeds").flatMap(_.toIntOption).getOrElse(100),
           f.get("faults").flatMap(_.toIntOption).getOrElse(1), f.get("observed").flatMap(_.toDoubleOption)
-            .getOrElse(0.8), metrics = f.get("metrics").contains("true")).stripSuffix("\n"))
+            .getOrElse(0.8), metrics = f.get("metrics").contains("true"),
+          changes = f.get("changes").contains("true")).stripSuffix("\n"))
         0
       case Some("extraction") =>
         val dir = Path.of(f.getOrElse("out", "/tmp/okay-reliability-extraction"))

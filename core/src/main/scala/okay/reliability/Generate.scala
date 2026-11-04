@@ -128,8 +128,8 @@ object Generate:
    * `faults` faults on different components, each alone failing something visible; observed: the entry points always,
    * another component with probability `observed`; a chat about one or two healthy components and the users' view
    */
-  def scenario(system: System, seed: Long, faults: Int = 1, observed: Double = 1.0, byRates: Boolean = false):
-    Scenario =
+  def scenario(system: System, seed: Long, faults: Int = 1, observed: Double = 1.0, byRates: Boolean = false,
+    changes: Boolean = false): Scenario =
     val rnd = scala.util.Random(seed)
     val useful = Spread.candidates(system).filter(f => Spread(system, Vector(f)).failedEntries.nonEmpty)
     // by rates: as incidents come, the frequent events more often (each drawn by its rate, no component twice)
@@ -149,7 +149,17 @@ object Generate:
     val formatOf = writing.map(c => c -> (if system.component(c).exists(_.entry) then
       (if rnd.nextBoolean() then "access" else formats(rnd.nextInt(3))) else formats(rnd.nextInt(3)))).toMap
     val depth = depths(r)
-    val lines = writing.map(c => c -> linesOf(system, r, c, depth, rnd)).toMap
+    val lines0 = writing.map(c => c -> linesOf(system, r, c, depth, rnd)).toMap
+    // CHANGES (spec §18): a deploy just before the errors or the slowness it caused; a deploy elsewhere that broke
+    // nothing, as a decoy
+    def deploy(c: String, at: Int) = Line(c, at, "INFO", s"deployed version 1.${rnd.nextInt(9)}.${rnd.nextInt(30)}",
+      Vector(Observation.Changed(c, "deploy")))
+    val caused = if !changes then Set.empty[String] else chosen.filter(f => (f.kind == FaultKind.Errors ||
+      f.kind == FaultKind.Slow) && writing.contains(f.component) && rnd.nextDouble() < 0.6).map(_.component).toSet
+    val calm = writing.filterNot(c => chosen.exists(_.component == c))
+    val decoy = if changes && calm.nonEmpty && rnd.nextBoolean() then Some(calm(rnd.nextInt(calm.size))) else None
+    val lines = lines0.map((c, ls) => c -> (if caused(c) then (deploy(c, 55) +: ls).sortBy(_.at)
+      else if decoy.contains(c) then (deploy(c, 15 + rnd.nextInt(35)) +: ls).sortBy(_.at) else ls))
     val logs = lines.map((c, ls) => c -> render(c, ls, formatOf(c)))
     val facts = Vector.newBuilder[Observation]
     lines.toVector.sortBy(_._1).foreach { (c, ls) =>
@@ -160,9 +170,10 @@ object Generate:
         case Observation.Symptom(x, k, _, _) => facts += Observation.Symptom(x, k, s"log:$c:$at", Some(origin + l.at))
         case Observation.Healthy(x, _) => facts += Observation.Healthy(x, s"log:$c:$at")
         case Observation.Alive(x, _) => facts += Observation.Alive(x, s"log:$c:$at")
+        case Observation.Changed(x, w, _, _) => facts += Observation.Changed(x, w, s"log:$c:$at", Some(origin + l.at))
       })
       facts += Observation.Alive(c, s"log:$c")
-      if ls.forall(_.facts.isEmpty) then facts += Observation.Healthy(c, s"log:$c")
+      if !ls.exists(_.facts.exists(_.isInstanceOf[Observation.Symptom])) then facts += Observation.Healthy(c, s"log:$c")
     }
     val (chat, chatFacts) = chatOf(system, r, rnd)
     val all = (facts.result() ++ chatFacts).distinctBy(o => (o.productPrefix, o.component, o match
@@ -280,4 +291,5 @@ object Generate:
       case Observation.Symptom(c, k, _, _) => Observation.Symptom(c, k, s"chat:${i + 1}")
       case Observation.Healthy(c, _) => Observation.Healthy(c, s"chat:${i + 1}")
       case Observation.Alive(c, _) => Observation.Alive(c, s"chat:${i + 1}")
+      case ch: Observation.Changed => ch.copy(source = s"chat:${i + 1}")
     } })

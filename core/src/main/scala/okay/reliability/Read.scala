@@ -23,6 +23,9 @@ object Read:
   private val stale = (s"(?i)$name unavailable, serving cached").r.unanchored
   private val fallback = (s"(?i)$name failing, using fallback").r.unanchored
   private val degraded = (s"(?i)$name unavailable, feature degraded").r.unanchored
+  private val changeLine = ("(?i)(deployed version \\S+|deploying version|Started \\S+ in [0-9.]+ seconds|" +
+    "Scaled up replica set|rollout (started|complete)|new version \\S+ (is )?live)").r.unanchored
+  private val configLine = "(?i)(configuration reloaded|config(uration)? (changed|updated|reloaded))".r.unanchored
   private val piling = (s"(?i)messages for $name piling up").r.unanchored
 
   /** a line's level and message, whatever its format; None for a stack trace's line */
@@ -67,6 +70,8 @@ object Read:
       case fallback(_) => Vector(S(c, Retries))
       case degraded(_) => Vector(S(c, Retries))
       case piling(_) => Vector(S(c, Backlog))
+      case changeLine(_*) => Vector(Observation.Changed(c, "deploy"))
+      case configLine(_*) => Vector(Observation.Changed(c, "config"))
       case m if m.contains("No space left on device") => Vector(S(c, Errors))
       case m if m.toLowerCase.contains("backlog growing") => Vector(S(c, Backlog))
       case m if m.toLowerCase.startsWith("slow query") || m.matches("""(?i)request took \d+ms.*""") =>
@@ -82,10 +87,13 @@ object Read:
       facts(system, c, level, msg).map {
         case Observation.Symptom(x, k, _, _) => Observation.Symptom(x, k, s"log:$c:${i + 1}", time(l))
         case Observation.Alive(x, _) => Observation.Alive(x, s"log:$c:${i + 1}")
+        case Observation.Changed(x, w, _, _) => Observation.Changed(x, w, s"log:$c:${i + 1}", time(l))
         case h => h
       }))
     if !lines.exists(_.trim.nonEmpty) then found
-    else Observation.Alive(c, s"log:$c") +: (if found.isEmpty then Vector(Observation.Healthy(c, s"log:$c")) else found)
+    // healthy: no symptom in it (a change said is no symptom)
+    else Observation.Alive(c, s"log:$c") +: (if found.exists(_.isInstanceOf[Observation.Symptom]) then found
+      else found :+ Observation.Healthy(c, s"log:$c"))
 
   private val good = "(?i)(works fine|working fine|is fine|is ok|работает нормально|работает|в порядке)".r.unanchored
   private val failing = "(?i)(failing|errors?|down|падает|ошибк|не работает)".r.unanchored
@@ -121,4 +129,5 @@ object Read:
     (logs.toVector.sortBy(_._1).flatMap((c, ls) => log(system, c, ls)) ++ chat(system, chatLines))
       .distinctBy(o => (o.productPrefix, o.component, o match
         case Observation.Symptom(_, k, _, _) => k.word
+        case Observation.Changed(_, w, _, at) => s"$w$at"
         case _ => ""))

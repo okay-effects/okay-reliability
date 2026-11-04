@@ -2,7 +2,7 @@ package okay.reliability
 
 /** THE WORDS A MODEL WRITES: facts (`symptom(checkout, errors) [log:checkout:17]`), faults (`db down, web#1 down`) */
 object Words:
-  private val fact = """^\s*(symptom|healthy|alive)\s*\(\s*([A-Za-z0-9_.-]+)\s*(?:,\s*([a-z]+)\s*)?\)\s*""" +
+  private val fact = """^\s*(symptom|healthy|alive|changed)\s*\(\s*([A-Za-z0-9_.-]+)\s*(?:,\s*([a-z]+)\s*)?\)\s*""" +
     """(?:\[([^\]]*)\])?\s*(?:@\s*(\S+))?\s*\.?\s*$"""
   private val factRe = fact.r
   private val faultRe = """^\s*([A-Za-z0-9_.:-]+?)(?:#(\d+))?\s+([a-z]+)\s*$""".r
@@ -15,7 +15,10 @@ object Words:
           .map(Observation.Symptom(c, _, Option(src).getOrElse(""), Option(at).flatMap(Read.time)))
       case factRe("healthy", c, null, src, _) => Right(Observation.Healthy(c, Option(src).getOrElse("")))
       case factRe("alive", c, null, src, _) => Right(Observation.Alive(c, Option(src).getOrElse("")))
-      case l => Left(s"not a fact: $l — symptom(component, kind) [source], healthy(component), alive(component)")
+      case factRe("changed", c, w, src, at) => Right(Observation.Changed(c, Option(w).getOrElse("deploy"),
+          Option(src).getOrElse(""), Option(at).flatMap(Read.time)))
+      case l => Left(s"not a fact: $l — symptom(component, kind) [source], healthy(component), alive(component), " +
+        "changed(component, deploy|config)")
     }
     val errors = read.collect { case Left(e) => e }
     if errors.nonEmpty then Left(errors.mkString("\n")) else Right(read.collect { case Right(o) => o })

@@ -6,12 +6,13 @@ package okay.reliability
  * remain — the ceiling a model reading the same logs can reach.
  */
 object Bench:
-  def run(seeds: Int, faults: Int, observed: Double, byRates: Boolean = true, metrics: Boolean = false): String =
-    var unique, among, missed, sizes, total, consistent, first, top3 = 0
+  def run(seeds: Int, faults: Int, observed: Double, byRates: Boolean = true, metrics: Boolean = false,
+    changes: Boolean = false): String =
+    var unique, among, missed, sizes, total, consistent, first, top3, blind = 0
     val t0 = java.lang.System.nanoTime()
     (1 to seeds).foreach { i =>
       val s = Generate.system(i.toLong, 6 + i % 6)
-      val sc = Generate.scenario(s, i.toLong, faults, observed, byRates)
+      val sc = Generate.scenario(s, i.toLong, faults, observed, byRates, changes)
       val seen = Read.all(s, sc.logs, sc.chat) ++
         (if metrics then Metrics.facts(s, Metrics.exposition(Metrics.snapshot(sc.spread))) else Vector.empty)
       val r = Explain(s, seen)
@@ -25,11 +26,16 @@ object Bench:
       val at = p.ranked.indexWhere(_.faults.toSet == sc.faults.toSet)
       if at == 0 then first += 1
       if at >= 0 && at < 3 then top3 += 1
+      // the same, the changes not read: what they are worth
+      if changes && Probable(s, seen.filterNot(_.isInstanceOf[Observation.Changed])).ranked.headOption
+        .exists(_.faults.toSet == sc.faults.toSet) then blind += 1
       total += 1
     }
     val ms = (java.lang.System.nanoTime() - t0) / 1000000
     val how = if byRates then "drawn by their rates" else "drawn evenly"
-    val also = if metrics then ", and a scrape of metrics" else ""
+    val blindLine = if changes then f"  the changes not read: first      $blind (${100.0 * blind / total}%.0f%%)\n" else ""
+    val also = (if metrics then ", and a scrape of metrics" else "") +
+      (if changes then "; deploys before 60% of the errors and slowness, and decoys" else "")
     val pct = f"${observed * 100}%.0f%%"
     f"""$seeds scenarios, $faults fault(s) $how, $pct of the components with logs, read by `Read`$also:
        |  the gold the only explanation:   $unique (${100.0 * unique / total}%.0f%%)
@@ -39,7 +45,7 @@ object Bench:
        |  the gold consistent with facts:  $consistent (${100.0 * consistent / total}%.0f%%)
        |  explanations on average:         ${sizes.toDouble / total}%.1f
        |  probable causes: the gold first  $first (${100.0 * first / total}%.0f%%); in the top 3: $top3
-       |  time: $ms ms (${ms.toDouble / total}%.1f ms a scenario)
+       |${blindLine}  time: $ms ms (${ms.toDouble / total}%.1f ms a scenario)
        |""".stripMargin
 
 /** THE SEARCHES ON LARGE SYSTEMS (spec §14): for each size, the time of the diagnosis (hitting sets; the enumeration

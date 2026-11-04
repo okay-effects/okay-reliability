@@ -58,7 +58,9 @@ object Tools:
 
   private val factsHelp = "one a line: symptom(component, kind) [source] — kind one of " +
     EffectKind.values.map(_.word).mkString(", ") + "; healthy(component) [source] — nothing wrong seen with it; " +
-    "alive(component) [source] — it writes to its log (so it is not down as a whole). A source is where you saw it: " +
+    "alive(component) [source] — it writes to its log (so it is not down as a whole); " +
+    "changed(component, deploy) [source] " +
+    "@time — it was deployed (or `config`: reconfigured) then. A source is where you saw it: " +
     "log:<component>:<line>, chat:<line>, metrics."
 
   val all: Vector[Tool] = Vector(
@@ -144,7 +146,7 @@ object Tools:
             val r = Explain(s, os, int(a, "max_size", 3))
             val probable = Probable(s, os)
             val fix = r.explanations match
-              case Vector(x) => "\nremedies (each checked by simulation):\n" + Remedies.plan(s, x.faults.toSet).text
+              case Vector(x) => "\nremedies (each checked by simulation):\n" + Remedies.plan(s, x.faults.toSet, os).text
               case _ => ""
             Right(r.text + (if probable.ranked.nonEmpty then "\n" + probable.text else "") + fix)
           }
@@ -178,7 +180,7 @@ object Tools:
             case Some(t) => pure(faultsIn(s, t).map(fs => Remedies.plan(s, fs.toSet).text))
             case None => Desk.seen[R].map { os =>
                 Explain(s, os).explanations match
-                  case Vector(x) => Right(Remedies.plan(s, x.faults.toSet).text)
+                  case Vector(x) => Right(Remedies.plan(s, x.faults.toSet, os).text)
                   case Vector() => Left("no explanation yet: assert facts, or give faults")
                   case xs => Left(s"${xs.size} explanations, not told apart: explain shows the check; or give faults")
               }

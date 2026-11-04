@@ -465,3 +465,35 @@ class ReliabilitySuite extends munit.FunSuite:
       .fold(e => fail(e), identity)
     val r = Explain(withB, seen)
     assertEquals(r.explanations.map(_.faults), Vector(Vector(Zone.fault("a"))), r.text)
+
+  // ---- §18: CHANGES
+
+  test("a change before the onset: its component's fault the likelier, said, and rolled back first"):
+    val t0 = 1_800_000_000L
+    val seen = Vector(Observation.Symptom("web", EffectKind.Errors, "log:web:5", Some(t0 + 60)),
+      Observation.Symptom("checkout", EffectKind.Errors, "log:checkout:4", Some(t0 + 50)),
+      Observation.Alive("checkout", "log:checkout"))
+    val deployed = seen :+ Observation.Changed("checkout", "deploy", "log:checkout:2", Some(t0))
+    val before = Probable(shop, seen).ranked.find(_.faults == Vector(Fault("checkout", FaultKind.Errors))).get.p
+    val after = Probable(shop, deployed).ranked.find(_.faults == Vector(Fault("checkout", FaultKind.Errors))).get.p
+    assert(after > before, s"$before → $after")
+    assertEquals(Probable(shop, deployed).ranked.head.faults, Vector(Fault("checkout", FaultKind.Errors)))
+    val late = seen :+ Observation.Changed("checkout", "deploy", "log:checkout:9", Some(t0 + 600))
+    assertEquals(Probable.boost(Fault("checkout", FaultKind.Errors), late), 1.0)
+    assert(Explain(shop, deployed).text.contains("after checkout's deploy"), Explain(shop, deployed).text)
+    val plan = Remedies.plan(shop, Set(Fault("checkout", FaultKind.Errors)), deployed)
+    assert(plan.ranked.head.action.what.startsWith("roll back checkout's deploy"), plan.text)
+
+  test("changes read from the usual lines, and written by the generator — the reader still gives the gold"):
+    val s = shop
+    val r = Read.log(s, "checkout", Vector("2026-11-04T14:02:00Z INFO  [checkout] deployed version 1.4.2",
+      "ts=2026-11-04T14:05:00Z level=info msg=\"configuration reloaded\""))
+    assertEquals(r.collect { case c: Observation.Changed => c.what }, Vector("deploy", "config"))
+    assert(r.exists(_.isInstanceOf[Observation.Healthy]), r.toString)
+    (1L to 30L).foreach { seed =>
+      val sys = Generate.system(seed)
+      val sc = Generate.scenario(sys, seed, 1, 0.8, byRates = true, changes = true)
+      assertEquals(Read.all(sys, sc.logs, sc.chat).map(_.toString).sorted, sc.facts.map(_.toString).sorted, s"$seed")
+    }
+    assertEquals(Words.facts("changed(checkout, deploy) [log:checkout:2] @2026-11-04T14:02:00Z").map(_.head),
+      Right(Observation.Changed("checkout", "deploy", "log:checkout:2", Some(1793800920L))))

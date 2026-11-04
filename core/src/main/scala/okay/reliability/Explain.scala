@@ -9,6 +9,8 @@ enum Observation:
   case Healthy(component: String, source: String = "")
   /** it wrote to its log: not down as a whole */
   case Alive(component: String, source: String = "")
+  /** it changed: a deploy, a configuration — `what`, `at` when */
+  case Changed(component: String, what: String = "deploy", source: String = "", at: Option[Long] = None)
   def component: String
   def source: String
   override def toString: String = this match
@@ -16,6 +18,8 @@ enum Observation:
       t.fold("")(x => s" @${Instant(x).toString}")
     case Healthy(c, s) => s"healthy($c)" + (if s.nonEmpty then s" [$s]" else "")
     case Alive(c, s) => s"alive($c)" + (if s.nonEmpty then s" [$s]" else "")
+    case Changed(c, w, s, t) => s"changed($c, $w)" + (if s.nonEmpty then s" [$s]" else "") +
+      t.fold("")(x => s" @${Instant(x)}")
 
 /**
  * PRODUCT 3 — THE FAILURE ANALYZER (spec §5): the smallest sets of faults whose spread shows every symptom
@@ -56,7 +60,12 @@ object Explain:
         else s"$n explanations (k = $size), not told apart yet:\n")
       explanations.zipWithIndex.foreach { (x, i) =>
         val letter = ('A' + i).toChar
-        b ++= s"  $letter. $x — explains ${symptoms.size} of ${symptoms.size} symptoms\n"
+        val after = x.faults.flatMap(f => observations.collect {
+          case c: Observation.Changed if c.component == f.component && Probable.boost(f, observations) > 1 =>
+            s"${c.component}'s ${c.what}" + c.at.fold("")(t => s" at ${Explain.clock(t)}")
+        }).distinct
+        b ++= s"  $letter. $x — explains ${symptoms.size} of ${symptoms.size} symptoms" +
+          (if after.nonEmpty then s", after ${after.mkString(", ")}" else "") + "\n"
         symptoms.take(3).foreach(s => b ++= s"       ${s.component} ${s.kind.word}${source(s)}: " +
           s"${x.spread.chain(matching(x.spread, s).get).map(_.takeWhile(_ != ':')).reverse.mkString(" ← ")}\n")
         if symptoms.size > 3 then b ++= s"       … and ${symptoms.size - 3} more\n"
@@ -77,6 +86,7 @@ object Explain:
     case Observation.Healthy(c, _) => c
     case Observation.Alive(c, _) => c
     case Observation.Symptom(c, _, src, _) if !src.startsWith("log:") || src.startsWith(s"log:$c:") => c
+    case Observation.Changed(c, _, src, _) if src.startsWith(s"log:$c") => c
   }.toSet
 
   private def source(o: Observation): String = if o.source.nonEmpty then s" [${o.source}]" else ""
@@ -125,7 +135,8 @@ object Explain:
       // WITH THE CLOCK: an explanation whose chains run against the times seen is set aside, and said
       val (ok, late) = found.partition(x => againstClock(x.spread, symptoms, tolerance).isEmpty)
       clocked ++= late.map(x => x -> againstClock(x.spread, symptoms, tolerance).head)
-      found = ok
+      // those that follow a change first (spec §18)
+      found = ok.sortBy(x => if x.faults.exists(f => Probable.boost(f, observations) > 1) then 0 else 1)
       if found.isEmpty then k += 1
     val unobserved = system.names.toSet -- direct(observations)
     Result(system, observations, k min maxSize, found, nextCheck(found, unobserved), unexplained, clocked.result())

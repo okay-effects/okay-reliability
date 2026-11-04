@@ -88,7 +88,7 @@ object App:
       case Msg.ClearFacts => clean.copy(seen = Vector.empty)
       case Msg.Train(seed, faults) =>
         val sys = s.system.getOrElse(Generate.system(seed))
-        val sc = Generate.scenario(sys, seed, faults, 0.8, byRates = true)
+        val sc = Generate.scenario(sys, seed, faults, 0.8, byRates = true, changes = true)
         clean.copy(system = Some(sys), source = if s.system.isEmpty then ArchText.print(sys) else s.source,
           training = Some(sc), revealed = false, seen = Vector.empty,
           note = Some(s"An incident: ${sc.logs.size} logs, ${sc.chat.size} lines of chat. Find the cause."))
@@ -265,7 +265,7 @@ object App:
         case Vector(x) => Some(x.faults)
         case _ => probable.ranked.headOption.filter(_.p >= 0.5).map(_.faults)
       top.foreach { fs =>
-        val p = Remedies.plan(sys, fs.toSet)
+        val p = Remedies.plan(sys, fs.toSet, s.seen)
         parts += Part.section(s"Remedies for ${fs.mkString(" + ")}")(Table(p.ranked.take(6).toList)(
           Column.text("action")(_.action.what), Column.text("restores")(c => c.restored.mkString(", ")),
           Column.text("minutes")(_.action.minutes.toString)))

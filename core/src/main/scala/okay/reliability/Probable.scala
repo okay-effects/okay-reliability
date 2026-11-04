@@ -34,12 +34,27 @@ object Probable:
         case s: Observation.Symptom => Explain.matching(r, s).isDefined
         case h: Observation.Healthy => !Explain.contradicts(r, h)
         case a: Observation.Alive => !r.shows(Effect(a.component, EffectKind.Down))
-      math.log(if agrees then 1 - e else e)
+        case _: Observation.Changed => true
+      if o.isInstanceOf[Observation.Changed] then 0.0 else math.log(if agrees then 1 - e else e)
     }.sum
+
+  /** HOW MUCH A CHANGE RAISES A FAULT (spec §18): its component changed within the hour before the onset — errors and
+   * slowness ×30, down ×5; a change after the onset, or another component's, nothing */
+  def boost(f: Fault, observations: Vector[Observation]): Double =
+    val onset = observations.collect { case s: Observation.Symptom => s }.flatMap(_.at).minOption
+    val before = observations.collect { case c: Observation.Changed if c.component == f.component => c }.exists(c =>
+      (c.at, onset) match
+        case (Some(t), Some(o)) => t <= o + 10 && o - t <= 3600
+        case _ => true)
+    if !before then 1.0
+    else f.kind match
+      case FaultKind.Errors | FaultKind.Slow => 30.0
+      case FaultKind.Down if f.instance.isEmpty => 5.0
+      case _ => 1.0
 
   def apply(system: System, observations: Vector[Observation], maxSize: Int = 3, most: Int = 40): Result =
     val events = Rates.events(system)
-    val q = events.toMap.view.mapValues(_.q).toMap
+    val q = events.map((f, r) => f -> r.q * boost(f, observations)).toMap
     val symptoms = observations.collect { case s: Observation.Symptom => s }
     if symptoms.isEmpty then return Result(Vector.empty, None, 0)
     val singles = events.map(_._1).flatMap { f =>
