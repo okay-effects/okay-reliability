@@ -142,6 +142,8 @@ class AppSuite extends munit.FunSuite:
       Act.press("Добавить сбой", "Сбой" -> "db down"))
     val t = texts(ru)
     assert(t.contains("Эффекты") && t.contains("перезапустить db") && t.contains("Решения, каждое"), t)
+    assertEquals(I18n.core("  A. checkout errors — explains 2 of 2 symptoms, after checkout's deploy")(using Lang.Ru),
+      "  A. checkout errors — объясняет 2 из 2 симптомов, после изменения (deploy) checkout")
     val back = Play(steps(keptIn(kept)(copiedTo(copied)(Here.at("https://example.org/okr/", None, "ru-RU")(
       App.main[Row])))), Act.press("English"))
     assert(kept.get("lang").contains("en"), kept.toString)

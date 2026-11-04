@@ -194,10 +194,11 @@ object I18n:
     """one (\S+) instance, no fallback""".r -> "один экземпляр ($1), без запасного"
   )
 
-  private val afterChange = """, after (\S+)'s (deploy|config) at (\S+)""".r
+  private val afterChange = """, after (\S+)'s (deploy|config)( at \S+)?""".r
 
   def core(line: String)(using l: Lang): String =
     if l == Lang.En then line
     else
       val whole = templates.find((re, _) => re.matches(line)).fold(line)((re, ru) => re.replaceAllIn(line, ru))
-      afterChange.replaceAllIn(whole, ", после изменения ($2) $1 в $3")
+      afterChange.replaceAllIn(whole, m => s", после изменения (${m.group(2)}) ${m.group(1)}" +
+        Option(m.group(3)).fold("")(at => " в " + at.drop(4)))
