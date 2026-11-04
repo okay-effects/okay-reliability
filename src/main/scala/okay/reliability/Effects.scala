@@ -1,11 +1,11 @@
-package okay.reason
+package okay.reliability
 
 import okay.scala3.*
 
 import java.nio.file.{Files as Nio, Path}
 
 /**
- * THE INVESTIGATION'S DESK, as an effect (specs/reason.md §7): the system being looked at, what has been seen. Where
+ * THE INVESTIGATION'S DESK, as an effect (specs/reliability.md §7): the system being looked at, what has been seen. Where
  * it is kept is the handler's — a session's memory (`Desk.memory`); a test's too.
  */
 enum Desk[X]:

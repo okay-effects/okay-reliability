@@ -1,4 +1,4 @@
-package okay.reason
+package okay.reliability
 
 import org.yaml.snakeyaml.{LoaderOptions, Yaml}
 import org.yaml.snakeyaml.constructor.SafeConstructor
@@ -6,7 +6,7 @@ import org.yaml.snakeyaml.constructor.SafeConstructor
 import scala.jdk.CollectionConverters.*
 
 /**
- * A SYSTEM FROM ITS DEPLOYMENT (specs/reason.md §3): docker-compose (services, `depends_on`, `deploy.replicas`, an
+ * A SYSTEM FROM ITS DEPLOYMENT (specs/reliability.md §3): docker-compose (services, `depends_on`, `deploy.replicas`, an
  * environment naming another service in a URL or a host) and Kubernetes manifests (Deployments and StatefulSets: their
  * replicas; Services; an environment naming a Service). A kind by the image (postgres → database, redis → cache,
  * rabbitmq/kafka → queue, nginx/traefik/envoy → balancer); a service published on a port is an entry point.

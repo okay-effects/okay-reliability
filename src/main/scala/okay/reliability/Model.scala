@@ -1,6 +1,6 @@
-package okay.reason
+package okay.reliability
 
-/** WHAT A COMPONENT IS (specs/reason.md §1): what it does decides the remedies, not how a failure spreads */
+/** WHAT A COMPONENT IS (specs/reliability.md §1): what it does decides the remedies, not how a failure spreads */
 enum Kind:
   case Service, Database, Cache, Queue, Balancer, External
   def word: String = toString.toLowerCase

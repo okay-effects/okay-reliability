@@ -1,4 +1,4 @@
-package okay.reason
+package okay.reliability
 
 /** WHAT WAS SEEN: a component's effect, or that it is fine — each from somewhere (`log:checkout:17`, `chat:5`) */
 enum Observation:
@@ -14,7 +14,7 @@ enum Observation:
     case Alive(c, s) => s"alive($c)" + (if s.nonEmpty then s" [$s]" else "")
 
 /**
- * PRODUCT 3 — THE FAILURE ANALYZER (specs/reason.md §5): the smallest sets of faults whose spread shows every symptom
+ * PRODUCT 3 — THE FAILURE ANALYZER (specs/reliability.md §5): the smallest sets of faults whose spread shows every symptom
  * and touches no component seen healthy — all of them at the smallest size, counted; what to check next to tell them
  * apart; why a fault is not one. Abduction by enumeration over the candidates that alone explain something and
  * contradict nothing (monotone: a contradiction alone is one in every superset), each set checked by `Spread`.

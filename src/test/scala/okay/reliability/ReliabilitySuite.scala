@@ -1,7 +1,7 @@
-package okay.reason
+package okay.reliability
 
-/** THE LAWS (specs/reason.md §8), over a written system and over generated ones */
-class ReasonSuite extends munit.FunSuite:
+/** THE LAWS (specs/reliability.md §8), over a written system and over generated ones */
+class ReliabilitySuite extends munit.FunSuite:
   val shop: System = ArchText.read("""
     web: service entry replicas 2
     checkout: service replicas 2

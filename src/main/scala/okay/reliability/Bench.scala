@@ -1,7 +1,7 @@
-package okay.reason
+package okay.reliability
 
 /**
- * THE ANALYZER ON GENERATED SCENARIOS (specs/reason.md §8, arm E of okay-inlay §6: the facts read exactly): for each
+ * THE ANALYZER ON GENERATED SCENARIOS (specs/reliability.md §8, arm E of okay-inlay §6: the facts read exactly): for each
  * seed a random system and its faults; how often the gold is found, alone or among others, and how many explanations
  * remain — the ceiling a model reading the same logs can reach.
  */

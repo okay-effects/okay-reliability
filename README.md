@@ -1,4 +1,4 @@
-# okay-reason
+# okay-reliability
 
 Four products on one model of a system:
 
@@ -15,7 +15,7 @@ Four products on one model of a system:
 4. **The remedy generator** — actions for the faults found, each checked by simulating the faults left after it: the
    entry points it restores, what still fails, its risk.
 
-The model does what it is good at — reading text, stating facts, leading an investigation; okay-reason does what a
+The model does what it is good at — reading text, stating facts, leading an investigation; okay-reliability does what a
 model gets wrong — propagation through a graph, abduction, counting the explanations, checking that a fix fixes. Both
 through an MCP server any agent can use (Claude Code, okay-agent, opencode).
 
@@ -38,6 +38,6 @@ remedies (each checked by simulation):
 ```
 
 Measured (`bench`, 200 random systems, 80% of components with logs): one fault — the cause found always, alone in
-64%, among a few (with the check that tells them apart) in 36%; 2–3 ms a scenario. specs/reason.md §8.
+64%, among a few (with the check that tells them apart) in 36%; 2–3 ms a scenario. specs/reliability.md §8.
 
 Built on okay-datalog (rules with proofs), okay-mcp (the server) and okay-scala (effects). Apache-2.0.

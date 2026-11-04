@@ -1,10 +1,10 @@
-# okay-reason — architecture, failures, diagnosis, remedies: four products on one model (spec, 2026-11-04)
+# okay-reliability — architecture, failures, diagnosis, remedies and the numbers of reliability, on one model (spec)
 
-Status: v0 being built. The operator's decision (2026-11-04): four products in one — an architecture analyzer, a
+Status: v0 built (four products); §9 being built. Renamed from okay-reason 2026-11-04. The operator's decision (2026-11-04): four products in one — an architecture analyzer, a
 failure generator for testing, a failure analyzer, a remedy generator — on ONE model of a system and ONE simulator of
-how a failure spreads. It grows out of okay-inlay `specs/reason.md` (exact reasoning as a tool the model uses): a model
-does what it is good at (reading architecture text, logs, chat; stating facts; leading an investigation), okay-reason
-does what a model gets wrong (propagation through a graph, abduction, counting the explanations, uniqueness, checking
+how a failure spreads. It grows out of okay-inlay `specs/reason.md` (exact reasoning as a tool the model
+uses): a model does what it is good at (reading architecture text, logs, chat; stating facts; leading an
+investigation), okay-reliability does what a model gets wrong (propagation through a graph, abduction, counting the explanations, uniqueness, checking
 that a fix fixes).
 
 ## 1. One model
@@ -114,7 +114,7 @@ the blast radius before and after, by `Spread` — a fix is proposed only when t
 
 ## 7. Surfaces
 
-- A CLI: `okay-reason arch|generate|explain|remedies|serve`.
+- A CLI: `okay-reliability arch|generate|explain|remedies|serve`.
 - An MCP server (okay-mcp, as symdex): `load_system`, `assert`, `arch`, `simulate`, `explain`, `why_not`,
   `next_check`, `remedies`, `generate`, `reset` — compact text for a model, `format: json` for a program; under
   okay-guard every call seen and journaled.
@@ -126,15 +126,80 @@ the blast radius before and after, by `Spread` — a fix is proposed only when t
   analyzer may find another set of the same size when the observations cannot tell them apart — then it says so).
 - Every remedy ranked first restores the entry points it claims (re-spread).
 - `Read` over the generator's logs gives the gold facts (`facts.txt`).
-- `okay-reason bench` (2026-11-04, 200 random systems of 6â11 services, 80% of the components with logs, read by
+- `okay-reliability bench` (2026-11-04, 200 random systems of 6â11 services, 80% of the components with logs, read by
   `Read`): one fault â the gold the only explanation 64%, among several 36% (each with the check that tells them
   apart), never missed; two faults â the only one 24%, among several 47%, another as small or smaller 30% (a fault
   behind another leaves no trace of its own: Occam's answer, and the gold consistent with every fact in 100%);
   2â3 ms a scenario. Half the components observed, one fault: 49% / 51% / 0%.
 - Round trip: `arch.txt` printed and read gives the same system.
 
-## 9. Not yet
+## 9. Probabilities (2026-11-04, the operator: "okay-reliability, with a probabilistic model and metrics")
 
-Timing in the reasoning (a dependent failing before its cause), probabilities and confidence of facts, a SAT
-formulation for large systems (v0 enumerates hitting sets), okay-inlay's handler, a model's extraction measured
-(the A / T / E benchmark on okay-agent + Qwen).
+The same model and the same `Spread`, with rates. Steady-state reliability theory — fault trees by minimal cut sets,
+the rare-event approximation, Fussell–Vesely importance, the β-factor model of common causes — checked by a
+simulation over time.
+
+**Rates** (`Rates`): a fault EVENT — one instance down, a component's errors, slowness, a full disk or queue, a
+component down as a whole (a common cause: a bad deploy, a config) — happens every MTBF and lasts MTTR (both
+exponential). In arch.txt: `db fails down every 180d for 1h`, `checkout fails errors every 30d for 30m`; units m, h,
+d, y. Not written: a prior by the component's kind (§9.1). A component of several replicas: each instance down at the
+kind's rate, and down as a whole at β = 0.1 of it. An event's unavailability q = MTTR / (MTBF + MTTR).
+
+**An SLO** per entry point: `web slo 99.9%` (availability: neither down nor errors), `web latency slo 99%` (not slow).
+
+### 9.1 Priors by kind (when no rate is written)
+
+| kind | down | errors | slow | full |
+|---|---|---|---|---|
+| service (each instance) | 30d / 10m | 45d / 30m | 14d / 20m | — |
+| database | 180d / 1h | 365d / 30m | 30d / 30m | 365d / 2h |
+| cache | 90d / 10m | — | 60d / 10m | — |
+| queue | 180d / 30m | — | 60d / 20m | 90d / 1h |
+| balancer | 365d / 10m | — | 90d / 10m | — |
+| external | 30d / 30m | 30d / 20m | 14d / 20m | — |
+
+Rough, and said to be: numbers to replace with your own (§9.5).
+
+### 9.2 Availability (`reliability`)
+
+For each entry point and SLI (availability: down or errors; latency: slow): its **minimal cut sets** — the smallest
+sets of fault events whose spread fails it (up to 3 events; how many were cut off said); its unavailability
+U ≈ Σ over cuts Π q (the rare-event approximation, an upper bound); its frequency F ≈ Σ over cuts Σ e∈cut
+(1/MTBF_e) Π f≠e q_f — incidents a year; the downtime a month (U · 730 h); the SLO met or not, the error budget left.
+**Importance** (Fussell–Vesely): each event's share of U — where the downtime comes from, in minutes a month.
+
+**Checked by simulation** (`simulate --years N`): every event up and down over N years (seeded), the entry points'
+state by `Spread` at each change; the measured unavailability within the analytic one's confidence — the law.
+
+### 9.3 Probable causes (`explain`)
+
+The minimal explanations stay (exact). Beside them, **posteriors**: each set S of up to 3 events among the candidates
+(those that explain a symptom — now even when they contradict a report: people and readers err), its prior Π q_e,
+its likelihood Π over the observations (1 − ε) where `Spread(S)` agrees and ε where it does not — ε 0.02 for a log's
+fact, 0.1 for a person's word (a source `chat:`), 0.05 otherwise; normalized over the sets enumerated. The answer:
+"A redis down 0.81, B payments slow 0.15 — check inventory". The law: over generated scenarios the gold is ranked
+first at least as often as the exact search finds it alone.
+
+### 9.4 Remedies with numbers
+
+- An incident's action has a time (restart 5m, roll back 15m, fail over 10m, restore 2h, scale out 10m, a breaker 15m,
+  replace an instance 10m): ranked by the entry points restored, then the time, then the risk.
+- A change of the architecture is priced in **downtime a month saved** (U before − U after, §9.2) per entry point and
+  SLI; ranked by it.
+
+### 9.5 From your history (`estimate`)
+
+Incidents in a CSV (`start,end,component,kind[,instance]`, ISO times): each event's MTBF and MTTR re-estimated — a
+Gamma prior (the kind's rate, worth one failure) updated by the failures seen in the window; MTTR the mean of the
+durations with the prior as one more. Written out as arch.txt lines, to paste.
+
+### 9.6 A span of life (`generate --timeline`)
+
+Every event over a span (seeded): `incidents.csv` (the truth), `sli.csv` (each hour, each entry point: the minutes
+unavailable, the minutes slow) — for testing alerts and SLO burn. The law: `estimate` over a long generated history
+recovers the rates written.
+
+## 10. Not yet
+
+Prometheus metrics read directly; time inside the diagnosis (a dependent failing before its cause); a SAT formulation
+for large systems; okay-inlay's handler; a model's extraction measured (A / T / E on okay-agent + Qwen).

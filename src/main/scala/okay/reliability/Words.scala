@@ -1,4 +1,4 @@
-package okay.reason
+package okay.reliability
 
 /** THE WORDS A MODEL WRITES: facts (`symptom(checkout, errors) [log:checkout:17]`), faults (`db down, web#1 down`) */
 object Words:

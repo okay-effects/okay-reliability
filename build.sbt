@@ -1,5 +1,5 @@
 /*
- * okay-reason — four products on one model of a system (specs/reason.md): the architecture analyzer, the failure
+ * okay-reliability — four products on one model of a system (specs/reliability.md): the architecture analyzer, the failure
  * generator, the failure analyzer, the remedy generator — over one simulator of how a failure spreads; okay-datalog for
  * the rules with proofs, okay-mcp for the server a model uses.
  */
@@ -14,10 +14,10 @@ ThisBuild / resolvers ++= Seq(
   "okay-mcp" at "https://okay-effects.github.io/okay-mcp/maven",
   "okay-datalog" at "https://okay-effects.github.io/okay-datalog/maven")
 
-lazy val reason = (project in file("."))
+lazy val reliability = (project in file("."))
   .settings(
-    name := "okay-reason",
-    Compile / mainClass := Some("okay.reason.Main"),
+    name := "okay-reliability",
+    Compile / mainClass := Some("okay.reliability.Main"),
     libraryDependencies ++= Seq(
       "io.github.okay-effects" %% "okay-datalog" % "0.1.0",
       "io.github.okay-effects" %% "okay-scala" % "0.1.1",

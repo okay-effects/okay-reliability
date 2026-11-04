@@ -1,7 +1,7 @@
-package okay.reason
+package okay.reliability
 
 /**
- * PRODUCT 4 — THE REMEDY GENERATOR (specs/reason.md §6): for the faults found, the actions that may fix them — each
+ * PRODUCT 4 — THE REMEDY GENERATOR (specs/reliability.md §6): for the faults found, the actions that may fix them — each
  * with what it changes in the model, its risk — CHECKED by spreading the faults left after it: the entry points it
  * restores, what is still broken; ranked. And prevention from the architecture: a change of the system for each
  * single point of failure and unguarded dependency, the blast radius before and after, kept only when it helps.

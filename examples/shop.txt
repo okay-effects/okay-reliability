@@ -1,4 +1,4 @@
-# a shop: one fact a line (okay-reason arch examples/shop.txt)
+# a shop: one fact a line (okay-reliability arch examples/shop.txt)
 web: service entry replicas 2
 checkout: service replicas 2
 reports: service

@@ -1,7 +1,7 @@
-package okay.reason
+package okay.reliability
 
 /**
- * PRODUCT 2 — THE FAILURE GENERATOR (specs/reason.md §4): systems (read, or made at random from a seed), faults
+ * PRODUCT 2 — THE FAILURE GENERATOR (specs/reliability.md §4): systems (read, or made at random from a seed), faults
  * chosen in them, spread, and rendered as what people and programs see — logs in several formats with noise, a chat —
  * with the gold: the faults, the effects, and the facts an ideal reader takes from the text (each line made with its
  * facts, so the gold is exact). Deterministic for a seed.

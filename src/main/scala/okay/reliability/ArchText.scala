@@ -1,7 +1,7 @@
-package okay.reason
+package okay.reliability
 
 /**
- * A SYSTEM AS TEXT (specs/reason.md §3), one fact a line: `web: service entry replicas 2`, `web -> checkout hard`,
+ * A SYSTEM AS TEXT (specs/reliability.md §3), one fact a line: `web: service entry replicas 2`, `web -> checkout hard`,
  * `checkout -> payments hard fallback payments-backup`; `#` starts a comment. A component used in a dependency and
  * not declared is a service. Printed back in the same words: reading the print gives the same system.
  */

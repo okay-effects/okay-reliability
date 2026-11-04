@@ -1,11 +1,11 @@
-package okay.reason
+package okay.reliability
 
 import okay.effects.json.Json
 import okay.mcp.ToolSpec
 import okay.scala3.*
 
 /**
- * THE TOOLS a model (or a person, by the CLI) uses (specs/reason.md §7): each a program over the desk and the files,
+ * THE TOOLS a model (or a person, by the CLI) uses (specs/reliability.md §7): each a program over the desk and the files,
  * its answer compact text. One system on the desk at a time; the facts seen added to it.
  */
 object Tools:

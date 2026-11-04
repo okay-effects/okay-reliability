@@ -1,4 +1,4 @@
-package okay.reason
+package okay.reliability
 
 import okay.effects.Void
 import okay.effects.cek.OnCek
@@ -7,7 +7,7 @@ import okay.mcp.{Link, Servers, ToolCall, ToolResult}
 import okay.scala3.*
 
 /**
- * OKAY-REASON RUNNING (specs/reason.md §7): the tools' effects given their handlers in one line (`Live.run`) — a
+ * OKAY-RELIABILITY RUNNING (specs/reliability.md §7): the tools' effects given their handlers in one line (`Live.run`) — a
  * session's desk in memory, the machine's files — under a CLI and an MCP server (okay-mcp's, on okay-scala's machine
  * through okay-simple's adapter, as symdex's).
  */
@@ -26,7 +26,7 @@ object Main:
     val servers: Servers[OnCek.type] = new Servers[OnCek.type]()(using OnCek)
     type Linked[X] = okay.effects.Sum[Void, Link, X]
     def server(live: Live): servers.Server[Linked] =
-      servers.Server[Linked]("okay-reason", version, new servers.Tools[Linked]:
+      servers.Server[Linked]("okay-reliability", version, new servers.Tools[Linked]:
         def list = OnCek.pure(Tools.all.map(_.spec).toList)
         def call(c: ToolCall) = OnCek.delay(OnCek.pure(live.call(c.name, c.arguments)
           .fold(ToolResult.error, ToolResult.text))))
@@ -35,19 +35,19 @@ object Main:
     def stdio(live: Live): Unit = OnCek.run(servers.links.stdio(servers.serve(server(live))))
 
   private val usage =
-    """okay-reason — architecture, failures, diagnosis and remedies on one model of a system
+    """okay-reliability — architecture, failures, diagnosis and remedies on one model of a system
       |
-      |  okay-reason arch FILE                     the architecture: blast radius, single points of failure,
+      |  okay-reliability arch FILE                     the architecture: blast radius, single points of failure,
       |                                            cycles, unguarded dependencies, changes that help
       |                                            (FILE: arch.txt, docker-compose.yml, Kubernetes manifests)
-      |  okay-reason generate --out DIR [--arch FILE | --random N] [--seed S] [--faults K] [--observed P]
+      |  okay-reliability generate --out DIR [--arch FILE | --random N] [--seed S] [--faults K] [--observed P]
       |                                            a failure scenario: logs, chat, gold answer
-      |  okay-reason explain DIR                   the causes of a scenario (DIR/arch.txt, logs/, chat.txt)
-      |  okay-reason explain --arch FILE [--logs DIR] [--chat FILE] [--facts FILE]
-      |  okay-reason simulate --arch FILE --faults "db down, web#1 down"
-      |  okay-reason remedies --arch FILE --faults "..."   the actions, each checked by simulation
-      |  okay-reason bench [--seeds N] [--faults K] [--observed P]   the analyzer on generated scenarios
-      |  okay-reason serve                         an MCP server on stdin/stdout""".stripMargin
+      |  okay-reliability explain DIR                   the causes of a scenario (DIR/arch.txt, logs/, chat.txt)
+      |  okay-reliability explain --arch FILE [--logs DIR] [--chat FILE] [--facts FILE]
+      |  okay-reliability simulate --arch FILE --faults "db down, web#1 down"
+      |  okay-reliability remedies --arch FILE --faults "..."   the actions, each checked by simulation
+      |  okay-reliability bench [--seeds N] [--faults K] [--observed P]   the analyzer on generated scenarios
+      |  okay-reliability serve                         an MCP server on stdin/stdout""".stripMargin
 
   private def flags(args: List[String]): (Map[String, String], List[String]) =
     args.foldLeft((Map.empty[String, String], List.empty[String], Option.empty[String])) {
@@ -63,7 +63,7 @@ object Main:
       if code != 0 then code
       else live.call(c._1, c._2) match
         case Right(out) => if c._1 != "load_system" && c._1 != "read_logs" then println(out.stripSuffix("\n")); 0
-        case Left(e) => Console.err.println(s"okay-reason: $e"); 1
+        case Left(e) => Console.err.println(s"okay-reliability: $e"); 1
     }
 
   def main(args: Array[String]): Unit =
