@@ -25,11 +25,11 @@ class PhoneSuite extends munit.FunSuite:
     val again = ReliabilityApp.over(phone).open()
     assert(again.contains("Single points of failure"), again.take(500))
 
-  test("in the phone's language; a report shared by the share sheet"):
+  test("in English whatever the phone's language (for now); a report shared by the share sheet"):
     val phone = new Device.Memory(language = "ru")
     val d = ReliabilityApp.over(phone)
     val first = d.open()
-    assert(first.contains("Анализировать"), first.take(800))
-    val loaded = press(d, press(d, first, "Примеры"), "Загрузить магазин")
-    press(d, loaded, "Скопировать отчёт (Markdown)")
+    assert(first.contains("Analyze") && !first.contains("Анализировать"), first.take(800))
+    val loaded = press(d, press(d, first, "Examples"), "Load the shop")
+    press(d, loaded, "Copy the report (Markdown)")
     assert(phone.shared.lastOption.exists(_.startsWith("# The system")), phone.shared.toString)

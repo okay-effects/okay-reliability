@@ -135,13 +135,13 @@ class AppSuite extends munit.FunSuite:
     assert(md.startsWith("# The system") && md.contains("## Availability") && md.contains("## Weak points"), md)
     assert(md.contains("## The incident") && md.contains("Probable causes") && md.contains("okay-reliability"), md)
 
-  test("in Russian: chosen by the browser, the page's words and the core's; no button to switch"):
+  test("in English always, for now — a Russian browser too; the Russian dictionary kept, no button"):
     kept.clear(); copied.clear()
     val ru = Play(steps(keptIn(kept)(copiedTo(copied)(Here.at("https://example.org/okr/", None, "ru-RU")(
-      App.main[Row])))), Act.press("Примеры"), Act.press("Загрузить магазин"), Act.press("Что если"),
-      Act.press("Добавить сбой", "Сбой" -> "db down"))
+      App.main[Row])))), Act.press("Examples"), Act.press("Load the shop"), Act.press("What if"),
+      Act.press("Add the fault", "A fault" -> "db down"))
     val t = texts(ru)
-    assert(t.contains("Эффекты") && t.contains("перезапустить db") && t.contains("Решения, каждое"), t)
+    assert(t.contains("Effects") && t.contains("restart db") && !t.contains("Эффекты"), t)
     assertEquals(I18n.core("  A. checkout errors — explains 2 of 2 symptoms, after checkout's deploy")(using Lang.Ru),
       "  A. checkout errors — объясняет 2 из 2 симптомов, после изменения (deploy) checkout")
     assert(!ru.at.exists(_.buttons.exists(b => b.label == "English" || b.label == "Русский")))

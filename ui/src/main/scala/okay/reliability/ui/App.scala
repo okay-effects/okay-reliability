@@ -55,8 +55,7 @@ object App:
       fragment <- Here.fragment[R]
       keptSystem <- setting[R]("system")
       keptFacts <- setting[R]("facts")
-      browser <- Here.language[R]
-      lang = Lang.of(browser)    // the browser's language, no button (spec §25)
+      lang = Lang.En    // English always, for now (spec §25): the Russian dictionary kept, not used
       begun = fragment.flatMap(Links.read) match
         case Some((sys, facts)) => resume(sys, facts, lang)
         case None => keptSystem.filter(_.nonEmpty).fold(State(lang = lang))(resume(_, keptFacts, lang))
