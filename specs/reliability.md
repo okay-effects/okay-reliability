@@ -672,6 +672,18 @@ misses teach — new, beside §30–§32:
   edge's month-old deploy. The rule works as written; the postmortem's cause is a latent bug a change woke.
 - Roblox 2021: the players failed while discovery was slow — `saturates`, which the system as first written lacks.
 
+## 35. The kind after a change (BACKLOG 22, 2026-11-04) — tried, refuted, reverted
+
+Facebook 2021 names the backbone, `errors` before `down`. Tried: a change raises every kind of its component alike
+(down ×30, as errors and slowness), so the change points at the component and the facts choose the kind. Measured on
+the same build: `bench` with changes (one fault, two faults) and without — unchanged (the generator puts deploys before
+errors and slowness only); the 21 postmortems — Facebook still second (`errors` 0.66, `down` 0.33: the kinds' priors,
+nothing seen tells them apart), Cloudflare 2022 fifth → second, Cloudflare 2025-11 first → second (`clickhouse down`
+above `errors`), Cloudflare 2020 third → fourth: the truth first in 12 instead of 13. Reverted.
+
+What it says: when every fact is explained as well by either kind, only a look tells them apart — and the analyzer
+already asks for that look (Facebook: "check backbone next"). No rule for the kind; the check is the answer.
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a

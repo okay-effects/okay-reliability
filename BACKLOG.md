@@ -79,7 +79,9 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 21. ~~**More postmortems**~~ — DONE 2026-11-04 (spec §34: 21 in all, first 13, top three 18).
     10–15 more public ones beside the eight (spec §28), the same rules: facts only from before
     the cause was known; the table re-measured.
-22. **The kind after a change**: a change raises errors ×30, down ×5 — Facebook 2021 names the backbone but `errors`
+22. ~~**The kind after a change**~~ — CLOSED 2026-11-04, refuted (spec §35: equal boosts, first 13 → 12; the kind is told
+    by the check the analyzer already asks for).
+    a change raises errors ×30, down ×5 — Facebook 2021 names the backbone but `errors`
     before `down`. A rule for the kind, measured on `bench` (200 scenarios, with changes) and on all the postmortems.
 
 ## 8. What the twenty-one taught (spec §34)
