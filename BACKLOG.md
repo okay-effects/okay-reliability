@@ -71,6 +71,15 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
     a component that turns a callee's failure into its own `down` (DNS withdrawing its routes,
     Facebook 2021); a caller saturated by a slow callee fails rather than slows (Slack 2021).
 
+## 7. After the real incidents (the owner, 2026-11-04: "the rest — do it"; the phone app later)
+
+20. **The new words on the page**: `reads`/`writes` in a symptom, `withdraws`/`saturates` on a dependency — said in
+    the fields' hints and shown by an example on the Examples page.
+21. **More postmortems**: 10–15 more public ones beside the eight (spec §28), the same rules: facts only from before
+    the cause was known; the table re-measured.
+22. **The kind after a change**: a change raises errors ×30, down ×5 — Facebook 2021 names the backbone but `errors`
+    before `down`. A rule for the kind, measured on `bench` (200 scenarios, with changes) and on all the postmortems.
+
 ## Later, when a server is needed
 
 - A Worker again (its code: commit 30767db): an alert's webhook (Alertmanager) diagnosed with no page open and told in
