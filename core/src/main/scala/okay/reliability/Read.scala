@@ -41,13 +41,7 @@ object Read:
               case Some(a) => Some((if a.group(1).startsWith("5") then "ERROR" else "INFO") -> s"status ${a.group(1)}")
               case None => Some("INFO" -> l)
 
-  private val iso = """(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(?:[.,]\d+)?(Z|[+-]\d\d:?\d\d)?""".r
-  /** a line's time, the first ISO-8601 one in it (UTC when it names no zone), epoch seconds */
-  def time(line: String): Option[Long] = iso.findFirstMatchIn(line).flatMap { m =>
-    val zone = Option(m.group(2)).map(z => if z == "Z" || z.contains(":") then z else z.take(3) + ":" + z.drop(3))
-      .getOrElse("Z")
-    scala.util.Try(java.time.OffsetDateTime.parse(m.group(1) + zone).toEpochSecond).toOption
-  }
+  def time(line: String): Option[Long] = Iso.find(line)
 
   private def S(c: String, k: EffectKind) = Observation.Symptom(c, k)
 
@@ -96,8 +90,7 @@ object Read:
   def chat(system: System, lines: Vector[String]): Vector[Observation] =
     lines.zipWithIndex.flatMap { (l, i) =>
       val src = s"chat:${i + 1}"
-      val named = system.names.filter(n => s"(?<![A-Za-z0-9_-])${java.util.regex.Pattern.quote(n)}(?![A-Za-z0-9_-])"
-        .r.findFirstIn(l).isDefined)
+      val named = system.names.filter(n => mentions(l, n))
       named.flatMap { n =>
         if slowly.findFirstIn(l).isDefined then Vector(Observation.Symptom(n, EffectKind.Slow, src))
         else if failing.findFirstIn(l).isDefined && !l.contains("не работает нормально") then
@@ -106,6 +99,17 @@ object Read:
         else Vector.empty
       }
     }
+
+  /** whether a line names a component: the name, not inside a longer one */
+  def mentions(line: String, name: String): Boolean =
+    def part(c: Char) = c.isLetterOrDigit || c == '_' || c == '-'
+    var i = line.indexOf(name)
+    var found = false
+    while i >= 0 && !found do
+      val before = i == 0 || !part(line.charAt(i - 1))
+      val after = i + name.length >= line.length || !part(line.charAt(i + name.length))
+      if before && after then found = true else i = line.indexOf(name, i + 1)
+    found
 
   /** all of them, each kind of fact once (its first source) */
   def all(system: System, logs: Map[String, Vector[String]], chatLines: Vector[String]): Vector[Observation] =

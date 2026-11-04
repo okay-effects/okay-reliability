@@ -225,9 +225,9 @@ object Generate:
       case (Down, _) | (Stale, _) => Vector.empty
 
   /** the scenarios' clock: 2026-11-04T14:00:00Z, and `t` seconds after */
-  val origin: Long = java.time.Instant.parse("2026-11-04T14:00:00Z").getEpochSecond
+  val origin: Long = Iso.parse("2026-11-04T14:00:00Z").get
   private def clock(t: Int): String =
-    java.time.Instant.ofEpochSecond(origin + t).toString.stripSuffix("Z") + f".${(t * 37) % 1000}%03dZ"
+    Iso.format(origin + t).stripSuffix("Z") + f".${(t * 37) % 1000}%03dZ"
 
   /** a component's lines in a format: JSON lines, logfmt, plain with stack traces, or an access log */
   def render(c: String, ls: Vector[Line], format: String): Vector[String] =

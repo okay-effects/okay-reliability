@@ -1,6 +1,6 @@
 package okay.reliability
 
-import okay.effects.json.{Descent, Json}
+import okay.effects.json.{Json, JsonText}
 
 /**
  * METRICS (spec §12): Prometheus' — a snapshot in the text exposition format, or a server's answers (the HTTP API) —
@@ -49,7 +49,7 @@ object Metrics:
 
   /** an instant query's answer (`resultType: vector`): each series' labels and value */
   def vector(body: String, name: String): Either[String, Vector[Sample]] =
-    Descent.parse(body).left.map(_ => "not JSON").flatMap { j =>
+    JsonText.parse(body).left.map(_ => "not JSON").flatMap { j =>
       if !field(j, "status").contains(Json.Str("success")) then
         Left(field(j, "error").collect { case Json.Str(e) => e }.getOrElse("the query failed"))
       else Right(results(j)
@@ -58,7 +58,7 @@ object Metrics:
 
   /** a range query's answer (`resultType: matrix`): each series' labels and its points (epoch seconds, value) */
   def matrix(body: String): Either[String, Vector[(Map[String, String], Vector[(Double, Double)])]] =
-    Descent.parse(body).left.map(_ => "not JSON").flatMap { j =>
+    JsonText.parse(body).left.map(_ => "not JSON").flatMap { j =>
       if !field(j, "status").contains(Json.Str("success")) then
         Left(field(j, "error").collect { case Json.Str(e) => e }.getOrElse("the query failed"))
       else Right(results(j)

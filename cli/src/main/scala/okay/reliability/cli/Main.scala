@@ -1,4 +1,6 @@
-package okay.reliability
+package okay.reliability.cli
+
+import okay.reliability.*
 
 import okay.effects.Void
 import okay.effects.cek.OnCek
@@ -16,11 +18,11 @@ import java.nio.file.Path
  */
 object Main:
   val version = "0.1.0"
-  type Asked[X] = (Clock + Desk + Files + Http)[X]
+  type Asked[X] = Tools.Asked[X]
 
   final class Live:
     val desk = Desk.State()
-    def run[A](p: A ! Asked): A = okay.scala3.run(Clock.system(Desk.memory(desk)(Files.real(Http.real(p)))))
+    def run[A](p: A ! Asked): A = okay.scala3.run(Clock.system(Desk.memory(desk)(RealWorld.files(RealWorld.http(p)))))
     def call(name: String, args: Json): Either[String, String] =
       try run(Tools.call[Asked](name, args))
       catch case e: Exception => Left(Option(e.getMessage).getOrElse(e.toString))

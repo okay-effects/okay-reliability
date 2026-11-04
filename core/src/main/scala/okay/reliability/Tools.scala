@@ -10,6 +10,9 @@ import okay.scala3.std.Clock
  * its answer compact text. One system on the desk at a time; the facts seen added to it.
  */
 object Tools:
+  /** the effects every tool may perform */
+  type Asked[X] = (Clock + Desk + Files + Http)[X]
+
   trait Run:
     def apply[R[_]: Has[Desk]: Has[Files]: Has[Http]: Has[Clock]](a: Json): Either[String, String] ! R
 
@@ -276,7 +279,7 @@ object Tools:
                   case Right(series) =>
                     val rows = Metrics.incidents(s, series, mapping)
                     val csv = Life.csv(rows.map(r => Life.Incident(r.start, r.end, Fault(r.component, r.kind,
-                      r.instance))), java.time.Instant.EPOCH)
+                      r.instance))), 0L)
                     val r = Estimate(s, csv, Some(window))
                     val applied = a.field("apply").exists { case Json.Bool(b) => b; case _ => false }
                     if applied then Desk.load[R](r(s)).map(_ => Right(r.text + "\napplied"))
@@ -303,7 +306,7 @@ object Tools:
             val (files, said) = str(a, "timeline").flatMap(Rates.hours) match
               case Some(span) =>
                 val life = Life.run(system, span / Rates.hoursAYear, seed, record = true)
-                val origin = java.time.Instant.parse("2026-01-01T00:00:00Z")
+                val origin = Iso.parse("2026-01-01T00:00:00Z").get
                 (Vector("arch.txt" -> ArchText.print(system), "incidents.csv" -> Life.csv(life.incidents, origin),
                   "sli.csv" -> Life.sliCsv(life.hourly, origin)),
                   s"${life.incidents.size} incidents over ${Rates.show(span)}; " + life.measured.map(m =>

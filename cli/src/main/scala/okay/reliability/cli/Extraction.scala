@@ -1,4 +1,6 @@
-package okay.reliability
+package okay.reliability.cli
+
+import okay.reliability.*
 
 import java.nio.file.{Files as Nio, Path}
 

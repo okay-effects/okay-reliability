@@ -99,11 +99,11 @@ object Life:
     Run(horizon, incidents.result().sortBy(_.start), measured, rows)
 
   /** the incidents as CSV: start,end,component,kind,instance — times ISO, from `origin` */
-  def csv(incidents: Vector[Incident], origin: java.time.Instant): String =
-    def at(h: Double) = origin.plusSeconds(math.round(h * 3600)).toString
+  def csv(incidents: Vector[Incident], origin: Long): String =
+    def at(h: Double) = Iso.format(origin + math.round(h * 3600))
     ("start,end,component,kind,instance" +: incidents.map(i => s"${at(i.start)},${at(i.end)},${i.fault.component}," +
       s"${i.fault.kind.word},${i.fault.instance.fold("")(_.toString)}")).mkString("", "\n", "\n")
 
-  def sliCsv(rows: Vector[(Int, String, Double, Double)], origin: java.time.Instant): String =
+  def sliCsv(rows: Vector[(Int, String, Double, Double)], origin: Long): String =
     ("hour,entry,unavailable_minutes,slow_minutes" +: rows.map((h, e, a, s) =>
-      f"${origin.plusSeconds(h * 3600L)},$e,$a%.2f,$s%.2f")).mkString("", "\n", "\n")
+      f"${Iso.format(origin + h * 3600L)},$e,$a%.2f,$s%.2f")).mkString("", "\n", "\n")

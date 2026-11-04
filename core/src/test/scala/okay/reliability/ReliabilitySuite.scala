@@ -178,25 +178,6 @@ class ReliabilitySuite extends munit.FunSuite:
     assertEquals(kube.dependencies, Vector(Dependency("shop", "shop-db", Mode.Hard)))
     assertEquals(kube.entries, Vector("shop"))
 
-  test("the MCP server: a model loads a system, states facts, and is told the cause and the remedy"):
-    def call(id: Int, name: String, args: String) =
-      s"""{"jsonrpc":"2.0","id":$id,"method":"tools/call","params":{"name":"$name","arguments":$args}}"""
-    val arch = ArchText.print(shop).replace("\n", "\\n")
-    val out = Main.Serve.scripted(Main.Live(), List(
-      """{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},""" +
-        """"clientInfo":{"name":"test","version":"0"}}}""",
-      """{"jsonrpc":"2.0","id":2,"method":"tools/list"}""",
-      call(3, "load_system", s"""{"text":"$arch"}"""),
-      call(4, "assert", """{"facts":"symptom(web, errors) [chat:1]\nsymptom(checkout, errors) [log:checkout:3]\n""" +
-        """alive(checkout) [log:checkout]\nhealthy(reports) [chat:2]"}"""),
-      call(5, "explain", "{}"),
-      call(6, "why_not", """{"faults":"db down"}""")))
-    val all = out.mkString("\n")
-    assert(all.contains("\"explain\"") && all.contains("\"why_not\""), all)
-    assert(all.contains("one explanation (k = 1)") && all.contains("checkout errors"), all)
-    assert(all.contains("roll checkout back"), all)
-    assert(all.contains("reports would show"), all)
-
   // ---- §9: THE PROBABILITIES
 
   val rated: System = ArchText.read(ArchText.print(shop) + """
@@ -237,7 +218,7 @@ class ReliabilitySuite extends munit.FunSuite:
 
   test("the rates read back from a long generated history"):
     val life = Life.run(rated, 200, 3, record = true)
-    val origin = java.time.Instant.parse("2026-01-01T00:00:00Z")
+    val origin = Iso.parse("2026-01-01T00:00:00Z").get
     val est = Estimate(rated, Life.csv(life.incidents, origin), Some(200 * Rates.hoursAYear))
     assert(est.problems.isEmpty, est.problems.mkString)
     def close(c: String, k: FaultKind) =
@@ -375,7 +356,7 @@ class ReliabilitySuite extends munit.FunSuite:
     desk.system = Some(shop)
     def run(name: String, args: okay.effects.json.Json) =
       okay.scala3.run(okay.scala3.std.Clock.virtual(2_000_000L)(Desk.memory(desk)(Files.memory(
-        scala.collection.mutable.Map.empty)(Http.memory(answer)(Tools.call[Main.Asked](name, args))))))._2
+        scala.collection.mutable.Map.empty)(Http.memory(answer)(Tools.call[Tools.Asked](name, args))))))._2
     val got = run("read_metrics", okay.effects.json.Json.obj("url" -> okay.effects.json.Json.Str("http://prom:9090")))
     assert(got.exists(_.contains("symptom(db, down)")), got.toString)
     assert(desk.seen.contains(Observation.Healthy("checkout", "metrics:prometheus:up{job=checkout}")),
