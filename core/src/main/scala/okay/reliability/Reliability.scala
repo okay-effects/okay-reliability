@@ -76,7 +76,9 @@ object Reliability:
   def cutsByEnumeration(system: System, entry: String, fails: Spread.Result => Boolean, events: Vector[(Fault, Rate)],
     maxSize: Int = 3): Vector[Cut] =
     val near = reach(system, entry)
-    val relevant = events.filter((f, _) => near(f.component))
+    // a zone matters when something reached runs in it
+    val relevant = events.filter((f, _) => near(f.component) ||
+      Zone.of(f).exists(z => system.inZone(z).exists(x => near(x.component))))
     val q = relevant.map((f, r) => f -> r.q).toMap
     var found = Vector.empty[Vector[Fault]]
     (1 to maxSize).foreach { k =>

@@ -359,6 +359,22 @@ in, the answer revealed). Tested on the JVM by okay-ui's `Play` (`AppSuite`).
   diagnosed with no page open, shared incidents, a remote agent's MCP with sessions). Its code is in the history
   (commit 30767db, `worker/`).
 
+## 17. Zones (BACKLOG 1, 2026-11-04)
+
+Replicas fail together when the place they run in fails: a zone (a data centre, an availability zone), a region.
+Independent failures and the β-factor overstate a replicated system's availability while its replicas share a zone.
+
+- **Where instances run**: `db: database replicas 2 zones a,b` — instance i in zone i mod n (instance 1 in `a`,
+  instance 2 in `b`); a component of one replica in a zone: `cache: cache zones a`. No zones: none shared.
+- **A zone's failure** is a fault event of its own, `zone:a down`: every instance in the zone down at once (a
+  component of one replica there, down). Its rate: `zone a fails every 365d for 2h`, else the prior 365d / 1h.
+- `Spread` takes a zone's fault as the instances' faults it means; the fault tree's `down` of an instance is its own
+  event or its zone's; the diagnosis has the zones among its candidates; `Life` simulates them.
+- `arch`: each zone's blast radius ("losing zone a fails web"); prevention proposes spreading a component's replicas
+  over two zones where they share one, priced by `Reliability` as every change is.
+- Laws: the fault tree equals the enumeration with zones; `Life` agrees with the cut sets; a system with its two
+  replicas in one zone is less available than the same with them in two.
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a

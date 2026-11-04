@@ -16,7 +16,18 @@ enum Mode:
 object Mode:
   def of(s: String): Option[Mode] = values.find(_.word == s.toLowerCase)
 
-final case class Component(name: String, kind: Kind = Kind.Service, replicas: Int = 1, entry: Boolean = false)
+/** a component: what it is, its instances, whether users reach it, the zones its instances run in (instance i in
+ * zone i mod n) */
+final case class Component(name: String, kind: Kind = Kind.Service, replicas: Int = 1, entry: Boolean = false,
+  zones: Vector[String] = Vector.empty):
+  /** the zone of instance `i` (1-based), if it has zones */
+  def zoneOf(i: Int): Option[String] = Option.when(zones.nonEmpty)(zones((i - 1) % zones.size))
+
+/** A ZONE'S FAILURE, as a fault of its own: `zone:a down` — every instance in the zone down at once */
+object Zone:
+  val prefix = "zone:"
+  def fault(z: String): Fault = Fault(prefix + z, FaultKind.Down)
+  def of(f: Fault): Option[String] = Option.when(f.component.startsWith(prefix))(f.component.drop(prefix.length))
 /** what a dependency carries: the reads, the writes, or both */
 enum Use:
   case Both, Reads, Writes
@@ -33,7 +44,14 @@ final case class Fallback(from: String, to: String, alternative: String)
 /** A SYSTEM: its components, who calls whom and how, the fallbacks */
 final case class System(components: Vector[Component], dependencies: Vector[Dependency] = Vector.empty,
   fallbacks: Vector[Fallback] = Vector.empty, rates: Map[(String, FaultKind), Rate] = Map.empty,
-  slos: Map[String, Slo] = Map.empty, writeShares: Map[String, Double] = Map.empty):
+  slos: Map[String, Slo] = Map.empty, writeShares: Map[String, Double] = Map.empty,
+  zoneRates: Map[String, Rate] = Map.empty):
+  /** the zones the instances run in */
+  def zones: Vector[String] = components.flatMap(_.zones).distinct.sorted
+  def withZoneRate(z: String, r: Rate): System = copy(zoneRates = zoneRates + (z -> r))
+  /** the instances a zone's failure takes down: each instance's fault (a component of one, down as a whole) */
+  def inZone(z: String): Vector[Fault] = components.flatMap(c => (1 to c.replicas).filter(i => c.zoneOf(i).contains(z))
+    .map(i => if c.replicas > 1 then Fault(c.name, FaultKind.Down, Some(i)) else Fault(c.name, FaultKind.Down)))
   private lazy val byName = components.map(c => c.name -> c).toMap
   def component(name: String): Option[Component] = byName.get(name)
   def names: Vector[String] = components.map(_.name)

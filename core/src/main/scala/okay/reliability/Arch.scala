@@ -11,7 +11,8 @@ object Arch:
   final case class Blast(component: String, entries: Vector[String], chains: Vector[Vector[String]])
   final case class Unguarded(from: String, to: String, why: String)
   final case class Report(system: System, blasts: Vector[Blast], spofs: Vector[String],
-    cycles: Vector[(String, Vector[String])], unguarded: Vector[Unguarded], score: Double):
+    cycles: Vector[(String, Vector[String])], unguarded: Vector[Unguarded], score: Double,
+    zones: Vector[(String, Vector[String])] = Vector.empty):
     def text: String =
       val b = StringBuilder()
       val s = system
@@ -29,6 +30,9 @@ object Arch:
       if wide.nonEmpty then
         b ++= s"\nfails entry points when ALL its instances are lost (it has replicas):\n"
         wide.foreach(x => b ++= s"  ${x.component} — ${x.entries.filter(_ != x.component).mkString(", ")}\n")
+      if zones.nonEmpty then
+        b ++= "\nzones (what losing one fails):\n"
+        zones.foreach((z, es) => b ++= s"  zone $z — ${if es.isEmpty then "nothing" else es.mkString(", ")}\n")
       if cycles.nonEmpty then
         b ++= s"\ncycles of hard dependencies (${cycles.size}):\n"
         cycles.foreach((n, proof) => b ++= s"  $n: ${proof.mkString("; ")}\n")
@@ -74,4 +78,5 @@ object Arch:
     val pairs = system.names.size * system.entries.size - system.entries.size
     val lost = blasts.map(b => b.entries.count(_ != b.component)).sum
     val score = if pairs == 0 then 1.0 else 1.0 - lost.toDouble / pairs
-    Report(system, blasts, spofs, cycles, unguarded, score)
+    val zones = system.zones.map(z => z -> Spread(system, Vector(Zone.fault(z))).failedEntries)
+    Report(system, blasts, spofs, cycles, unguarded, score, zones)

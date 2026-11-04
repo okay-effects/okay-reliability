@@ -30,6 +30,11 @@ object ArchText:
             val unknown = words.filterNot(w => Mode.of(w).isDefined || Set("reads", "writes", "breaker")(w))
             if unknown.nonEmpty then errors += s"line $n: what is ${unknown.mkString(" ")}?"
           case _ => errors += s"line $n: a dependency is `from -> to [mode] [fallback alt]`"
+      else if words.headOption.contains("zone") && words.lift(2).contains("fails") then words match
+        case Vector("zone", z, "fails", "every", mtbf, "for", mttr) => (Rates.hours(mtbf), Rates.hours(mttr)) match
+            case (Some(b), Some(r)) if b > 0 && r > 0 => system = system.withZoneRate(z, Rate(b, r))
+            case _ => errors += s"line $n: `zone $z fails every <time> for <time>`"
+        case _ => errors += s"line $n: `zone <name> fails every <time> for <time>`"
       else if words.lift(1).contains("writes") && words.size == 3 then
         words(2).stripSuffix("%").toDoubleOption.filter(p => p >= 0 && p <= 100) match
           case Some(p) => system = system.withWriteShare(words(0), (BigDecimal(p) / 100).toDouble)
@@ -58,6 +63,10 @@ object ArchText:
         while i < rest.size do
           rest(i) match
             case "entry" => c = c.copy(entry = true)
+            case "zones" => rest.lift(i + 1).map(_.split(",").toVector.map(_.trim).filter(_.nonEmpty))
+                .filter(_.nonEmpty) match
+                case Some(zs) => c = c.copy(zones = zs); i += 1
+                case None => errors += s"line $n: zones wants names, a comma between them (zones a,b)"
             case "replicas" => rest.lift(i + 1).flatMap(_.toIntOption).filter(_ > 0) match
                 case Some(r) => c = c.copy(replicas = r); i += 1
                 case None => errors += s"line $n: replicas wants a number"
@@ -78,7 +87,8 @@ object ArchText:
   def print(s: System): String =
     val cs = s.components.map { c =>
       (Vector(s"${c.name}:", c.kind.word) ++ (if c.entry then Vector("entry") else Vector.empty) ++
-        (if c.replicas > 1 then Vector("replicas", c.replicas.toString) else Vector.empty)).mkString(" ")
+        (if c.replicas > 1 then Vector("replicas", c.replicas.toString) else Vector.empty) ++
+        (if c.zones.nonEmpty then Vector("zones", c.zones.mkString(",")) else Vector.empty)).mkString(" ")
     }
     val ds = s.dependencies.map { d =>
       (Vector(d.from, "->", d.to, d.mode.word) ++ (if d.use != Use.Both then Vector(d.use.word) else Vector.empty) ++
@@ -91,4 +101,6 @@ object ArchText:
     val ss = s.slos.toVector.sortBy(_._1).flatMap((c, slo) => slo.availability.map(a => s"$c slo ${pct(a)}").toVector ++
       slo.latency.map(l => s"$c latency slo ${pct(l)}"))
     val ws = s.writeShares.toVector.sortBy(_._1).map((c, w) => s"$c writes ${pct(w)}")
-    (cs ++ ds ++ rs ++ ss ++ ws).mkString("", "\n", "\n")
+    val zs = s.zoneRates.toVector.sortBy(_._1).map((z, r) =>
+      s"zone $z fails every ${Rates.show(r.mtbf)} for ${Rates.show(r.mttr)}")
+    (cs ++ ds ++ rs ++ zs ++ ss ++ ws).mkString("", "\n", "\n")

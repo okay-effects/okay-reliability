@@ -85,7 +85,12 @@ object Spread:
     val fs = faults.toSet
     Result(system, fs, world(system, fs, World.Reads), world(system, fs, World.Writes))
 
-  def world(system: System, fs: Set[Fault], w: World): Map[Effect, Cause] =
+  def world(system: System, asked: Set[Fault], w: World): Map[Effect, Cause] =
+    // a zone's failure is the failures of its instances; each said to come from the zone
+    val origin: Map[Fault, Fault] = asked.toVector.flatMap(f => Zone.of(f).toVector.flatMap(z =>
+      system.inZone(z).map(_ -> f))).toMap
+    val fs = asked.filter(Zone.of(_).isEmpty) ++ origin.keySet
+    def own(f: Fault): Cause = Cause.Own(if asked(f) then f else origin.getOrElse(f, f))
     val causes = scala.collection.mutable.LinkedHashMap.empty[Effect, Cause]
     def add(e: Effect, c: Cause): Boolean = if causes.contains(e) then false else { causes(e) = c; true }
     // A FAULT'S OWN EFFECT
@@ -97,8 +102,8 @@ object Spread:
             .sortBy(_.instance)
           if down.map(_.instance).distinct.size >= c.fold(1)(_.replicas) then
             add(Effect(n, EffectKind.Down), Cause.AllInstances(down))
-          else add(Effect(n, EffectKind.Retries), Cause.Own(f))
-        case Fault(n, FaultKind.Down, None) => add(Effect(n, EffectKind.Down), Cause.Own(f))
+          else add(Effect(n, EffectKind.Retries), own(f))
+        case Fault(n, FaultKind.Down, None) => add(Effect(n, EffectKind.Down), own(f))
         case Fault(n, FaultKind.Slow, _) => add(Effect(n, EffectKind.Slow), Cause.Own(f))
         case Fault(n, FaultKind.Errors, _) => add(Effect(n, EffectKind.Errors), Cause.Own(f))
         case Fault(n, FaultKind.Full, _) =>
@@ -132,4 +137,4 @@ object Spread:
         (if c.kind == Kind.Queue || c.kind == Kind.Database then Vector(FaultKind.Full) else Vector.empty)
       kinds.map(Fault(c.name, _)) ++
         (if c.replicas > 1 then (1 to c.replicas).map(i => Fault(c.name, FaultKind.Down, Some(i))) else Nil)
-    }
+    } ++ system.zones.map(Zone.fault)

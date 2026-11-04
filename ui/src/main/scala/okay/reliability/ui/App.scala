@@ -147,7 +147,8 @@ object App:
       Part.section(title)(Part.text(what), Part.code(title, text.linesIterator.toList, Set.empty), Part.slot(slot))
     (List(Part.text("Systems to start from. Each loads into the analysis; then edit it on System."),
       one("shop", "A shop (arch.txt)", "Seven components: an entry point of two replicas, a checkout with a payments " +
-        "provider and its fallback, a read cache, one database — a single point of failure; a rate and SLOs written.",
+        "provider and its fallback, a read cache, one database — a single point of failure, in zone a; two zones, " +
+        "a rate and SLOs written.",
         Examples.shop),
       one("compose", "A docker compose file", "Six services: a front, an API of three replicas, a worker, Postgres, " +
         "Redis, RabbitMQ — the dependencies read from depends_on and the URLs in the environment.", Examples.compose),

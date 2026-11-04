@@ -92,7 +92,9 @@ object Remedies:
     saved: Vector[(String, Reliability.Sli, Double)] = Vector.empty):
     def minutes: Double = saved.map(_._3).sum
     def text: String =
-      val loss = s"losing one instance of $component fails " +
+      val what = Zone.of(Fault(component, FaultKind.Down))
+        .fold(s"losing one instance of $component")(z => s"losing zone $z")
+      val loss = s"$what fails " +
         s"${if before.isEmpty then "nothing" else before.mkString(", ")} today, " +
         s"${if after.isEmpty then "nothing" else after.mkString(", ")} after"
       val by = saved.filter(x => math.abs(x._3) > 0.05).map((e, sli, m) => f"$e ${sli.word} $m%+.1f").mkString(", ")
@@ -141,5 +143,19 @@ object Remedies:
             lossOfOne(system, u.to), lossOfOne(s2, u.to)))
         else Vector.empty)
     }
-    (replicas ++ guards).distinctBy(_._2.what).map((after, c) => priced(system, after, c))
+    // ZONES: replicas that share one zone spread over two; a lone instance in a zone given a second in another
+    val zoned = system.components.filter(c => c.zones.nonEmpty && c.kind != Kind.External).flatMap { c =>
+      val used = (1 to c.replicas).flatMap(c.zoneOf).distinct
+      if used.size > 1 then None
+      else
+        val here = used.head
+        val other = system.zones.find(_ != here).getOrElse(here + "-2")
+        val loss = Spread(system, Vector(Zone.fault(here))).failedEntries
+        val c2 = c.copy(replicas = c.replicas max 2, zones = Vector(here, other))
+        val s2 = system.withComponent(c2)
+        Option.when(loss.nonEmpty)(s2 -> Change(s"run ${c.name} in zones $here and $other" +
+          (if c.replicas < 2 then " (2 replicas)" else ""), s"zone:$here", loss,
+          Spread(s2, Vector(Zone.fault(here))).failedEntries))
+    }
+    (replicas ++ guards ++ zoned).distinctBy(_._2.what).map((after, c) => priced(system, after, c))
       .filter(_.minutes > 0.01).sortBy(-_.minutes)

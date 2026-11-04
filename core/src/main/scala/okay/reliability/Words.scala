@@ -5,7 +5,7 @@ object Words:
   private val fact = """^\s*(symptom|healthy|alive)\s*\(\s*([A-Za-z0-9_.-]+)\s*(?:,\s*([a-z]+)\s*)?\)\s*""" +
     """(?:\[([^\]]*)\])?\s*(?:@\s*(\S+))?\s*\.?\s*$"""
   private val factRe = fact.r
-  private val faultRe = """^\s*([A-Za-z0-9_.-]+?)(?:#(\d+))?\s+([a-z]+)\s*$""".r
+  private val faultRe = """^\s*([A-Za-z0-9_.:-]+?)(?:#(\d+))?\s+([a-z]+)\s*$""".r
 
   def facts(text: String): Either[String, Vector[Observation]] =
     val lines = text.split("[\n;]").toVector.map(_.trim).filter(l => l.nonEmpty && !l.startsWith("#"))

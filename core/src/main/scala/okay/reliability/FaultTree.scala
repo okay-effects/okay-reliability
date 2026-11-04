@@ -56,9 +56,12 @@ object FaultTree:
 
     /** down as a whole: its own event, or every instance */
     def down(c: String): Dnf = at("down", c) {
-      val replicas = system.component(c).map(_.replicas).getOrElse(1)
+      val comp = system.component(c)
+      val replicas = comp.map(_.replicas).getOrElse(1)
+      // an instance down: its own event, or its zone's
+      def zone(i: Int) = comp.flatMap(_.zoneOf(i)).fold(False)(z => ev(Zone.fault(z)))
       val all = if replicas > 1 then (1 to replicas).foldLeft(True)((acc, i) =>
-        and(acc, ev(Fault(c, FaultKind.Down, Some(i))))) else False
+        and(acc, or(ev(Fault(c, FaultKind.Down, Some(i))), zone(i)))) else zone(1)
       or(ev(Fault(c, FaultKind.Down)), all)
     }
 

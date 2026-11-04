@@ -4,13 +4,13 @@ package okay.reliability.ui
 object Examples:
   val shop: String =
     """|# a shop: one fact a line
-       |web: service entry replicas 2
-       |checkout: service replicas 2
+       |web: service entry replicas 2 zones a,b
+       |checkout: service replicas 2 zones a,b
        |reports: service
        |payments: external
        |payments-backup: external
        |redis: cache
-       |db: database
+       |db: database zones a
        |web -> checkout hard
        |web -> reports soft
        |checkout -> payments hard fallback payments-backup
@@ -18,6 +18,7 @@ object Examples:
        |checkout -> db hard
        |reports -> db hard
        |db fails down every 180d for 1h
+       |zone a fails every 365d for 2h
        |web slo 99.9%
        |web latency slo 99%
        |""".stripMargin

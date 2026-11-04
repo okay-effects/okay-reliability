@@ -17,6 +17,8 @@ object Rates:
   val beta = 0.1
   val hoursAMonth = 730.0
   val hoursAYear = 8760.0
+  /** a zone's failure when none is written: once a year, for an hour */
+  val zonePrior: Rate = Rate(8760.0, 1.0)
 
   /** `180d`, `30m`, `1.5h`, `2y` → hours */
   def hours(s: String): Option[Double] =
@@ -77,4 +79,4 @@ object Rates:
       }
       down ++ Vector(FaultKind.Errors, FaultKind.Slow, FaultKind.Full).flatMap(k =>
         of(system, c.name, k).map(Fault(c.name, k) -> _))
-    }
+    } ++ system.zones.map(z => Zone.fault(z) -> system.zoneRates.getOrElse(z, zonePrior))

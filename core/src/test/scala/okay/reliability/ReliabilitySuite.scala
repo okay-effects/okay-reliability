@@ -406,3 +406,62 @@ class ReliabilitySuite extends munit.FunSuite:
     assert(r.explanations.nonEmpty, r.text)
     assert(rel.unavailability > 0)
     assert((t1 - t0) / 1e9 < 30 && (t2 - t1) / 1e9 < 30, s"explain ${(t1 - t0) / 1e9} s, cuts ${(t2 - t1) / 1e9} s")
+
+  // ---- §17: ZONES
+
+  val zoned: System = ArchText.read("""
+    web: service entry replicas 2 zones a,b
+    api: service replicas 2 zones a,b
+    db: database replicas 2 zones a,a
+    cache: cache zones b
+    web -> api hard
+    api -> db hard
+    api -> cache cached
+    zone a fails every 180d for 2h
+  """).fold(e => fail(e), identity)
+
+  test("a zone down: its instances at once — two replicas in one zone are one"):
+    val a = Spread(zoned, Vector(Zone.fault("a")))
+    assertEquals(a.of("db"), Set(EffectKind.Down))
+    assertEquals(a.failedEntries, Vector("web"))
+    assert(a.chain(Effect("db", EffectKind.Down)).head.contains("all of its instances"))
+    val b = Spread(zoned, Vector(Zone.fault("b")))
+    assertEquals(b.failedEntries, Vector.empty)
+    assertEquals(b.of("cache"), Set(EffectKind.Down))
+    assertEquals(ArchText.read(ArchText.print(zoned)).map(ArchText.print), Right(ArchText.print(zoned)))
+    assertEquals(zoned.zoneRates.get("a"), Some(Rate(180 * 24, 2)))
+
+  test("zones in the numbers: the tree is the enumeration's; one zone less available than two; the model says so"):
+    val events = Rates.events(zoned)
+    assert(events.exists(_._1 == Zone.fault("a")) && events.exists(_._1 == Zone.fault("b")))
+    Reliability.Sli.values.foreach(sli => Spread.World.values.foreach { w =>
+      val tree = Reliability.cuts(zoned, "web", sli, w, events).map(_.events.toSet).toSet
+      val all = Reliability.cutsByEnumeration(zoned, "web", r => sli.failingIn(w, r, "web"), events)
+        .map(_.events.toSet).toSet
+      assertEquals(tree, all, s"$sli $w")
+    })
+    val spread = zoned.withComponent(zoned.component("db").get.copy(zones = Vector("a", "b")))
+    val av = Reliability.Sli.Availability
+    assert(Reliability.unavailability(spread, "web", av) < Reliability.unavailability(zoned, "web", av))
+    val arch = Arch.analyze(zoned)
+    assertEquals(arch.zones.toMap.get("a"), Some(Vector("web")))
+    assert(arch.text.contains("zone a — web"), arch.text)
+    assert(Remedies.prevention(zoned).exists(c => c.what.contains("run db in zones a and b") && c.minutes > 0),
+      Remedies.prevention(zoned).map(_.text).mkString("\n"))
+
+  test("zones simulated: Life agrees with the cut sets"):
+    val rep = Reliability.analyze(zoned)
+    val life = Life.run(zoned, 3000, 5)
+    life.measured.filter(_.sli == Reliability.Sli.Availability).foreach { m =>
+      val e = rep.entries.find(x => x.entry == m.entry && x.sli == m.sli).get
+      assert(math.abs(m.unavailability - e.unavailability) <= 4 * m.stdError + 0.05 * e.unavailability,
+        s"measured ${m.unavailability} ± ${m.stdError}, computed ${e.unavailability}")
+    }
+
+  test("a zone among the diagnosis's candidates: the cause when two components of it fail"):
+    val seen = Vector(Observation.Symptom("db", EffectKind.Down, "metrics:up"),
+      Observation.Symptom("cache", EffectKind.Down, "metrics:up"), Observation.Alive("api", "log:api"))
+    val withB = ArchText.read(ArchText.print(zoned).replace("cache: cache zones b", "cache: cache zones a"))
+      .fold(e => fail(e), identity)
+    val r = Explain(withB, seen)
+    assertEquals(r.explanations.map(_.faults), Vector(Vector(Zone.fault("a"))), r.text)
