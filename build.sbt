@@ -48,7 +48,8 @@ lazy val cli = (project in file("cli")).dependsOn(core.jvm)
     libraryDependencies ++= Seq("io.github.okay-effects" %% "okay-effects-cek" % "0.1.1", munit.value))
 
 /** THE FRONT'S PROGRAM: okay-ui screens over the core — a page's, a phone's; tested on the JVM */
-lazy val ui = crossProject(JVMPlatform, JSPlatform, NativePlatform).crossType(CrossType.Pure).in(file("ui")).dependsOn(core)
+lazy val ui = crossProject(JVMPlatform, JSPlatform, NativePlatform).crossType(CrossType.Pure).in(file("ui"))
+  .dependsOn(core)
   .settings(name := "okay-reliability-ui", publish / skip := true,
     libraryDependencies ++= Seq("io.github.okay-effects" %%% "okay-ui-scala3" % "0.1.0", munit.value))
 
