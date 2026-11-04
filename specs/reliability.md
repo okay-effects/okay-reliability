@@ -492,6 +492,20 @@ places); what the core writes — the explanations, the remedies, the changes, t
 sentences (`I18n.core`); a component's name, a chain's effects (`down`, `errors`, `slow`), arch.txt and the facts'
 syntax stay as written. Fields keep English keys (`.keyed`), so a form reads the same in either.
 
+## 26. On a phone (BACKLOG 10, 2026-11-04)
+
+The page's program, unchanged, runs on an iPhone: module `phone` (JVM for tests, Native for the phone) puts
+`App.run` on okay-faces' mobile face (`ReliabilityApp`, a `MobileApp` the SwiftUI shell opens by name). The world
+effects are the phone's: `Settings` kept by `Device.Load/Save` (keys `okay-reliability.<name>`), `Clipboard` the
+share sheet (`Device.Share`), `Here` the page's address (a shared link opens the page), no fragment, the phone's
+language. The foot ("Built on okay-effects … Need more?") is part of the program there (`foot = true`); the page
+says it in its own HTML footer. The picture's marks get rules in the look's tones — the shell colours a box by its
+mark's rule: what fails red (problem), weak or touched amber (warning), an entry the accent, the rest quiet; a band
+by its mode, a breaker amber, a fallback the accent.
+
+Built by `scripts/ios.sh lib|app|ipa` (Scala Native XCFramework, xcodegen, an unsigned ipa for SideStore at
+`dist/okay-reliability.ipa`); checked by `PhoneSuite` (JVM) and the simulator test `testTheShop` (screenshots).
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a

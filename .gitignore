@@ -3,3 +3,7 @@ target/
 .idea/
 .metals/
 out/
+ios/lib/
+ios/build/
+ios/OkayReliability.xcodeproj/
+dist/

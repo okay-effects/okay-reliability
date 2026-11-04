@@ -4,6 +4,7 @@
  * JavaScript (a browser); `cli` the machine's (a CLI, an MCP server on stdio); `web` the page — on GitHub Pages.
  */
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
+import scalanative.sbtplugin.ScalaNativePlugin.autoImport._
 
 ThisBuild / scalaVersion := "3.9.0"
 ThisBuild / organization := "io.github.okay-effects"
@@ -24,7 +25,7 @@ ThisBuild / resolvers ++= Seq(
 val munit = Def.setting("org.scalameta" %%% "munit" % "1.1.1" % Test)
 
 /** THE MODEL AND ALL FOUR PRODUCTS, pure: on the JVM and in JavaScript */
-lazy val core = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("core"))
+lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform).crossType(CrossType.Pure).in(file("core"))
   .settings(name := "okay-reliability",
     libraryDependencies ++= Seq(
       "io.github.okay-effects" %%% "okay-datalog" % "0.1.0",
@@ -42,7 +43,7 @@ lazy val cli = (project in file("cli")).dependsOn(core.jvm)
     libraryDependencies ++= Seq("io.github.okay-effects" %% "okay-effects-cek" % "0.1.1", munit.value))
 
 /** THE FRONT'S PROGRAM: okay-ui screens over the core — a page's, a phone's; tested on the JVM */
-lazy val ui = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("ui")).dependsOn(core)
+lazy val ui = crossProject(JVMPlatform, JSPlatform, NativePlatform).crossType(CrossType.Pure).in(file("ui")).dependsOn(core)
   .settings(name := "okay-reliability-ui", publish / skip := true,
     libraryDependencies ++= Seq("io.github.okay-effects" %%% "okay-ui-scala3" % "0.1.0", munit.value))
 
@@ -84,3 +85,12 @@ pageDist := {
   ((ThisBuild / baseDirectory).value / "site" * "*").get.foreach(f => IO.copyFile(f, out / f.getName))
   out
 }
+
+/** THE PHONE (spec §26): the front's program on okay-faces' mobile face — Scala Native linked for the SwiftUI shell
+ * (`ios/`, `scripts/ios.sh`); tested on the JVM, the phone a `Device.Memory` */
+lazy val phone = crossProject(JVMPlatform, NativePlatform).crossType(CrossType.Pure).in(file("phone")).dependsOn(ui)
+  .settings(name := "okay-reliability-phone", publish / skip := true,
+    libraryDependencies ++= Seq("io.github.okay-effects" %%% "okay-faces-mobile" % "0.1.0",
+      "io.github.okay-effects" %%% "okay-ui-faces" % "0.1.0",
+      "io.github.okay-effects" %%% "okay-effects-machine" % "0.1.1", munit.value))
+  .nativeSettings(IosBuild.library, Test / sources := Nil, Test / test := {})

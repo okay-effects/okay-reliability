@@ -15,7 +15,7 @@ object App:
     problem: Option[String] = None, note: Option[String] = None, seen: Vector[Observation] = Vector.empty,
     whatIf: Vector[Fault] = Vector.empty, simulated: Option[Vector[Life.Measured]] = None,
     training: Option[Generate.Scenario] = None, revealed: Boolean = false, focus: Option[String] = None,
-    lang: Lang = Lang.En)
+    lang: Lang = Lang.En, foot: Boolean = false)
 
   enum Msg:
     case Go(place: String)
@@ -45,7 +45,11 @@ object App:
 
   /** THE PROGRAM: begun from a link (its fragment) or from what this browser kept, in the language kept or the
    * browser's, then a screen at a time */
-  def main[R[_]](using In[Ui, R], In[Settings, R], In[Clipboard, R], In[Here, R]): Unit ! R =
+  def main[R[_]](using In[Ui, R], In[Settings, R], In[Clipboard, R], In[Here, R]): Unit ! R = run[R](foot = false)
+
+  /** the program; `foot`: its own foot, "built on okay-effects" and "Need more?" — where no page around it says so
+   * (a phone's app) */
+  def run[R[_]](foot: Boolean)(using In[Ui, R], In[Settings, R], In[Clipboard, R], In[Here, R]): Unit ! R =
     for
       fragment <- Here.fragment[R]
       keptSystem <- setting[R]("system")
@@ -56,7 +60,7 @@ object App:
       begun = fragment.flatMap(Links.read) match
         case Some((sys, facts)) => resume(sys, facts, lang)
         case None => keptSystem.filter(_.nonEmpty).fold(State(lang = lang))(resume(_, keptFacts, lang))
-      _ <- loop[R](begun)
+      _ <- loop[R](begun.copy(foot = foot))
     yield ()
 
   /** a system and its facts taken up: loaded, the facts read, the place where they matter */
@@ -88,7 +92,7 @@ object App:
           copy[R](Report.markdown(sys, next.seen)).map(ok => next.copy(note = Some(if ok then
             t("Copied: the report, as Markdown.") else t("The clipboard is not reachable from this page.")))))
       case Msg.ForgetHere => keep[R]("system", "").flatMap(_ => keep[R]("facts", "")).map(_ =>
-          State(lang = next.lang, note = Some(t("Forgotten in this browser."))))
+          State(lang = next.lang, foot = next.foot, note = Some(t("Forgotten in this browser."))))
       case Msg.SetLang(l) => keep[R]("lang", l.toString.toLowerCase).map(_ => next)
       case _ =>
         val system: Unit ! R = if next.system.nonEmpty && next.source != s.source then keep[R]("system", next.source)
@@ -192,7 +196,11 @@ object App:
       case ("incident", Some(sys)) => incident(s, sys)
       case ("training", Some(sys)) => training(s, sys)
       case _ => systemScreen(s)
-    Screen[Msg]("okay-reliability", head ++ parts, language(s) :: nav(s) ++ buttons)
+    val foot = if !s.foot then Nil else List(Part.block("foot")(
+      Part.text("Built on okay-effects — algebraic effects for Scala"),
+      Part.link("okay-effects", "https://github.com/okay-effects"),
+      Part.link("Need more?", "https://okay-effects.github.io/#author")))
+    Screen[Msg]("okay-reliability", head ++ parts ++ foot, language(s) :: nav(s) ++ buttons)
 
   private def pct(x: Double) = f"${x * 100}%.4f%%"
   private def mins(x: Double) = f"$x%.1f"
