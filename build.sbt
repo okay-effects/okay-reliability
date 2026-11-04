@@ -22,6 +22,11 @@ ThisBuild / resolvers ++= Seq(
   "okay-http" at "https://okay-effects.github.io/okay-http/maven",
   "okay-store" at "https://okay-effects.github.io/okay-store/maven")
 
+/** RELEASES, ON GITHUB PAGES (spec §29, RELEASING.md): `core` (JVM, JS, Native) and `cli` written as a Maven repository
+ * into target/pages-maven, which goes to `gh-pages` under `maven/` */
+ThisBuild / publishTo := Some(MavenCache("pages", (ThisBuild / baseDirectory).value / "target" / "pages-maven"))
+ThisBuild / homepage := Some(url("https://github.com/okay-effects/okay-reliability"))
+
 val munit = Def.setting("org.scalameta" %%% "munit" % "1.1.1" % Test)
 
 /** THE MODEL AND ALL FOUR PRODUCTS, pure: on the JVM and in JavaScript */

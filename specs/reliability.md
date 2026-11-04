@@ -566,6 +566,14 @@ where the cause is (S3: placement or the index; Facebook: the backbone; GitHub: 
 - Not modelled, said in the notes: a failover across regions (GitHub), replication lag (stale reads), a load surge
   (Slack's holiday traffic), recovery storms (Google's restarts with no backoff, AWS's congested leases).
 
+## 29. A library (BACKLOG 15, 2026-11-04)
+
+`core` (`io.github.okay-effects::okay-reliability`, JVM, Scala.js, Scala Native) and `cli`
+(`okay-reliability-cli`, JVM) are released as 0.1.0 on the repository's GitHub Pages, `maven/` beside the page
+(RELEASING.md). A program uses the model and the products directly — `ArchText.read`, `Arch`, `Reliability`,
+`Explain`, `Probable`, `Remedies`, `Incidents` — or the tools as effects (`Tools.call` over `Desk`, `Files`, `Http`,
+`Clock`); `cli` brings the real world's handlers and the MCP server. Scala 3.9 (what the build is on).
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a

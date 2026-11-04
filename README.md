@@ -63,4 +63,7 @@ On real incidents (`okay-reliability incidents incidents`: eight public postmort
 before they knew, and what the postmortem found): the cause first in 5, in the top three in all 8; the misses and
 why in specs/reliability.md §28.
 
+As a library: `io.github.okay-effects::okay-reliability:0.1.0` (JVM, Scala.js, Scala Native) and
+`okay-reliability-cli`, from https://okay-effects.github.io/okay-reliability/maven (RELEASING.md).
+
 Built on okay-datalog (rules with proofs), okay-mcp (the server) and okay-scala (effects). Apache-2.0.
