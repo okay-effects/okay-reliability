@@ -7,7 +7,23 @@
 <meta name="description" content="The reliability of a system: architecture, availability and SLOs, failures, their causes and fixes — computed in your browser.">
 <link rel="icon" href="icon.svg">
 <title>okay-reliability</title>
+<style>
+  /* the foot: who built it on the left, "Need more?" (the author, for more than the page does) on the right */
+  body > footer { border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+    color: var(--okay-muted, #5b6472); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body > footer .bar { max-width: 1100px; margin: 0 auto; padding: 18px 14px 32px; display: flex; flex-wrap: wrap;
+    align-items: baseline; gap: 6px; }
+  body > footer .more { margin-left: auto; font-weight: 600; }
+  body > footer a { color: var(--okay-accent, #0e7490); }
+</style>
 <script type="module" src="page.js"></script>
 </head>
-<body><div id="app"></div></body>
+<body>
+  <div id="app"></div>
+  <footer><div class="bar">
+    Built on <a href="https://github.com/okay-effects" target="_blank" rel="noopener noreferrer">okay-effects</a> —
+    algebraic effects for Scala
+    <a class="more" href="https://okay-effects.github.io/#author" target="_blank" rel="noopener noreferrer">Need more?</a>
+  </div></footer>
+</body>
 </html>

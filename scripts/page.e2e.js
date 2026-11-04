@@ -28,6 +28,8 @@ const cdpOf = require("./cdp.js");
   await c.click("Read it into the incident"); await c.sleep(2500);
   ok("an incident diagnosed", (await c.text()).toLowerCase().includes("the causes"));
   await c.shot("/tmp/okr-incident.png");
+  ok("the foot: built on okay-effects, Need more?", await c.js(`(()=>{const f=document.querySelector("body > footer");
+    return !!f && f.textContent.includes("okay-effects") && !!f.querySelector("a.more[href*='#author']")})()`));
   c.close();
   process.exit(failed ? 1 : 0);
 })();
