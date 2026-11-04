@@ -1,0 +1,8 @@
+# what was seen before the cause was known (times UTC, the postmortem's PST + 8)
+changed(quota, config) [postmortem: the service moved to a new quota system in October] @2020-10-15T00:00:00Z
+symptom(user-id, errors) [postmortem: a capacity alert] @2020-12-14T11:43:00Z
+symptom(gmail, errors) [postmortem: authenticated apps down] @2020-12-14T11:46:00Z
+symptom(console, errors) [postmortem: new logins failed] @2020-12-14T11:46:00Z
+symptom(storage, errors) [postmortem: ~15% of requests failed] @2020-12-14T11:46:00Z
+symptom(bigquery, errors) [postmortem: streaming errors] @2020-12-14T11:46:00Z
+symptom(gke, errors) [postmortem: control plane errors] @2020-12-14T11:46:00Z

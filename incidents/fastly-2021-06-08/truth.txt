@@ -1,0 +1,6 @@
+cause: edge errors
+source: https://www.fastly.com/blog/summary-of-june-8-outage
+# A bug in the edge's software, deployed on May 12, waited for one valid configuration under specific circumstances.
+# The configuration was fine; the software was not. The change the operators could see was the configuration's.
+# The analyzer (spec §34): fourth, behind `config errors` (0.83) — the change it could see was the configuration's,
+# with no time (so within the hour): what changed is blamed. The edge's deploy was a month before.

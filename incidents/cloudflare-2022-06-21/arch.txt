@@ -1,0 +1,8 @@
+# Cloudflare, 2022-06-21: the 19 MCP data centers, their spines, the older locations
+mcp-edge: service entry replicas 3        # the 19 MCP locations: 4% of the network, half its requests
+older-edge: service entry replicas 3      # the locations on the older architecture
+spines: balancer replicas 3               # the MCP sites' spine layer: it advertises the site-local prefixes
+origin: external                          # customers' servers
+mcp-edge -> spines hard
+mcp-edge -> origin hard
+older-edge -> origin hard

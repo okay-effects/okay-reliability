@@ -1,0 +1,10 @@
+# what was seen before the cause was known (times UTC, each service's own mostly not published)
+symptom(warp, errors) [postmortem: device registrations failing] @2025-06-12T17:52:00Z
+symptom(access, errors) [postmortem: identity logins failed] @2025-06-12T18:05:00Z
+symptom(workers-kv, errors) [postmortem: ~90% of uncached requests failed]
+symptom(gateway, errors) [postmortem: identity rules, proxy failed]
+symptom(turnstile, errors) [postmortem: siteverify failures]
+symptom(dashboard, errors) [postmortem: logins failed]
+symptom(workers-ai, errors) [postmortem: inference failed]
+healthy(cdn) [postmortem: proxy, cache, WAF not directly impacted]
+healthy(dns) [postmortem: not impacted]

@@ -1,0 +1,7 @@
+cause: internal-network errors | internal-network slow
+source: https://aws.amazon.com/message/12721/
+# The scaling activity on the main network made many clients on the internal network connect at once: the devices
+# between the two congested, retries kept them so. The change was on the main network — healthy for all that ran on
+# it; what failed was everything on the internal one, where nothing had changed.
+# The analyzer (spec §34): agrees except one fact — one fault shows errors or slowness, congestion showed both
+# (the monitoring slow, the rest failing). BACKLOG 24.

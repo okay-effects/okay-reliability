@@ -1,0 +1,7 @@
+cause: kv-storage down | kv-storage errors
+source: https://blog.cloudflare.com/cloudflare-service-outage-june-12-2025/
+# A third-party cloud provider's outage took the storage behind Workers KV's central store; cold reads and writes
+# failed, and everything that keeps its configuration or identity in KV failed with it.
+# The analyzer (spec §34): first, but not among the minimal explanations — Access's time is when its alert fired
+# (18:05), thirteen minutes after WARP, which needs Access, was seen failing: against the clock. An alert's time is not
+# an onset. BACKLOG 26.

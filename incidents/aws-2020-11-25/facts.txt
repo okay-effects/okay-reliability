@@ -1,0 +1,8 @@
+# what was seen before the cause was known (times UTC, the postmortem's PST + 8)
+changed(kinesis-frontend, deploy) [postmortem: capacity added to the front end, 2:44-3:47] @2020-11-25T11:47:00Z
+symptom(kinesis-frontend, errors) [postmortem: put and get errors] @2020-11-25T13:15:00Z
+symptom(cognito, errors) [postmortem: elevated API failures] @2020-11-25T13:15:00Z
+symptom(cloudwatch, errors) [postmortem: put errors and latency] @2020-11-25T13:15:00Z
+symptom(eventbridge, errors) [postmortem: errors and delays] @2020-11-25T13:15:00Z
+symptom(lambda, errors) [postmortem: invocation errors] @2020-11-25T14:15:00Z
+symptom(health-dashboard, errors) [postmortem: early updates blocked]

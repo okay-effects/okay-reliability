@@ -1,0 +1,8 @@
+cause: control-plane down
+source: https://status.cloud.google.com/incident/cloud-networking/19009
+# Automation, for a maintenance at one site, descheduled the network control plane in several (a bug); the network ran
+# on "fail static" for minutes, then withdrew routes between the sites: capacity fell, the eastern US congested.
+# The packet loss is dated 11:38 PDT, before the maintenance at 11:45: the change is after the first symptom, and the
+# model gives it nothing.
+# The analyzer (spec §34): not found — the control plane lost, the model says the network fails (errors); it
+# congested (slow): a loss that takes capacity, not service. BACKLOG 23.

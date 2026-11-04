@@ -1,0 +1,6 @@
+cause: spines errors | spines down
+source: https://blog.cloudflare.com/cloudflare-outage-on-june-21-2022/
+# A reordered policy put a reject-all term above the site-local terms: the spines withdrew the site-local prefixes of
+# all 19 MCP sites. The same change at the older locations, earlier, did nothing: two changes there, healthy.
+# The analyzer (spec §34): fifth, behind `mcp-edge errors` (0.83): a balancer's prior is so low that a change at
+# the onset (×30) does not lift it past the locations themselves. BACKLOG 25.

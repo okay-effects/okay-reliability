@@ -1,0 +1,14 @@
+# Roblox, 2021-10-28: Consul and everything that finds its services through it
+players: service entry replicas 3         # game-facing services
+consul: service replicas 5                # service discovery, health checks, KV, locks
+consul-streaming: service                 # Consul 1.10's streaming of changes
+consul-boltdb: database                   # where Consul keeps its Raft log
+vault: service
+nomad: service
+databases: database
+players -> consul hard
+players -> databases hard
+consul -> consul-streaming hard
+consul -> consul-boltdb hard
+vault -> consul hard
+nomad -> consul hard

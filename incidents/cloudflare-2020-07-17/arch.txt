@@ -1,0 +1,11 @@
+# Cloudflare, 2020-07-17: the backbone, the Atlanta router, the edge locations behind the backbone
+edge-backbone: service entry replicas 3   # the 19 locations whose traffic crosses the backbone
+edge-other: service entry replicas 3      # the locations that do not
+backbone: service                         # the private links between data centers
+atlanta: service                          # the Atlanta router, atl01: its routes go into the backbone
+ewr-ord: service                          # one backbone link, Newark to Chicago
+logs: service entry                       # the core data center's logs and metrics
+edge-backbone -> backbone hard
+backbone -> atlanta hard                  # every site takes the routes it advertises
+backbone -> ewr-ord soft                  # one link of many: lost, traffic goes around
+logs -> backbone hard

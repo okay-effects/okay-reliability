@@ -1,0 +1,18 @@
+# Cloudflare, 2025-06-12: Workers KV, its storage, and the services built on it
+kv-storage: external                      # the third-party cloud storage behind part of KV
+workers-kv: database entry
+access: service entry
+gateway: service entry
+warp: service entry
+turnstile: service entry
+dashboard: service entry
+workers-ai: service entry
+cdn: service entry replicas 3             # the proxy, cache, WAF
+dns: service entry replicas 3
+workers-kv -> kv-storage hard             # its cold reads and writes
+access -> workers-kv hard
+gateway -> access hard
+warp -> access hard
+turnstile -> workers-kv hard
+dashboard -> turnstile hard
+workers-ai -> workers-kv hard

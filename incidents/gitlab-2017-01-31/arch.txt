@@ -1,0 +1,8 @@
+# GitLab.com, 2017-01-31: the application and its PostgreSQL primary and standby (the hours before the data loss)
+web: service entry replicas 3
+db1: database                             # the primary
+db2: database                             # the hot standby, for failover
+git-storage: database                     # the repositories, on NFS
+web -> db1 hard
+web -> git-storage hard
+db2 -> db1 async                          # replication: the WAL streamed

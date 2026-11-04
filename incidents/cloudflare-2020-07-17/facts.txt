@@ -1,0 +1,6 @@
+# what was seen before the cause was known (times UTC)
+symptom(ewr-ord, down) [postmortem: the Newark-Chicago link lost] @2020-07-17T20:25:00Z
+symptom(backbone, retries) [postmortem: Atlanta-Washington congested] @2020-07-17T20:25:00Z
+changed(atlanta, config) [postmortem: a change to shed Atlanta's backbone traffic, shortly before]
+symptom(edge-backbone, errors) [postmortem: 19 locations down, traffic halved] @2020-07-17T21:12:00Z
+healthy(edge-other) [postmortem: the other locations operated normally]

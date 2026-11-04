@@ -625,6 +625,53 @@ The system's format line says `[withdraws] [saturates]` and what each means; the
 (`Msg.LoadIncident`: the system loaded, the facts added, the incident shown). The texts are the files of
 `incidents/<name>`, kept equal by `AppSuite`; the e2e loads Facebook 2021 and finds the backbone first.
 
+## 34. More postmortems (BACKLOG 21, 2026-11-04)
+
+Thirteen more beside the eight (§28), by the same rules (facts only from before the cause was known; the system as
+first written, not changed after its answer was seen): Cloudflare 2020-07-17, 2022-06-21, 2023-11-02, 2025-06-12; AWS
+2020-11-25 (Kinesis), 2021-12-07; GitLab 2017-01-31; Google 2019-06-02, 2020-12-14; Datadog 2023-03-08; Stripe
+2019-07-10; Roblox 2021-10-28; Fastly 2021-06-08. Measured (`okay-reliability incidents incidents`):
+
+```
+incident                 truth                               rank   minimal  top three; next check
+aws-2017-02-28           s3-index down                          1        6*  s3-index down (0.27), s3 full (0.26), s3-index full (0.26); check s3-index
+aws-2020-11-25           kinesis-frontend errors                1        5*  kinesis-frontend errors (0.58), kinesis-backend full (0.29), kinesis-backend errors (0.07); check kinesis-backend
+aws-2021-12-07           internal-network errors | internal-network slow    1!         4  internal-network errors (0.64), internal-network down (0.32), internal-network errors + internal-network slow (0.01); check internal-network
+aws-2025-10-20           dynamodb-dns errors | dynamodb-dns down     1        5*  dynamodb-dns errors (0.46), dynamodb-dns down (0.23), dynamodb full (0.22); check dynamodb-dns
+cloudflare-2019-07-02    waf errors                             1        9*  waf errors (0.86), origin down (0.04), edge errors (0.03); check waf
+cloudflare-2020-07-17    atlanta errors + ewr-ord down          3        6*  atlanta errors (0.58), ewr-ord down (0.18), atlanta errors + ewr-ord down (0.05); check atlanta
+cloudflare-2022-06-21    spines errors | spines down            5        4*  mcp-edge errors (0.83), origin down (0.07), origin errors (0.04); check origin
+cloudflare-2023-11-02    pdx04 down                             1        1*  pdx04 down (0.87), pdx04 errors (0.09), kafka down (0.02); check kafka
+cloudflare-2025-06-12    kv-storage down | kv-storage errors     1         7  kv-storage down (0.41), kv-storage errors (0.27), workers-kv down (0.14); check kv-storage
+cloudflare-2025-11-18    clickhouse errors | feature-file errors     1        7*  clickhouse errors (0.39), clickhouse down (0.26), bots errors (0.10); check clickhouse
+datadog-2023-03-08       nodes down | nodes errors              1        4*  nodes errors (0.47), kubernetes errors (0.47), nodes down (0.02); check nodes
+facebook-2021-10-04      backbone down                          2        3*  backbone errors (0.92), backbone down (0.08), dns errors (0.00); check backbone
+fastly-2021-06-08        edge errors                            4        6*  config errors (0.83), config down (0.07), origin down (0.04); check config
+gcp-2019-06-02           control-plane down                    —!         2  control-plane slow (0.50), network-east slow (0.50), control-plane slow + network-east slow (0.00); check control-plane
+gcp-2020-12-14           quota errors | account-db errors       2        7*  user-id errors (0.31), quota errors (0.31), quota down (0.15); check quota
+gcp-2025-06-12           service-control down | policy-db errors     1        7*  policy-db errors (0.56), api-frontend errors (0.15), service-control errors (0.15); check policy-db
+github-2018-10-21        mysql slow                             2        2*  web slow (0.50), mysql slow (0.35), east-link slow (0.16); check mysql
+gitlab-2017-01-31        db1 slow                               1        1*  db1 slow (0.93), web slow (0.07), db1 slow + web slow (0.00); check db2
+roblox-2021-10-28        consul-streaming slow | consul-boltdb slow    2!        27  consul slow (0.33), consul-streaming slow (0.33), consul-boltdb slow (0.23); check consul-streaming
+slack-2021-01-04         tgw slow                               1        1*  tgw slow (0.99), tgw slow + web slow (0.00), tgw slow + backend slow (0.00); check backend
+stripe-2019-07-10        election errors                        1        5*  election errors (0.44), election down (0.22), db-cluster full (0.22); check election
+21 incidents: the truth first in 13, in the top three in 18; * the truth among the minimal explanations; ! the truth contradicts a fact seen
+```
+
+The truth first in 13 of 21, in the top three in 18; of the thirteen new ones first in 7, top three in 10. What the
+misses teach — new, beside §30–§32:
+
+- **A loss that congests** (Google 2019): the control plane gone, the routes withdrawn, capacity fell — the network
+  slowed, it did not fail. The model's hard dependency says errors. BACKLOG 23.
+- **Congestion shows both** (AWS 2021): latency and errors from one fault; a fault is one kind. BACKLOG 24.
+- **A rare kind of component stays rare** (Cloudflare 2022): a balancer's prior is low enough that a change at the
+  onset (×30) leaves it fifth. BACKLOG 25.
+- **An alert's time is not an onset** (Cloudflare 2025-06): Access alerted 13 minutes after WARP, which needs it, was
+  seen failing: the true explanation ran against the clock. BACKLOG 26.
+- **What changed is blamed** (Fastly 2021): the configuration changed (no time: within the hour), the bug was in the
+  edge's month-old deploy. The rule works as written; the postmortem's cause is a latent bug a change woke.
+- Roblox 2021: the players failed while discovery was slow — `saturates`, which the system as first written lacks.
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a

@@ -1,0 +1,12 @@
+# what was seen before the cause was known (times UTC, the postmortem's PST + 8)
+changed(main-network, config) [postmortem: an automated scaling activity on the main network] @2021-12-07T15:30:00Z
+symptom(route53-api, errors) [postmortem: APIs impaired] @2021-12-07T15:30:00Z
+symptom(ec2-api, errors) [postmortem: API errors] @2021-12-07T15:33:00Z
+symptom(support, errors) [postmortem: cases could not be created] @2021-12-07T15:33:00Z
+symptom(monitoring, slow) [postmortem: reduced visibility]
+symptom(internal-dns, errors) [postmortem: DNS errors inside]
+symptom(sts, errors) [postmortem: login failures]
+healthy(ec2-running) [postmortem: running instances not affected]
+healthy(s3) [postmortem: direct access not affected]
+healthy(dynamodb) [postmortem: direct access not affected]
+healthy(lambda) [postmortem: APIs and invocations not affected]

@@ -1,0 +1,25 @@
+# AWS us-east-1, 2021-12-07: the main network, the internal network, and what lives on each
+main-network: service
+internal-network: service                 # and the devices linking it to the main network
+internal-dns: service
+monitoring: service entry
+ec2-api: service entry
+sts: service entry
+api-gateway: service entry
+route53-api: service entry
+support: service entry
+ec2-running: service entry                # instances already running
+s3: database entry
+dynamodb: database entry
+lambda: service entry
+internal-dns -> internal-network hard
+monitoring -> internal-network hard
+ec2-api -> internal-network hard
+sts -> internal-network hard
+api-gateway -> internal-network hard
+route53-api -> internal-network hard
+support -> internal-network hard
+ec2-running -> main-network hard
+s3 -> main-network hard
+dynamodb -> main-network hard
+lambda -> main-network hard

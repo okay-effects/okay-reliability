@@ -1,0 +1,5 @@
+# what was seen before the cause was known (times UTC)
+changed(edge, deploy) [postmortem: a software deployment] @2021-05-12T00:00:00Z
+changed(config, config) [postmortem: a customer pushed a valid configuration change]
+symptom(edge, errors) [postmortem: 85% of the network returned errors] @2021-06-08T09:47:00Z
+symptom(sites, errors) [postmortem: customers' sites failed] @2021-06-08T09:47:00Z

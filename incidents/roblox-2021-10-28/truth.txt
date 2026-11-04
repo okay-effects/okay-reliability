@@ -1,0 +1,9 @@
+cause: consul-streaming slow | consul-boltdb slow
+source: https://about.roblox.com/newsroom/2022/01/roblox-return-to-service-10-28-10-31-2021/
+# Two causes, found days apart: streaming contended on one Go channel under load and blocked writes (disabled, the
+# writes came back), and BoltDB's freelist had grown so that each Raft append rewrote megabytes (compacted).
+# The change came a day before the first symptom: outside the model's hour. The new hardware tried, a snapshot
+# restored, the load cut — each ruled out, none of them a component here.
+# The analyzer (spec §34): second, behind `consul slow` (0.33 each), and against one fact: the players failed, the
+# model says a slow callee makes them slow — written `players -> consul hard saturates` it would agree (§32); the
+# system is left as first written, before the answer was seen.

@@ -1,0 +1,5 @@
+cause: kinesis-frontend errors
+source: https://aws.amazon.com/message/11201/
+# Each front-end server keeps a thread for every other: the capacity added took every server past the operating
+# system's thread limit, and the shard maps could not be built. The capacity was suspected first, but it had been
+# added an hour and a half before the errors — outside the model's hour for a change.

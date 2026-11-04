@@ -58,10 +58,10 @@ check checkout next (it settles 1.46 bits): down 0.54, fine 0.23, errors 0.22
 Measured (`bench`, 200 random systems, faults drawn by their rates, 80% of components with logs): one fault — the
 cause first by probability in 90%, in the top 3 in 99%. specs/reliability.md §8, §9.7.
 
-On real incidents (`okay-reliability incidents incidents`: eight public postmortems — Cloudflare 2019 and 2025, AWS
-2017 and 2025, Google Cloud 2025, GitHub 2018, Slack 2021, Facebook 2021 — each the system, what its operators saw
-before they knew, and what the postmortem found): the cause first in 5, in the top three in all 8; the misses and
-why in specs/reliability.md §28.
+On real incidents (`okay-reliability incidents incidents`: 21 public postmortems — Cloudflare, AWS, Google,
+GitHub, GitLab, Slack, Facebook, Datadog, Stripe, Roblox, Fastly — each the system, what its operators saw before
+they knew, and what the postmortem found): the cause first in 13, in the top three in 18; the misses and why in
+specs/reliability.md §28, §34.
 
 As a library: `io.github.okay-effects::okay-reliability:0.1.0` (JVM, Scala.js, Scala Native) and
 `okay-reliability-cli`, from https://okay-effects.github.io/okay-reliability/maven (RELEASING.md).

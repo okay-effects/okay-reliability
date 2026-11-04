@@ -1,0 +1,9 @@
+# what was seen before the cause was known (times UTC, the postmortem's PDT + 7)
+symptom(network-east, slow) [postmortem: packet loss in us-east1] @2019-06-02T18:38:00Z
+changed(control-plane, config) [postmortem: a maintenance event at one site] @2019-06-02T18:45:00Z
+symptom(compute, slow) [postmortem: congestion] @2019-06-02T18:47:00Z
+symptom(storage, slow) [postmortem: congestion] @2019-06-02T18:47:00Z
+symptom(bigquery, slow) [postmortem: congestion] @2019-06-02T18:47:00Z
+symptom(console, slow) [postmortem] @2019-06-02T18:47:00Z
+symptom(youtube, slow) [postmortem] @2019-06-02T18:47:00Z
+healthy(services-europe) [postmortem: no regional congestion in Europe and Asia]

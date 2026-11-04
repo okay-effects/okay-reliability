@@ -1,0 +1,16 @@
+# Google, 2020-12-14: the User ID Service, its account database, the quota system, what authenticates through it
+user-id: service replicas 3               # credentials, account metadata
+account-db: database replicas 3           # Paxos-replicated
+quota: service                            # automated quota management
+gmail: service entry
+console: service entry
+storage: database entry
+bigquery: service entry
+gke: service entry
+user-id -> account-db hard
+account-db -> quota hard writes           # a write needs quota
+gmail -> user-id hard
+console -> user-id hard
+storage -> user-id hard
+bigquery -> user-id hard
+gke -> user-id hard

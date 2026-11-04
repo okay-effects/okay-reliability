@@ -1,0 +1,16 @@
+# AWS us-east-1, 2020-11-25: Kinesis Data Streams and the services built on it
+kinesis-frontend: service entry replicas 3  # the front-end fleet: authenticates, routes to the back end
+kinesis-backend: database replicas 3
+cognito: service entry
+cloudwatch: service entry
+eventbridge: service entry
+lambda: service entry
+autoscaling: service entry
+health-dashboard: service entry             # its posting tool
+kinesis-frontend -> kinesis-backend hard
+cognito -> kinesis-frontend hard
+cloudwatch -> kinesis-frontend hard
+eventbridge -> kinesis-frontend hard
+lambda -> cloudwatch hard                   # its metrics buffered on the host
+autoscaling -> cloudwatch hard
+health-dashboard -> cognito hard

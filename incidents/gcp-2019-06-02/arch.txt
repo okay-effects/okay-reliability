@@ -1,0 +1,18 @@
+# Google Cloud, 2019-06-02: the network control plane, the eastern US network, the services on it
+control-plane: service replicas 3         # the network control plane jobs, in several sites
+network-east: service                     # capacity in the eastern US
+network-europe: service
+compute: service entry
+storage: database entry
+bigquery: service entry
+console: service entry
+youtube: service entry
+services-europe: service entry
+network-east -> control-plane hard        # without it, routes between sites are withdrawn
+network-europe -> control-plane soft      # its own sites' jobs were not descheduled
+compute -> network-east hard
+storage -> network-east hard
+bigquery -> network-east hard
+console -> network-east hard
+youtube -> network-east hard
+services-europe -> network-europe hard

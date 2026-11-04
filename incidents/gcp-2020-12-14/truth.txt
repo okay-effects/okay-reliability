@@ -1,0 +1,6 @@
+cause: quota errors | account-db errors
+source: https://status.cloud.google.com/incident/zall/20013
+# The old quota system still reported the service's usage as 0; when the grace period ended, the automation lowered the
+# account database's quota, the Paxos leader could not write, reads went stale and the User ID Service rejected them.
+# In the model's words the quota system served a wrong answer (its writes refused), or the store failed: both said.
+# The analyzer (spec §34): second, beside `user-id errors` (0.31 each); the quota system checked next.

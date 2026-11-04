@@ -1,0 +1,5 @@
+cause: nodes down | nodes errors
+source: https://www.datadoghq.com/blog/2023-03-08-multiregion-infrastructure-connectivity-issue/
+# A systemd security update, applied automatically in the same window in every region, restarted systemd-networkd on
+# running nodes, which deleted the routes Cilium had made: the nodes fell off the network. Not in the facts: the
+# update — applied by the operating system, not by anyone who knew of it.

@@ -1,0 +1,14 @@
+# Datadog, 2023-03-08: the VMs, the Kubernetes clusters on them, the services, in five regions at once
+nodes: service replicas 3                 # tens of thousands of Ubuntu VMs, in several clouds
+kubernetes: service replicas 3
+web: service entry
+api: service entry
+intake: service entry
+monitors: service entry
+history: database                         # the historical data system, apart from the live path
+kubernetes -> nodes hard
+web -> kubernetes hard
+api -> kubernetes hard
+intake -> kubernetes hard
+monitors -> intake hard
+web -> history soft

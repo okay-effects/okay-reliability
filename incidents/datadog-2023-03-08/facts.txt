@@ -1,0 +1,7 @@
+# what was seen before the cause was known (times UTC)
+symptom(web, errors) [postmortem: outage seen] @2023-03-08T06:03:00Z
+symptom(api, errors) [postmortem] @2023-03-08T06:03:00Z
+symptom(intake, errors) [postmortem: ingestion impacted] @2023-03-08T06:03:00Z
+symptom(monitors, errors) [postmortem: monitors stopped alerting] @2023-03-08T06:10:00Z
+symptom(kubernetes, errors) [postmortem: clusters lost capacity] @2023-03-08T06:03:00Z
+healthy(history) [postmortem: historical data separate, unaffected]

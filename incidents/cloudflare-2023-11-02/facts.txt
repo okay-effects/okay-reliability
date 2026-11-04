@@ -1,0 +1,6 @@
+# what was seen before the cause was known (times UTC)
+symptom(pdx04, down) [postmortem: its routers offline] @2023-11-02T11:44:00Z
+symptom(dashboard, errors) [postmortem: control plane failures] @2023-11-02T11:44:00Z
+symptom(api, errors) [postmortem: control plane failures] @2023-11-02T11:44:00Z
+symptom(analytics, errors) [postmortem: analytics and logs unavailable] @2023-11-02T11:44:00Z
+healthy(edge) [postmortem: traffic unaffected]

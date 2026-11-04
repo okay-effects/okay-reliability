@@ -1,0 +1,4 @@
+# what was seen before the cause was known (times UTC)
+changed(db-cluster, deploy) [postmortem: a minor database version upgrade, three months before] @2019-04-10T00:00:00Z
+symptom(db-cluster, errors, writes) [postmortem: a shard could not accept writes] @2019-07-10T16:35:00Z
+symptom(api, errors) [postmortem: the API degraded, writes timed out] @2019-07-10T16:35:00Z

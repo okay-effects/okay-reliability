@@ -1,0 +1,4 @@
+# what was seen before the cause was known (times UTC)
+symptom(web, slow) [postmortem: comments on issues and merge requests could not be posted] @2017-01-31T19:00:00Z
+symptom(db1, slow) [postmortem: database load spiked] @2017-01-31T19:00:00Z
+healthy(git-storage) [postmortem: repositories unaffected]

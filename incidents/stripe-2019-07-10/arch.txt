@@ -1,0 +1,8 @@
+# Stripe, 2019-07-10: the API and one database cluster, its shards and their primary election
+api: service entry replicas 3
+db-cluster: database replicas 3           # the shards, each of redundant nodes
+election: service                         # the primary election (failover) of the cluster
+other-clusters: database replicas 3
+api -> db-cluster hard
+api -> other-clusters hard
+db-cluster -> election hard writes        # writes need a primary

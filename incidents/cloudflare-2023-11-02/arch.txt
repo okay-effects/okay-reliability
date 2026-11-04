@@ -1,0 +1,17 @@
+# Cloudflare, 2023-11-02: the core data centers in Oregon, the control plane, analytics, the edge
+pdx04: service                            # one of three core data centers, its power
+kafka: queue
+clickhouse: database
+control-plane: service replicas 3         # the HA cluster across three data centers
+analytics: service entry
+dashboard: service entry
+api: service entry
+edge: service entry replicas 3            # the global network: serves traffic on the configuration it has
+kafka -> pdx04 hard
+clickhouse -> pdx04 hard
+analytics -> kafka hard
+analytics -> clickhouse hard
+control-plane -> kafka hard               # a dependency on PDX-04 alone that the HA design did not show
+dashboard -> control-plane hard
+api -> control-plane hard
+edge -> control-plane async               # configuration pushed to it

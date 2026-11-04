@@ -1,0 +1,5 @@
+cause: pdx04 down
+source: https://blog.cloudflare.com/post-mortem-on-cloudflare-control-plane-and-analytics-outage/
+# A utility feed lost, then a ground fault: generators and the feed offline, batteries out in four minutes. The data
+# center was seen dark at once; the question was why the control plane, built to survive it, failed with it — Kafka
+# and ClickHouse lived in PDX-04 only. The system here has that dependency (`control-plane -> kafka`), as found.

@@ -1,0 +1,7 @@
+cause: atlanta errors, ewr-ord down
+source: https://blog.cloudflare.com/cloudflare-outage-on-july-17-2020/
+# The router change inactivated a prefix list instead of a term: Atlanta advertised every route into the backbone at
+# local-pref 200, drew the traffic of every backbone site, and overloaded. In the model's words the router served bad
+# routes (`atlanta errors`); the lost link that began the evening is the second fault, seen for itself.
+# Not in the model: traffic drawn to one place by a preference (the overload it made), the congestion around the link.
+# The analyzer (spec §34): third; `atlanta errors` alone first (0.58) — the lost link is a fault of its own.

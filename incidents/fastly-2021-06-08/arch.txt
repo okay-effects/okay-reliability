@@ -1,0 +1,8 @@
+# Fastly, 2021-06-08: the edge, the configuration it serves, the sites behind it
+edge: service entry replicas 3
+config: service                           # customers' configurations, pushed to the edge
+origin: external
+sites: service entry                      # customers' sites, through the edge
+edge -> config hard
+edge -> origin hard
+sites -> edge hard

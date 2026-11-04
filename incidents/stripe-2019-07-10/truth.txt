@@ -1,0 +1,5 @@
+cause: election errors
+source: https://stripe.com/rcas/2019-07-10
+# The shard's primary died and no new one could be elected: a fault of the failover system since an upgrade three
+# months before, triggered by nodes that had stalled four days before (still passing health checks). The second
+# outage that evening (a rollback against a recent setting) is not this one.

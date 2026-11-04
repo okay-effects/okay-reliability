@@ -1,0 +1,6 @@
+# what was seen before the cause was known (times UTC, the postmortem's PDT + 7)
+changed(consul-streaming, config) [postmortem: streaming enabled on the traffic-routing service] @2021-10-27T21:00:00Z
+symptom(vault, slow) [postmortem: Vault degraded] @2021-10-28T20:37:00Z
+symptom(consul, slow) [postmortem: a server at high CPU, KV writes at 2 s] @2021-10-28T20:37:00Z
+symptom(players, errors) [postmortem: players fell to half] @2021-10-28T23:35:00Z
+healthy(databases) [postmortem: unaffected]
