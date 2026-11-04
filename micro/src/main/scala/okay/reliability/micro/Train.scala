@@ -12,13 +12,17 @@ import okay.reliability.{Generate, Micro}
 object Train:
   import Micro.{Config, Example, Weights}
 
-  /** examples from generated scenarios: seeds `from` until `until`, every format, one or two faults, changes on */
-  def data(from: Int, until: Int): Vector[Example] =
+  /** the generator's labelled lines: (text, writer, facts, the system's names), seeds `from` until `until` */
+  def rawLines(from: Int, until: Int): Vector[(String, String, Vector[okay.reliability.Observation], Vector[String])] =
     (from until until).toVector.flatMap { seed =>
       val system = Generate.system(seed.toLong, 5 + seed % 6)
       val sc = Generate.scenario(system, seed.toLong, faults = 1 + seed % 2, observed = 0.8, changes = true)
-      sc.labelled.flatMap((text, self, facts) => Micro.examples(system.names, self, text, facts))
+      sc.labelled.map((text, self, facts) => (text, self, facts, system.names))
     }
+
+  /** examples from generated scenarios: seeds `from` until `until`, every format, one or two faults, changes on */
+  def data(from: Int, until: Int): Vector[Example] =
+    rawLines(from, until).flatMap((text, self, facts, names) => Micro.examples(names, self, text, facts))
 
   final class Model(val config: Config, init: Map[String, Array[Float]] = Map.empty, seed: Long = 1):
     val keep = new Scope
@@ -141,7 +145,9 @@ object Train:
     val steps = args.headOption.map(_.toInt).getOrElse(1500)
     val out = args.lift(1).getOrElse("../core/src/main/resources/okay/reliability/micro.bin")
     // "none" says nothing and is most lines: kept at three times the rest, so the batches see the kinds
-    val all = data(1, 400); val test = data(1001, 1061)
+    val para = Paraphrase.examples(java.nio.file.Path.of("data/paraphrases.tsv"), 11)
+    val all = data(1, 400) ++ para; val test = data(1001, 1061)
+    println(s"paraphrase examples: ${para.size}")
     val said = all.filter(e => e.kind != 0 || e.alive)
     val quiet = new scala.util.Random(3).shuffle(all.filterNot(e => e.kind != 0 || e.alive)).take(said.size * 3)
     val train = new scala.util.Random(5).shuffle(said ++ quiet)
