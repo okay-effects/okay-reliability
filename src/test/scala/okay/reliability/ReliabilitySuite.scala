@@ -37,7 +37,9 @@ class ReliabilitySuite extends munit.FunSuite:
     assertEquals(pay.failedEntries, Vector.empty)
     val both = Spread(shop, Vector(Fault("payments", FaultKind.Down), Fault("payments-backup", FaultKind.Down)))
     assert(both.of("checkout").contains(EffectKind.Errors))
-    assertEquals(Spread(shop, Vector(Fault("redis", FaultKind.Down))).of("checkout"), Set(EffectKind.Stale))
+    // a cache gone: reads stale; its invalidation on writes best effort
+    assertEquals(Spread(shop, Vector(Fault("redis", FaultKind.Down))).of("checkout"), Set(EffectKind.Stale,
+      EffectKind.Retries))
     assertEquals(Spread(shop, Vector(Fault("checkout", FaultKind.Down, Some(1)))).failedEntries, Vector.empty)
     assertEquals(Spread(shop, Vector(Fault("checkout", FaultKind.Down, Some(1)), Fault("checkout", FaultKind.Down,
       Some(2)))).failedEntries, Vector("web"))
@@ -57,7 +59,8 @@ class ReliabilitySuite extends munit.FunSuite:
         var steps = 0
         while at match { case Cause.Through(_, _) => true; case _ => false } do
           val Cause.Through(d, from) = at: @unchecked
-          assert(s.dependencies.contains(d) && d.to == from.component, s"seed $seed: $d")
+          assert(s.dependencies.exists(x => x.from == d.from && x.to == d.to) && d.to == from.component,
+            s"seed $seed: $d")
           at = b.causes(from); steps += 1
           assert(steps <= b.causes.size)
         at match
@@ -120,7 +123,7 @@ class ReliabilitySuite extends munit.FunSuite:
     assert(p.ranked.forall(c => (c.restored ++ c.stillFailing).toSet == Set("web")), p.text)
     val prevent = Remedies.prevention(shop)
     assert(prevent.exists(c => c.component == "db" && c.after.isEmpty), prevent.map(_.text).mkString("\n"))
-    assert(prevent.forall(c => c.after.size < c.before.size))
+    assert(prevent.forall(c => c.minutes > 0.01 || c.after.size < c.before.size))
 
   test("a compose file and Kubernetes manifests read as systems"):
     val compose = Manifests.read("""
@@ -267,3 +270,119 @@ class ReliabilitySuite extends munit.FunSuite:
     val prevent = Remedies.prevention(rated)
     assert(prevent.nonEmpty && prevent.map(_.minutes) == prevent.map(_.minutes).sorted.reverse, prevent.mkString)
     assert(prevent.exists(c => c.what.contains("db with 2 replicas") && c.minutes > 0))
+
+  // ---- §10: READS AND WRITES, BREAKERS
+
+  test("a read cache saves the reads, not the writes; the availability weighs them by the share of writes"):
+    val s = ArchText.read("""
+      web: service entry
+      db: database
+      web -> db cached
+      web writes 20%
+    """).fold(e => fail(e), identity)
+    val r = Spread(s, Vector(Fault("db", FaultKind.Down)))
+    assertEquals(r.ofIn(Spread.World.Reads, "web"), Set(EffectKind.Stale))
+    assertEquals(r.ofIn(Spread.World.Writes, "web"), Set(EffectKind.Errors))
+    val e = Reliability.entry(s, "web", Reliability.Sli.Availability, Rates.events(s))
+    val dbq = Rates.of(s, "db", FaultKind.Down).get.q
+    assert(e.uWrites > e.uReads)
+    assert(math.abs(e.unavailability - (0.8 * e.uReads + 0.2 * e.uWrites)) < 1e-15)
+    assert(e.writes.exists(_.events == Vector(Fault("db", FaultKind.Down))) && dbq > 0)
+    assertEquals(ArchText.read(ArchText.print(s)).map(ArchText.print), Right(ArchText.print(s)))
+
+  test("a breaker turns a callee's slowness into fast errors: latency saved, availability paid"):
+    val slow = ArchText.read("web: service entry\npay: external\nweb -> pay hard").fold(e => fail(e), identity)
+    val broken = ArchText.read("web: service entry\npay: external\nweb -> pay hard breaker").fold(e => fail(e),
+      identity)
+    assertEquals(Spread(slow, Vector(Fault("pay", FaultKind.Slow))).of("web"), Set(EffectKind.Slow))
+    assertEquals(Spread(broken, Vector(Fault("pay", FaultKind.Slow))).of("web"), Set(EffectKind.Errors))
+    val lat = Reliability.Sli.Latency
+    val av = Reliability.Sli.Availability
+    assert(Reliability.unavailability(broken, "web", lat) < Reliability.unavailability(slow, "web", lat))
+    assert(Reliability.unavailability(broken, "web", av) > Reliability.unavailability(slow, "web", av))
+
+  test("degrading the reads makes them optional and leaves the writes hard"):
+    val s = shop.degradeReads("checkout", "db")
+    val r = Spread(s, Vector(Fault("db", FaultKind.Down)))
+    assertEquals(r.ofIn(Spread.World.Reads, "checkout"), Set(EffectKind.Retries))
+    assertEquals(r.ofIn(Spread.World.Writes, "checkout"), Set(EffectKind.Errors))
+
+  // ---- §11: TIME
+
+  test("the clock: a cascade that runs against the times seen is set aside; the onset said"):
+    val chainOf = ArchText.read("""
+      web: service entry
+      checkout: service
+      db: database
+      web -> checkout hard
+      checkout -> db hard
+    """).fold(e => fail(e), identity)
+    val t0 = 1_800_000_000L
+    // web failed a minute BEFORE checkout: not through it
+    val seen = Vector(Observation.Symptom("web", EffectKind.Errors, "log:web:3", Some(t0)),
+      Observation.Symptom("checkout", EffectKind.Errors, "log:checkout:9", Some(t0 + 60)),
+      Observation.Alive("web", "log:web"), Observation.Alive("checkout", "log:checkout"))
+    val r = Explain(chainOf, seen)
+    assert(r.explanations.forall(_.faults.size == 2), r.text)
+    assert(r.explanations.exists(_.faults.toSet == Set(Fault("web", FaultKind.Errors),
+      Fault("checkout", FaultKind.Errors))), r.text)
+    assert(r.againstTheClock.nonEmpty && r.text.contains("against the clock"), r.text)
+    // in order, the cascade is the one explanation it was
+    val inOrder = Explain(chainOf, seen.map {
+      case s: Observation.Symptom if s.component == "web" => s.copy(at = Some(t0 + 70))
+      case o => o
+    })
+    assertEquals(inOrder.size, 1, inOrder.text)
+    assert(inOrder.text.contains("began by"), inOrder.text)
+
+  test("times read from every format, and written back in the facts"):
+    assertEquals(Read.time("""{"ts": "2026-11-04T14:01:05.120Z", "msg": "x"}"""), Some(1793800865L))
+    assertEquals(Read.time("ts=2026-11-04T14:01:05Z level=error"), Some(1793800865L))
+    assertEquals(Read.time("2026-11-04T16:01:05+02:00 ERROR x"), Some(1793800865L))
+    val f = Words.facts("symptom(web, errors) [log:web:3] @2026-11-04T14:01:05Z").toOption.get.head
+    assertEquals(f, Observation.Symptom("web", EffectKind.Errors, "log:web:3", Some(1793800865L)))
+    assertEquals(Words.facts(f.toString).toOption.get.head, f)
+
+  // ---- §12: METRICS
+
+  test("a scenario's scrape read back as facts the gold agrees with; metrics do not call stale data broken"):
+    (1 to 30).foreach { i =>
+      val s = Generate.system(i.toLong)
+      val sc = Generate.scenario(s, i.toLong, 1 + i % 2)
+      val facts = Metrics.facts(s, Metrics.exposition(Metrics.snapshot(sc.spread)))
+      val healthy = facts.collect { case h: Observation.Healthy => h }
+      assert(Explain.consistent(sc.spread, healthy), s"seed $i")
+      assert(facts.collect { case x: Observation.Symptom => x }.forall(x => Explain.matching(sc.spread, x).isDefined))
+      // with the metrics as well, the gold is still found
+      val r = Explain(s, sc.facts ++ facts)
+      if r.size == sc.faults.size then assert(r.explanations.exists(_.faults.toSet == sc.faults.toSet), r.text)
+    }
+    val redis = Spread(shop, Vector(Fault("redis", FaultKind.Down)))
+    val seen = Metrics.facts(shop, Metrics.exposition(Metrics.snapshot(redis)))
+    assert(seen.contains(Observation.Healthy("checkout", "metrics:up{job=checkout}")), seen.mkString("\n"))
+    assert(Explain.consistent(redis, seen.collect { case h: Observation.Healthy => h }))
+
+  test("a Prometheus server: instant queries as facts, up's history as incidents"):
+    val vector = """{"status":"success","data":{"resultType":"vector","result":[""" +
+      """{"metric":{"job":"db"},"value":[1700000000,"0"]},{"metric":{"job":"checkout"},"value":[1700000000,"1"]}]}}"""
+    val empty = """{"status":"success","data":{"resultType":"vector","result":[]}}"""
+    val range = """{"status":"success","data":{"resultType":"matrix","result":[{"metric":{"job":"db"},""" +
+      """"values":[[1000,"1"],[1060,"0"],[1120,"0"],[1180,"1"],[1240,"1"]]}]}}"""
+    def answer(url: String): Either[String, String] =
+      if url.contains("query_range") then Right(range)
+      else if url.contains("query=up") then Right(vector) else Right(empty)
+    val desk = Desk.State()
+    desk.system = Some(shop)
+    def run(name: String, args: okay.effects.json.Json) =
+      okay.scala3.run(okay.scala3.std.Clock.virtual(2_000_000L)(Desk.memory(desk)(Files.memory(
+        scala.collection.mutable.Map.empty)(Http.memory(answer)(Tools.call[Main.Asked](name, args))))))._2
+    val got = run("read_metrics", okay.effects.json.Json.obj("url" -> okay.effects.json.Json.Str("http://prom:9090")))
+    assert(got.exists(_.contains("symptom(db, down)")), got.toString)
+    assert(desk.seen.contains(Observation.Healthy("checkout", "metrics:prometheus:up{job=checkout}")),
+      desk.seen.toString)
+    val rows = Metrics.incidents(shop, Metrics.matrix(range).toOption.get)
+    assertEquals(rows.map(r => (r.component, math.round(r.start * 3600), math.round(r.end * 3600))),
+      Vector(("db", 1060L, 1180L)))
+    val est = run("estimate_from_prometheus", okay.effects.json.Json.obj(
+      "url" -> okay.effects.json.Json.Str("http://p"), "window" -> okay.effects.json.Json.Str("1d")))
+    assert(est.exists(_.contains("db fails down")), est.toString)

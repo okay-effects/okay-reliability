@@ -25,9 +25,14 @@ object Remedies:
     val name = f.component
     def fix(what: String, risk: Int, minutes: Int) = Action(what, risk, minutes, (s, fs) => (s, fs - f))
     val callers = system.callers(name)
-    def breaker = Action(s"a circuit breaker on the calls to $name (${callers.map(_.from).distinct.mkString(", ")}" +
-      " degrade instead of failing)", 1, 15, (s, fs) => (callers.foldLeft(s)((x, d) =>
-        x.withDependency(d.copy(mode = Mode.Soft))), fs))
+    val who = callers.map(_.from).distinct.mkString(", ")
+    // fail fast instead of waiting: the callers' latency back, their errors stay
+    def fastFail = Action(s"open a circuit breaker on the calls to $name ($who fail fast instead of waiting)", 1, 10,
+      (s, fs) => (callers.foldLeft(s)((x, d) => x.withDependency(d.copy(breaker = true))), fs))
+    // the reads made optional: only if the feature can be left out
+    def breaker = Action(s"degrade: $who serve without $name's reads (if that feature can be left out; writes still " +
+      "need it)", 2, 15, (s, fs) => (callers.map(_.from).distinct.foldLeft(s)((x, from) => x.degradeReads(from, name)),
+        fs))
     (f.kind, f.instance, kind) match
       case (FaultKind.Down, Some(i), _) => Vector(fix(s"replace instance $i of $name", 1, 10))
       case (FaultKind.Down, None, Kind.Database) =>
@@ -42,9 +47,9 @@ object Remedies:
           fix(s"restart $name", 1, 5), breaker)
       case (FaultKind.Slow, _, Kind.Database) =>
         Vector(fix(s"find and stop $name's slow queries (locks, a missing index)", 2, 20),
-          fix(s"scale $name up", 2, 30), breaker)
+          fix(s"scale $name up", 2, 30), fastFail, breaker)
       case (FaultKind.Slow, _, _) =>
-        Vector(fix(s"scale $name out", 1, 10), fix(s"shed load in front of $name", 2, 10), breaker)
+        Vector(fix(s"scale $name out", 1, 10), fix(s"shed load in front of $name", 2, 10), fastFail, breaker)
       case (FaultKind.Full, _, Kind.Queue) => Vector(fix(s"scale $name's consumers, drain the backlog", 1, 15))
       case (FaultKind.Full, _, _) => Vector(fix(s"free space on $name", 1, 15))
 
@@ -90,7 +95,7 @@ object Remedies:
       val loss = s"losing one instance of $component fails " +
         s"${if before.isEmpty then "nothing" else before.mkString(", ")} today, " +
         s"${if after.isEmpty then "nothing" else after.mkString(", ")} after"
-      val by = saved.filter(_._3 > 0.05).map((e, sli, m) => f"$e ${sli.word} $m%.1f").mkString(", ")
+      val by = saved.filter(x => math.abs(x._3) > 0.05).map((e, sli, m) => f"$e ${sli.word} $m%+.1f").mkString(", ")
       f"$what — saves $minutes%.1f min of downtime a month${if by.nonEmpty then s" ($by)" else ""}; $loss"
 
   /** what losing one instance of a component fails */
@@ -115,13 +120,19 @@ object Remedies:
     }
     val guards = report.unguarded.flatMap { u =>
       val target = system.component(u.to)
-      val breaker = system.withDependency(Dependency(u.from, u.to, Mode.Soft))
-      val cached = system.withDependency(Dependency(u.from, u.to, Mode.Cached))
-      Vector(breaker -> Change(s"a circuit breaker on ${u.from} -> ${u.to} (the feature degrades)", u.to,
-        lossOfOne(system, u.to), lossOfOne(breaker, u.to))) ++
+      val breaker = system.dependencies.filter(d => d.from == u.from && d.to == u.to)
+        .foldLeft(system)((s, d) => s.withDependency(d.copy(breaker = true)))
+      val degraded = system.degradeReads(u.from, u.to)
+      val cached = system.dependencies.filter(d => d.from == u.from && d.to == u.to && d.use.reads)
+        .foldLeft(system)((s, d) => s.withDependency(d.copy(mode = Mode.Cached)))
+      Vector(
+        breaker -> Change(s"a circuit breaker on ${u.from} -> ${u.to} (fails fast: latency for errors)", u.to,
+          lossOfOne(system, u.to), lossOfOne(breaker, u.to)),
+        degraded -> Change(s"${u.from} serves without ${u.to}'s reads (if that feature can be left out; writes " +
+          "still need it)", u.to, lossOfOne(system, u.to), lossOfOne(degraded, u.to))) ++
         (if target.exists(t => t.kind == Kind.Database || t.kind == Kind.Service) then
-          Vector(cached -> Change(s"a read cache in ${u.from} for ${u.to} (stale reads while it is gone)", u.to,
-            lossOfOne(system, u.to), lossOfOne(cached, u.to)))
+          Vector(cached -> Change(s"a read cache in ${u.from} for ${u.to} (stale reads while it is gone; writes " +
+            "still fail)", u.to, lossOfOne(system, u.to), lossOfOne(cached, u.to)))
         else Vector.empty) ++
         (if target.exists(_.kind == Kind.External) then
           val alt = s"${u.to}-backup"
@@ -131,4 +142,4 @@ object Remedies:
         else Vector.empty)
     }
     (replicas ++ guards).distinctBy(_._2.what).map((after, c) => priced(system, after, c))
-      .filter(c => c.minutes > 0.01 || c.after.size < c.before.size).sortBy(-_.minutes)
+      .filter(_.minutes > 0.01).sortBy(-_.minutes)

@@ -19,7 +19,7 @@ object Generate:
       Vector("arch.txt" -> ArchText.print(system)) ++
         logs.toVector.sortBy(_._1).map((c, ls) => s"logs/$c.log" -> ls.mkString("", "\n", "\n")) ++
         Vector("chat.txt" -> chat.mkString("", "\n", "\n"), "facts.txt" -> facts.mkString("", "\n", "\n"),
-          "gold.json" -> gold)
+          "metrics.prom" -> Metrics.snapshot(spread), "gold.json" -> gold)
     def gold: String =
       def q(s: String) = "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
       val fs = faults.map(f => s"""{"component": ${q(f.component)}, "kind": ${q(f.kind.word)}""" +
@@ -111,7 +111,7 @@ object Generate:
       val located = ls.map { l =>
         n += 1; val at = n; if formatOf(c) == "plain" then n += l.stack.size; (l, at) }
       located.foreach((l, at) => l.facts.foreach {
-        case Observation.Symptom(x, k, _) => facts += Observation.Symptom(x, k, s"log:$c:$at")
+        case Observation.Symptom(x, k, _, _) => facts += Observation.Symptom(x, k, s"log:$c:$at", Some(origin + l.at))
         case Observation.Healthy(x, _) => facts += Observation.Healthy(x, s"log:$c:$at")
         case Observation.Alive(x, _) => facts += Observation.Alive(x, s"log:$c:$at")
       })
@@ -120,7 +120,7 @@ object Generate:
     }
     val (chat, chatFacts) = chatOf(system, r, rnd)
     val all = (facts.result() ++ chatFacts).distinctBy(o => (o.productPrefix, o.component, o match
-      case Observation.Symptom(_, k, _) => k.word
+      case Observation.Symptom(_, k, _, _) => k.word
       case _ => ""))
     Scenario(system, chosen, r, logs, formatOf, chat, all, system.names.filterNot(seen.contains))
 
@@ -134,7 +134,8 @@ object Generate:
       "GET /health 200 2ms", "request completed in 41ms", "cache warmed: 1200 keys", "connected to the config server",
       s"processed batch of ${10 + rnd.nextInt(90)} items", "scheduler tick")).head, Vector.empty))
     val events = r.causes.toVector.filter(_._1.component == c).sortBy(_._1.kind.ordinal).flatMap { (e, cause) =>
-      val t = 60 + depth.getOrElse(e, 1) * 9 + rnd.nextInt(5)
+      // a depth 15 s after the one before it, 5 s of jitter (spec §11)
+      val t = 60 + depth.getOrElse(e, 1) * 15 + rnd.nextInt(5)
       eventLines(s, c, e, cause, t, rnd)
     }
     (noise ++ events).sortBy(_.at)
@@ -179,7 +180,10 @@ object Generate:
         Vector(Line(c, t, "WARN", s"queue depth ${20000 + rnd.nextInt(30000)}: backlog growing", Vector(S(c, Backlog))))
       case (Down, _) | (Stale, _) => Vector.empty
 
-  private def clock(t: Int): String = f"2026-11-04T14:${t / 60}%02d:${t % 60}%02d.${(t * 37) % 1000}%03dZ"
+  /** the scenarios' clock: 2026-11-04T14:00:00Z, and `t` seconds after */
+  val origin: Long = java.time.Instant.parse("2026-11-04T14:00:00Z").getEpochSecond
+  private def clock(t: Int): String =
+    java.time.Instant.ofEpochSecond(origin + t).toString.stripSuffix("Z") + f".${(t * 37) % 1000}%03dZ"
 
   /** a component's lines in a format: JSON lines, logfmt, plain with stack traces, or an access log */
   def render(c: String, ls: Vector[Line], format: String): Vector[String] =
@@ -194,7 +198,7 @@ object Generate:
           val status = l.level match
             case "ERROR" => if l.message.contains("connection refused") then 502 else 500
             case "WARN" if l.facts.exists {
-                case Observation.Symptom(_, EffectKind.Slow, _) => true
+                case Observation.Symptom(_, EffectKind.Slow, _, _) => true
                 case _ => false
               } =>
               504
@@ -227,7 +231,7 @@ object Generate:
     say("lead: let's find the cause before we restart anything", None)
     val lines = out.result()
     (lines.map(_._1), lines.zipWithIndex.flatMap { case ((_, o), i) => o.map {
-      case Observation.Symptom(c, k, _) => Observation.Symptom(c, k, s"chat:${i + 1}")
+      case Observation.Symptom(c, k, _, _) => Observation.Symptom(c, k, s"chat:${i + 1}")
       case Observation.Healthy(c, _) => Observation.Healthy(c, s"chat:${i + 1}")
       case Observation.Alive(c, _) => Observation.Alive(c, s"chat:${i + 1}")
     } })

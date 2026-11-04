@@ -17,14 +17,23 @@ object Mode:
   def of(s: String): Option[Mode] = values.find(_.word == s.toLowerCase)
 
 final case class Component(name: String, kind: Kind = Kind.Service, replicas: Int = 1, entry: Boolean = false)
-final case class Dependency(from: String, to: String, mode: Mode = Mode.Hard)
+/** what a dependency carries: the reads, the writes, or both */
+enum Use:
+  case Both, Reads, Writes
+  def word: String = toString.toLowerCase
+  def reads: Boolean = this != Writes
+  def writes: Boolean = this != Reads
+
+/** a call from `from` to `to`: its mode, what it carries, and whether a circuit breaker fails it fast */
+final case class Dependency(from: String, to: String, mode: Mode = Mode.Hard, use: Use = Use.Both,
+  breaker: Boolean = false)
 /** when `to` is bad, `from` uses `alternative` — unless that is bad too */
 final case class Fallback(from: String, to: String, alternative: String)
 
 /** A SYSTEM: its components, who calls whom and how, the fallbacks */
 final case class System(components: Vector[Component], dependencies: Vector[Dependency] = Vector.empty,
   fallbacks: Vector[Fallback] = Vector.empty, rates: Map[(String, FaultKind), Rate] = Map.empty,
-  slos: Map[String, Slo] = Map.empty):
+  slos: Map[String, Slo] = Map.empty, writeShares: Map[String, Double] = Map.empty):
   private lazy val byName = components.map(c => c.name -> c).toMap
   def component(name: String): Option[Component] = byName.get(name)
   def names: Vector[String] = components.map(_.name)
@@ -44,8 +53,23 @@ final case class System(components: Vector[Component], dependencies: Vector[Depe
 
   def withComponent(c: Component): System =
     copy(components = components.filterNot(_.name == c.name) :+ c)
+  /** a dependency put in, in place of one of the same ends carrying the same requests */
   def withDependency(d: Dependency): System =
-    copy(dependencies = dependencies.filterNot(x => x.from == d.from && x.to == d.to) :+ d)
+    val at = dependencies.indexWhere(x => x.from == d.from && x.to == d.to && x.use == d.use)
+    if at >= 0 then copy(dependencies = dependencies.updated(at, d))
+    else copy(dependencies = dependencies.filterNot(x => x.from == d.from && x.to == d.to &&
+      (x.use == Use.Both || d.use == Use.Both)) :+ d)
+  /** the reads of `from` from `to` made optional (soft), its writes left as they were */
+  def degradeReads(from: String, to: String): System =
+    dependencies.find(d => d.from == from && d.to == to && d.use.reads) match
+      case None => this
+      case Some(d) =>
+        val rest = dependencies.filterNot(_ == d)
+        val writes = if d.use == Use.Both then Vector(d.copy(use = Use.Writes)) else Vector.empty
+        copy(dependencies = rest ++ writes :+ d.copy(mode = Mode.Soft, use = Use.Reads))
+  /** an entry point's share of writes among its requests (default 10%) */
+  def writeShare(entry: String): Double = writeShares.getOrElse(entry, 0.1)
+  def withWriteShare(entry: String, w: Double): System = copy(writeShares = writeShares + (entry -> w))
   def withFallback(f: Fallback): System = copy(fallbacks = (fallbacks :+ f).distinct)
   def withRate(component: String, kind: FaultKind, r: Rate): System = copy(rates = rates + ((component, kind) -> r))
   def withSlo(entry: String, s: Slo): System = copy(slos = slos + (entry -> s))

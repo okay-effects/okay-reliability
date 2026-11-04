@@ -127,11 +127,11 @@ the blast radius before and after, by `Spread` — a fix is proposed only when t
   analyzer may find another set of the same size when the observations cannot tell them apart — then it says so).
 - Every remedy ranked first restores the entry points it claims (re-spread).
 - `Read` over the generator's logs gives the gold facts (`facts.txt`).
-- `okay-reliability bench` (2026-11-04, 200 random systems of 6â11 services, 80% of the components with logs, read by
-  `Read`): one fault â the gold the only explanation 64%, among several 36% (each with the check that tells them
-  apart), never missed; two faults â the only one 24%, among several 47%, another as small or smaller 30% (a fault
+- `okay-reliability bench` (2026-11-04, 200 random systems of 6–11 services, 80% of the components with logs, read by
+  `Read`): one fault — the gold the only explanation 64%, among several 36% (each with the check that tells them
+  apart), never missed; two faults — the only one 24%, among several 47%, another as small or smaller 30% (a fault
   behind another leaves no trace of its own: Occam's answer, and the gold consistent with every fact in 100%);
-  2â3 ms a scenario. Half the components observed, one fault: 49% / 51% / 0%.
+  2–3 ms a scenario. Half the components observed, one fault: 49% / 51% / 0%.
 - Round trip: `arch.txt` printed and read gives the same system.
 
 ## 9. Probabilities (2026-11-04, the operator: "okay-reliability, with a probabilistic model and metrics")
@@ -203,17 +203,92 @@ recovers the rates written.
 ### 9.7 Checked (2026-11-04)
 
 - The shop (examples/shop.txt, the priors): web availability computed 99.8509%, measured over 2000 simulated
-  years 99.8504% Â± 0.0026; 22.8 incidents a year computed, 22.9 measured; latency 99.7322% vs 99.7328% Â± 0.0021.
+  years 99.8504% ± 0.0026; 22.8 incidents a year computed, 22.9 measured; latency 99.7322% vs 99.7328% ± 0.0021.
   The analytic report in 86 ms, the 2000 years in 0.4 s. A test holds it within 4 standard errors + 5%.
 - `estimate` over 200 generated years recovers db down, checkout errors and checkout down within 25% (a test).
-- `bench`, faults drawn by their rates, 80% of components with logs: one fault â the gold first by probability 90%
-  (the exact search finds it alone in 70%), in the top 3 in 99%; two faults â first 24%, top 3 55% (a fault behind
+- `bench`, faults drawn by their rates, 80% of components with logs: one fault — the gold first by probability 90%
+  (the exact search finds it alone in 70%), in the top 3 in 99%; two faults — first 24%, top 3 55% (a fault behind
   another leaves no trace: no probability can find it). ~35 ms a scenario.
-- Optimistic, said: a read cache and a circuit breaker are modeled as hiding a dependency's loss (reads served
+- Optimistic until §10, fixed there: a read cache and a circuit breaker hid a dependency's loss (reads served
   stale, the feature degraded); writes through them still fail in life, and the model does not tell reads from
   writes yet.
 
-## 10. Not yet
+## 10. Reads and writes, breakers (2026-11-04, fixing §9.7's optimism)
 
-Prometheus metrics read directly; time inside the diagnosis (a dependent failing before its cause); a SAT formulation
-for large systems; okay-inlay's handler; a model's extraction measured (A / T / E on okay-agent + Qwen).
+A request is a read or a write, and they travel differently. `Spread` runs two worlds over the same faults:
+
+- **reads**: every dependency used for reads (`use` both or reads), by its mode;
+- **writes**: every dependency used for writes (`use` both or writes); a `cached` one is `hard` here — a cache serves
+  no write — unless its callee is a cache component itself (a cache's invalidation is best effort: `soft`).
+
+A component's effects are both worlds' (a log shows both). An entry point's availability is request-weighted:
+U = (1 − w) · U_reads + w · U_writes, w its share of writes (`web writes 20%`; default 10%); reported with the two
+apart. In arch.txt: `checkout -> db cached` (reads through a cache, writes direct), `web -> recs soft reads` (a
+dependency for reads only), `api -> audit soft writes`.
+
+**A circuit breaker** (`checkout -> payments hard breaker`) fails fast instead of waiting: through it a callee's
+`slow` or `backlog` becomes the caller's `errors`, not `slow` — it protects the latency SLI and costs availability. It
+does not make a dependency optional. **Degrading** (the mode `soft`) does, and is proposed as its own change, for
+reads only, with the condition said: "if the feature can be left out". Prevention prices each change by its net
+downtime (latency saved minus availability lost).
+
+## 11. Time in the diagnosis
+
+A symptom may carry when it was seen: `symptom(checkout, errors) [log:checkout:4] @2026-11-04T14:01:12Z`; `Read`
+takes the time from each line (JSON `ts`, logfmt `ts=`, a plain line's first word, an access log's `[…]`). An
+explanation's chains must run with the clock: where its spread makes a caller's observed effect come through a
+callee's observed effect, the caller's time is not before the callee's by more than the tolerance (10 s; clocks drift).
+An exact explanation that runs against the clock is dropped and said ("against the clock: …"); in the posterior each
+such pair weighs ε = 0.05. Each explanation's onset: its earliest explained symptom. The generator spaces the depths
+15 s apart (jitter 5 s).
+
+## 12. Metrics (Prometheus)
+
+- **A snapshot** in the text exposition format, or **a server** (`url`, the HTTP API's instant queries): per job (or
+  `service` label; a job named as a component, or `job` mapped by `component=` in the call) — `up` 0 → `down`; the
+  ratio of 5xx over all requests above 5% → `errors`; the p95 latency above 1 s → `slow`; a queue's depth growing
+  (`queue_depth` over 10 000) → `backlog`; up and under all thresholds → `healthy`. Each fact's source
+  `metrics:<series>`. The queries are the usual ones (`http_requests_total{code}`,
+  `http_request_duration_seconds_bucket`), each replaceable in the call.
+- **History**: `up` over a range (`query_range`) → the intervals each job was down → incidents → `estimate` (§9.5).
+- The generator writes `metrics.prom` for each scenario (every component scraped, a down one too: `up 0`); the law:
+  `Metrics.read` of it gives the gold's metric facts.
+
+### 10–12 checked (2026-11-04)
+
+- Reads and writes: `web -> db cached`, db down → reads stale, writes errors; the unavailability exactly
+  (1 − w)·U_reads + w·U_writes (a test). The shop's read cache for db now saves 47.7 min a month, not 53: its
+  writes (10%) still fail. A breaker on a hard dependency trades latency for availability — for the shop its net is
+  negative, and prevention no longer proposes it there.
+- Time: a cascade whose caller failed a minute before its callee is set aside ("against the clock"), two independent
+  faults found instead (a test); in order, the cascade is the one explanation again, its onset said.
+- Metrics: a scenario's scrape read back agrees with the gold in 30 of 30 (a test); a server's instant queries and
+  `up`'s range read through `Http` (a test with a server in memory). `bench` (200 scenarios, faults by their rates,
+  80% of components with logs):
+
+| | 1 fault, logs | 1 fault, logs + metrics | 2 faults, logs | 2 faults, logs + metrics |
+|---|---|---|---|---|
+| the gold the only explanation | 70% | 82% | 33% | 46% |
+| among several | 31% | 18% | 48% | 40% |
+| another, as small or smaller | 0% | 0% | 19% | 14% |
+| the gold first by probability | 90% | 95% | 27% | 36% |
+| in the top 3 | 99% | 100% | 65% | 80% |
+| ms a scenario | 90 | 100 | 212 | 131 |
+
+## 13. A model's extraction, measured (A / T / E)
+
+On generated scenarios (the logs, the chat; the system's arch.txt), a local model (Qwen3.6-35B through okay-mlx) in
+okay-agent, asked "what failed, and why":
+
+| arm | what the agent has |
+|---|---|
+| A | the files alone |
+| T | the files and okay-reliability's MCP tools (load_system, read_logs, assert, explain, why_not) |
+| E | the gold facts and the analyzer (`bench`: the ceiling) |
+
+Scored by the answer's root cause set against the gold (exact; the components named), with the time and the turns.
+The runs journaled by okay-agent; the table in this section with the date, the model, the seeds.
+
+## 14. Not yet
+
+A SAT formulation for large systems; okay-inlay's handler.

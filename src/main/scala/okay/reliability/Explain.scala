@@ -2,14 +2,16 @@ package okay.reliability
 
 /** WHAT WAS SEEN: a component's effect, or that it is fine — each from somewhere (`log:checkout:17`, `chat:5`) */
 enum Observation:
-  case Symptom(component: String, kind: EffectKind, source: String = "")
+  /** `at`: when it was seen, epoch seconds — a log line's time */
+  case Symptom(component: String, kind: EffectKind, source: String = "", at: Option[Long] = None)
   case Healthy(component: String, source: String = "")
   /** it wrote to its log: not down as a whole */
   case Alive(component: String, source: String = "")
   def component: String
   def source: String
   override def toString: String = this match
-    case Symptom(c, k, s) => s"symptom($c, ${k.word})" + (if s.nonEmpty then s" [$s]" else "")
+    case Symptom(c, k, s, t) => s"symptom($c, ${k.word})" + (if s.nonEmpty then s" [$s]" else "") +
+      t.fold("")(x => s" @${java.time.Instant.ofEpochSecond(x)}")
     case Healthy(c, s) => s"healthy($c)" + (if s.nonEmpty then s" [$s]" else "")
     case Alive(c, s) => s"alive($c)" + (if s.nonEmpty then s" [$s]" else "")
 
@@ -29,8 +31,14 @@ object Explain:
   final case class Check(component: String, outcomes: Vector[(String, Vector[Explanation])])
 
   final case class Result(system: System, observations: Vector[Observation], size: Int,
-    explanations: Vector[Explanation], next: Option[Check], unexplained: Vector[Observation.Symptom]):
+    explanations: Vector[Explanation], next: Option[Check], unexplained: Vector[Observation.Symptom],
+    againstTheClock: Vector[(Explanation, String)] = Vector.empty):
     def unobserved: Set[String] = system.names.toSet -- Explain.direct(observations)
+    private def clockText: String =
+      if againstTheClock.isEmpty then ""
+      else "set aside, against the clock:\n" + againstTheClock.take(5).map((x, why) => s"  $x: $why\n").mkString
+    /** the explanation's onset: the earliest time among the symptoms seen */
+    def onset: Option[Long] = observations.collect { case s: Observation.Symptom => s }.flatMap(_.at).minOption
     def text: String =
       val b = StringBuilder()
       val symptoms = observations.collect { case s: Observation.Symptom => s }
@@ -40,7 +48,7 @@ object Explain:
         if unexplained.nonEmpty then
           b ++= s"no single fault explains: ${unexplained.mkString(", ")}\n" +
             "  (a symptom with no cause in this system: a dependency missing from the architecture, or a wrong fact)\n"
-        return b.toString
+        return b.toString + clockText
       val n = explanations.size
       b ++= (if n == 1 then s"one explanation (k = $size):\n"
         else s"$n explanations (k = $size), not told apart yet:\n")
@@ -58,14 +66,15 @@ object Explain:
         b ++= c.outcomes.map((what, xs) => s"$what → ${xs.map(x => explanations.indexOf(x)).map(i =>
           ('A' + i).toChar).mkString(", ")}").mkString("; ") + "\n"
       }
-      b.toString
+      onset.foreach(t => b ++= s"began by ${Explain.clock(t)} (the earliest symptom seen)\n")
+      b.toString + clockText
 
   /** the components seen for themselves: their own log, a person's word — not only named in a caller's log (a
    * component down writes nothing: what its callers say of it is still worth checking) */
   def direct(observations: Vector[Observation]): Set[String] = observations.collect {
     case Observation.Healthy(c, _) => c
     case Observation.Alive(c, _) => c
-    case Observation.Symptom(c, _, src) if !src.startsWith("log:") || src.startsWith(s"log:$c:") => c
+    case Observation.Symptom(c, _, src, _) if !src.startsWith("log:") || src.startsWith(s"log:$c:") => c
   }.toSet
 
   private def source(o: Observation): String = if o.source.nonEmpty then s" [${o.source}]" else ""
@@ -78,13 +87,18 @@ object Explain:
       Some(Effect(s.component, EffectKind.Down))
     else None
 
-  def contradicts(r: Spread.Result, h: Observation.Healthy): Boolean = r.of(h.component).exists(_.visible)
+  /** a healthy component would show something: by metrics, only what metrics see (down, errors, slow, a backlog —
+   * not stale data, not a fallback) */
+  def contradicts(r: Spread.Result, h: Observation.Healthy): Boolean =
+    if h.source.startsWith("metrics") then r.of(h.component).exists(k => Spread.bad(k) || k == EffectKind.Backlog)
+    else r.of(h.component).exists(_.visible)
 
   def consistent(r: Spread.Result, healthy: Vector[Observation.Healthy],
     alive: Vector[Observation.Alive] = Vector.empty): Boolean =
     !healthy.exists(contradicts(r, _)) && !alive.exists(a => r.shows(Effect(a.component, EffectKind.Down)))
 
-  def apply(system: System, observations: Vector[Observation], maxSize: Int = 3, limit: Int = 50): Result =
+  def apply(system: System, observations: Vector[Observation], maxSize: Int = 3, limit: Int = 50,
+    tolerance: Long = 10): Result =
     val symptoms = observations.collect { case s: Observation.Symptom => s }.distinct
     val healthy = observations.collect { case h: Observation.Healthy => h }.distinct
     val alive = observations.collect { case a: Observation.Alive => a }.distinct
@@ -95,6 +109,7 @@ object Explain:
     }
     val unexplained = symptoms.filterNot(s => candidates.exists(_._2(s)))
     var found = Vector.empty[Explanation]
+    val clocked = Vector.newBuilder[(Explanation, String)]
     var k = 1
     while found.isEmpty && k <= maxSize && unexplained.isEmpty do
       found = combinations(candidates, k).filter(c => symptoms.forall(s => c.exists(_._2(s)))).flatMap { c =>
@@ -103,9 +118,26 @@ object Explain:
         Option.when(consistent(r, healthy, alive) && symptoms.forall(s => matching(r, s).isDefined))(
           Explanation(faults, r))
       }.take(limit)
+      // WITH THE CLOCK: an explanation whose chains run against the times seen is set aside, and said
+      val (ok, late) = found.partition(x => againstClock(x.spread, symptoms, tolerance).isEmpty)
+      clocked ++= late.map(x => x -> againstClock(x.spread, symptoms, tolerance).head)
+      found = ok
       if found.isEmpty then k += 1
     val unobserved = system.names.toSet -- direct(observations)
-    Result(system, observations, k min maxSize, found, nextCheck(found, unobserved), unexplained)
+    Result(system, observations, k min maxSize, found, nextCheck(found, unobserved), unexplained, clocked.result())
+
+  /** WHERE A SPREAD RUNS AGAINST THE CLOCK: a symptom that came through another symptom's effect, seen more than
+   * `tolerance` seconds before it — each said */
+  def againstClock(r: Spread.Result, symptoms: Vector[Observation.Symptom], tolerance: Long = 10): Vector[String] =
+    val timed = symptoms.filter(_.at.isDefined).flatMap(s => matching(r, s).map(s -> _))
+    timed.flatMap { (late, e) =>
+      val upstream = r.path(e).dropRight(1).toSet
+      timed.collect { case (early, u) if upstream(u) && late.at.get < early.at.get - tolerance =>
+        s"${late.component} ${late.kind.word} at ${clock(late.at.get)} before ${early.component} " +
+          s"${early.kind.word} at ${clock(early.at.get)}, which it would come through" }
+    }
+
+  def clock(t: Long): String = java.time.Instant.ofEpochSecond(t).toString
 
   /** the sets of `k` of them, in order */
   def combinations[A](xs: Vector[A], k: Int): Vector[Vector[A]] =

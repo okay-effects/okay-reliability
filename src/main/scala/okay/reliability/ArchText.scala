@@ -17,16 +17,23 @@ object ArchText:
         val at = words.indexOf("->")
         (words.take(at), words.drop(at + 1)) match
           case (Vector(from), to +: rest) =>
-            val mode = rest.headOption.filter(w => Mode.of(w).isDefined).flatMap(Mode.of).getOrElse(Mode.Hard)
-            system = system.withDependency(Dependency(from, to, mode))
             val fb = rest.indexOf("fallback")
-            if fb >= 0 then rest.lift(fb + 1) match
-              case Some(alt) => system = system.withFallback(Fallback(from, to, alt))
+            val alt = if fb >= 0 then rest.lift(fb + 1) else None
+            val words = if fb >= 0 then rest.take(fb) ++ rest.drop(fb + 2) else rest
+            val mode = words.flatMap(Mode.of).headOption.getOrElse(Mode.Hard)
+            val use = if words.contains("reads") then Use.Reads else if words.contains("writes") then Use.Writes
+              else Use.Both
+            system = system.withDependency(Dependency(from, to, mode, use, words.contains("breaker")))
+            if fb >= 0 then alt match
+              case Some(a) => system = system.withFallback(Fallback(from, to, a))
               case None => errors += s"line $n: fallback names no alternative"
-            val unknown = rest.filterNot(w => Mode.of(w).isDefined || w == "fallback" || rest.indexOf(w) ==
-              fb + 1 && fb >= 0)
+            val unknown = words.filterNot(w => Mode.of(w).isDefined || Set("reads", "writes", "breaker")(w))
             if unknown.nonEmpty then errors += s"line $n: what is ${unknown.mkString(" ")}?"
           case _ => errors += s"line $n: a dependency is `from -> to [mode] [fallback alt]`"
+      else if words.lift(1).contains("writes") && words.size == 3 then
+        words(2).stripSuffix("%").toDoubleOption.filter(p => p >= 0 && p <= 100) match
+          case Some(p) => system = system.withWriteShare(words(0), (BigDecimal(p) / 100).toDouble)
+          case None => errors += s"line $n: `entry writes 20%`: the share of its requests that are writes"
       else if words.lift(1).contains("fails") then words match
         case Vector(c, "fails", k, "every", mtbf, "for", mttr) =>
           (FaultKind.of(k), Rates.hours(mtbf), Rates.hours(mttr)) match
@@ -74,7 +81,8 @@ object ArchText:
         (if c.replicas > 1 then Vector("replicas", c.replicas.toString) else Vector.empty)).mkString(" ")
     }
     val ds = s.dependencies.map { d =>
-      (Vector(d.from, "->", d.to, d.mode.word) ++
+      (Vector(d.from, "->", d.to, d.mode.word) ++ (if d.use != Use.Both then Vector(d.use.word) else Vector.empty) ++
+        (if d.breaker then Vector("breaker") else Vector.empty) ++
         s.fallbackOf(d.from, d.to).flatMap(a => Vector("fallback", a))).mkString(" ")
     }
     val rs = s.rates.toVector.sortBy((k, _) => (k._1, k._2.ordinal)).map { case ((c, k), r) =>
@@ -82,4 +90,5 @@ object ArchText:
     def pct(x: Double) = { val p = BigDecimal(x * 100).bigDecimal.stripTrailingZeros.toPlainString; s"$p%" }
     val ss = s.slos.toVector.sortBy(_._1).flatMap((c, slo) => slo.availability.map(a => s"$c slo ${pct(a)}").toVector ++
       slo.latency.map(l => s"$c latency slo ${pct(l)}"))
-    (cs ++ ds ++ rs ++ ss).mkString("", "\n", "\n")
+    val ws = s.writeShares.toVector.sortBy(_._1).map((c, w) => s"$c writes ${pct(w)}")
+    (cs ++ ds ++ rs ++ ss ++ ws).mkString("", "\n", "\n")

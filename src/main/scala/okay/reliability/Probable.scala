@@ -50,7 +50,9 @@ object Probable:
     val scored = (1 to maxSize).toVector.flatMap(k => Explain.combinations(singles, k)).filter(set =>
       !set.exists(f => f.instance.isDefined && set.contains(Fault(f.component, f.kind)))).map { set =>
       val r = Spread(system, set)
-      (set, set.map(f => math.log(q(f))).sum + logLikelihood(r, observations), r)
+      // each chain against the clock weighs as a wrong observation (spec §11)
+      val late = Explain.againstClock(r, symptoms).size
+      (set, set.map(f => math.log(q(f))).sum + logLikelihood(r, observations) + late * math.log(0.05), r)
     }
     if scored.isEmpty then return Result(Vector.empty, None, 0)
     val top = scored.map(_._2).max

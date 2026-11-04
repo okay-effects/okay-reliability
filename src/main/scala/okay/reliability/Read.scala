@@ -41,6 +41,14 @@ object Read:
               case Some(a) => Some((if a.group(1).startsWith("5") then "ERROR" else "INFO") -> s"status ${a.group(1)}")
               case None => Some("INFO" -> l)
 
+  private val iso = """(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(?:[.,]\d+)?(Z|[+-]\d\d:?\d\d)?""".r
+  /** a line's time, the first ISO-8601 one in it (UTC when it names no zone), epoch seconds */
+  def time(line: String): Option[Long] = iso.findFirstMatchIn(line).flatMap { m =>
+    val zone = Option(m.group(2)).map(z => if z == "Z" || z.contains(":") then z else z.take(3) + ":" + z.drop(3))
+      .getOrElse("Z")
+    scala.util.Try(java.time.OffsetDateTime.parse(m.group(1) + zone).toEpochSecond).toOption
+  }
+
   private def S(c: String, k: EffectKind) = Observation.Symptom(c, k)
 
   /** the facts of one message of `c`, the names checked against the system */
@@ -74,7 +82,7 @@ object Read:
   def log(system: System, c: String, lines: Vector[String]): Vector[Observation] =
     val found = lines.zipWithIndex.flatMap((l, i) => parse(l).toVector.flatMap((level, msg) =>
       facts(system, c, level, msg).map {
-        case Observation.Symptom(x, k, _) => Observation.Symptom(x, k, s"log:$c:${i + 1}")
+        case Observation.Symptom(x, k, _, _) => Observation.Symptom(x, k, s"log:$c:${i + 1}", time(l))
         case h => h
       }))
     if !lines.exists(_.trim.nonEmpty) then found
@@ -103,5 +111,5 @@ object Read:
   def all(system: System, logs: Map[String, Vector[String]], chatLines: Vector[String]): Vector[Observation] =
     (logs.toVector.sortBy(_._1).flatMap((c, ls) => log(system, c, ls)) ++ chat(system, chatLines))
       .distinctBy(o => (o.productPrefix, o.component, o match
-        case Observation.Symptom(_, k, _) => k.word
+        case Observation.Symptom(_, k, _, _) => k.word
         case _ => ""))

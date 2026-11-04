@@ -6,14 +6,15 @@ package okay.reliability
  * remain — the ceiling a model reading the same logs can reach.
  */
 object Bench:
-  def run(seeds: Int, faults: Int, observed: Double, byRates: Boolean = true): String =
+  def run(seeds: Int, faults: Int, observed: Double, byRates: Boolean = true, metrics: Boolean = false): String =
     var unique, among, missed, sizes, total, consistent, first, top3 = 0
     val t0 = java.lang.System.nanoTime()
     (1 to seeds).foreach { i =>
       val s = Generate.system(i.toLong, 6 + i % 6)
       val sc = Generate.scenario(s, i.toLong, faults, observed, byRates)
-      val r = Explain(s, Read.all(s, sc.logs, sc.chat))
-      val seen = Read.all(s, sc.logs, sc.chat)
+      val seen = Read.all(s, sc.logs, sc.chat) ++
+        (if metrics then Metrics.facts(s, Metrics.exposition(Metrics.snapshot(sc.spread))) else Vector.empty)
+      val r = Explain(s, seen)
       if Explain.whyNot(s, seen, sc.faults).contains("consistent with everything") then consistent += 1
       val hit = r.explanations.exists(_.faults.toSet == sc.faults.toSet)
       if hit && r.explanations.size == 1 then unique += 1
@@ -28,7 +29,9 @@ object Bench:
     }
     val ms = (java.lang.System.nanoTime() - t0) / 1000000
     val how = if byRates then "drawn by their rates" else "drawn evenly"
-    f"""$seeds scenarios, $faults fault(s) $how, ${observed * 100}%.0f%% of the components with logs, read by `Read`:
+    val also = if metrics then ", and a scrape of metrics" else ""
+    val pct = f"${observed * 100}%.0f%%"
+    f"""$seeds scenarios, $faults fault(s) $how, $pct of the components with logs, read by `Read`$also:
        |  the gold the only explanation:   $unique (${100.0 * unique / total}%.0f%%)
        |  the gold among several:          $among (${100.0 * among / total}%.0f%%)
        |  another, as small or smaller:    $missed (${100.0 * missed / total}%.0f%%) — a fault hidden behind another

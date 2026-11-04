@@ -24,10 +24,17 @@ object Life:
     val began = Array.fill(events.size)(0.0)
     val entries = system.entries
     val slis = Vector(Reliability.Sli.Availability, Reliability.Sli.Latency)
-    val memo = scala.collection.mutable.HashMap.empty[Set[Fault], Vector[Boolean]]
-    def state(active: Set[Fault]): Vector[Boolean] = memo.getOrElseUpdate(active, {
+    // each entry point and SLI: the share of its requests failing (reads and writes by its share of writes)
+    val memo = scala.collection.mutable.HashMap.empty[Set[Fault], Vector[Double]]
+    def state(active: Set[Fault]): Vector[Double] = memo.getOrElseUpdate(active, {
       val r = Spread(system, active)
-      entries.flatMap(e => slis.map(_.failing(r, e)))
+      entries.flatMap { e =>
+        val w = system.writeShare(e)
+        slis.map { sli =>
+          (if sli.failingIn(Spread.World.Reads, r, e) then 1 - w else 0.0) +
+            (if sli.failingIn(Spread.World.Writes, r, e) then w else 0.0)
+        }
+      }
     })
     val n = entries.size * slis.size
     val batches = 20
@@ -46,11 +53,11 @@ object Life:
         val b = hourEnd
         val bi = math.min(batches - 1, (a / horizon * batches).toInt)
         (0 until n).foreach { i =>
-          if current(i) then
-            down(i) += b - a
-            inBatch(bi)(i) += b - a
+          if current(i) > 0 then
+            down(i) += (b - a) * current(i)
+            inBatch(bi)(i) += (b - a) * current(i)
             if record then hourly((math.floor(a).toInt, i)) = hourly.getOrElse((math.floor(a).toInt, i), 0.0) +
-              (b - a) * 60
+              (b - a) * 60 * current(i)
         }
         a = b
     var going = true
@@ -72,7 +79,7 @@ object Life:
           began(i) = at
           next(i) = at + draw(r.mttr)
         val after = state(events.indices.filter(on).map(events(_)._1).toSet)
-        (0 until n).foreach(j => if after(j) && !current(j) then starts(j) += 1)
+        (0 until n).foreach(j => if after(j) > 0 && current(j) == 0 then starts(j) += 1)
         current = after
     val measured = entries.zipWithIndex.flatMap { (e, ei) =>
       slis.zipWithIndex.map { (sli, si) =>

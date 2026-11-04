@@ -27,3 +27,20 @@ lazy val reliability = (project in file("."))
       // docker-compose and Kubernetes manifests
       "org.yaml" % "snakeyaml" % "2.3",
       "org.scalameta" %% "munit" % "1.1.1" % Test))
+
+// a runnable okay-reliability without sbt: `sbt stage` → target/okay-reliability (jars in lib, a launcher in bin)
+lazy val stage = taskKey[File]("a runnable okay-reliability in target/okay-reliability")
+reliability / stage := {
+  val out = (reliability / target).value / "okay-reliability"
+  IO.delete(out)
+  val jars = (reliability / Runtime / fullClasspathAsJars).value.map(_.data).filter(_.isFile)
+  jars.foreach(j => IO.copyFile(j, out / "lib" / j.getName))
+  val script = out / "bin" / "okay-reliability"
+  IO.write(script,
+    """#!/bin/sh
+      |here=$(cd "$(dirname "$0")/.." && pwd)
+      |exec java -Xss8m ${OKAY_RELIABILITY_JAVA_OPTS:-} -cp "$here/lib/*" okay.reliability.Main "$@"
+      |""".stripMargin)
+  script.setExecutable(true, false)
+  out
+}

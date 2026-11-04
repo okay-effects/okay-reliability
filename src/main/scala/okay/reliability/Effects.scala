@@ -75,3 +75,28 @@ object Files:
         val prefix = dir.stripSuffix("/") + "/"
         files.keys.filter(_.startsWith(prefix)).map(_.drop(prefix.length)).filterNot(_.contains('/')).toVector
           .sorted))
+
+/** THE NETWORK, as an effect: a GET answered (its body), or why not — a server's (Prometheus'); a test's map */
+enum Http[X]:
+  case Get(url: String) extends Http[Either[String, String]]
+
+object Http:
+  def get[R[_]](url: String)(using In[Http, R]): Either[String, String] ! R = perform[Http](Get(url))
+
+  def real[R[_], Rest[_], A](p: A ! R)(using Split[Http, R, Rest]): A ! Rest =
+    val client = java.net.http.HttpClient.newBuilder().connectTimeout(java.time.Duration.ofSeconds(10)).build()
+    handle(p, Handler.tail[Http, Rest, A, A](pure)([X] => (op: Http[X]) => op match
+      case Get(url) =>
+        try
+          val req = java.net.http.HttpRequest.newBuilder(java.net.URI.create(url))
+            .timeout(java.time.Duration.ofSeconds(30)).GET().build()
+          val res = client.send(req, java.net.http.HttpResponse.BodyHandlers.ofString())
+          if res.statusCode / 100 == 2 then Right(res.body) else Left(s"HTTP ${res.statusCode}: ${res.body.take(200)}")
+        catch case e: Exception => Left(Option(e.getMessage).getOrElse(e.toString))))
+
+  def memory[R[_], Rest[_], A](answers: String => Either[String, String])(p: A ! R)(
+    using Split[Http, R, Rest]): A ! Rest =
+    handle(p, Handler.tail[Http, Rest, A, A](pure)([X] => (op: Http[X]) => op match
+      case Get(url) => answers(url)))
+
+  def encode(s: String): String = java.net.URLEncoder.encode(s, "UTF-8")
