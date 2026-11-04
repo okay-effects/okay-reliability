@@ -43,7 +43,7 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 
 ## 4. Proof that it works
 
-12. **The extraction at scale** — 50+ incidents, two faults and partial observation among them, two or three models
+12. **The extraction at scale** — DEFERRED 2026-11-04 (the owner decides how to run the models). 50+ incidents, two faults and partial observation among them, two or three models
     (Qwen3.6-35B, a small one, Claude) — A / T / E with confidence intervals.
 13. **Real incidents** — public postmortems (GitHub, Cloudflare, AWS, Google Cloud, Slack): their systems and symptoms
     written as arch.txt and facts, and the analyzer's answer against what the postmortem found.
