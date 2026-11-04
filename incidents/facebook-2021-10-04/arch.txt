@@ -14,4 +14,4 @@ facebook -> datacenter hard
 instagram -> datacenter hard
 whatsapp -> datacenter hard
 datacenter -> backbone hard
-dns -> backbone hard
+dns -> backbone hard withdraws    # cut off from the data centers, it withdraws its routes

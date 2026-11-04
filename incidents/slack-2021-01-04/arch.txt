@@ -7,7 +7,7 @@ db: database
 dashboards: service entry           # monitoring and alerting
 provision: service                  # brings new instances into service
 lb -> web hard
-web -> tgw hard
+web -> tgw hard saturates          # its threads wait on the network: it fails, not only slows
 web -> backend hard
 dashboards -> tgw hard
 dashboards -> db hard

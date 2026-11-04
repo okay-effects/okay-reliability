@@ -20,10 +20,10 @@ class IncidentsSuite extends munit.FunSuite:
       "aws-2025-10-20" -> (Some(1), true, true),
       "cloudflare-2019-07-02" -> (Some(1), true, true),
       "cloudflare-2025-11-18" -> (Some(1), true, true),
-      "facebook-2021-10-04" -> (Some(2), false, false), // DNS withdrew itself: a reaction the model has no word for
+      "facebook-2021-10-04" -> (Some(2), true, true), // the backbone; `errors` first (a change: errors ×30, down ×5)
       "gcp-2025-06-12" -> (Some(1), true, true),
       "github-2018-10-21" -> (Some(2), true, true), // web or MySQL: the slowness seen only at web
-      "slack-2021-01-04" -> (Some(1), false, false)) // a slow gateway: the model says slow, the web tier failed
+      "slack-2021-01-04" -> (Some(1), true, true)) // the web tier saturates (spec §32)
     expected.foreach { case (name, (rank, minimal, consistent)) =>
       val a = answer(name)
       assertEquals((a.rank, a.truthMinimal, a.consistent), (rank, minimal, consistent), name)

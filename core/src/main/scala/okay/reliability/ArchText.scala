@@ -24,11 +24,12 @@ object ArchText:
             val use = if words.contains("reads") then Use.Reads else if words.contains("writes") then Use.Writes
               else Use.Both
             system = system.withDependency(Dependency(from, to, mode, use, words.contains("breaker"),
-              words.contains("retries")))
+              words.contains("retries"), words.contains("withdraws"), words.contains("saturates")))
             if fb >= 0 then alt match
               case Some(a) => system = system.withFallback(Fallback(from, to, a))
               case None => errors += s"line $n: fallback names no alternative"
-            val unknown = words.filterNot(w => Mode.of(w).isDefined || Set("reads", "writes", "breaker", "retries")(w))
+            val unknown = words.filterNot(w => Mode.of(w).isDefined || Set("reads", "writes", "breaker", "retries",
+              "withdraws", "saturates")(w))
             if unknown.nonEmpty then errors += s"line $n: what is ${unknown.mkString(" ")}?"
           case _ => errors += s"line $n: a dependency is `from -> to [mode] [fallback alt]`"
       else if words.headOption.contains("zone") && words.lift(2).contains("fails") then words match
@@ -99,6 +100,8 @@ object ArchText:
       (Vector(d.from, "->", d.to, d.mode.word) ++ (if d.use != Use.Both then Vector(d.use.word) else Vector.empty) ++
         (if d.breaker then Vector("breaker") else Vector.empty) ++
         (if d.retries then Vector("retries") else Vector.empty) ++
+        (if d.withdraws then Vector("withdraws") else Vector.empty) ++
+        (if d.saturates then Vector("saturates") else Vector.empty) ++
         s.fallbackOf(d.from, d.to).flatMap(a => Vector("fallback", a))).mkString(" ")
     }
     val rs = s.rates.toVector.sortBy((k, _) => (k._1, k._2.ordinal)).map { case ((c, k), r) =>

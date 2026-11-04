@@ -8,3 +8,6 @@ source: https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/
 # The analyzer (spec §28): `backbone errors` first, `backbone down` second, the backbone the check it makes next; the
 # truth contradicts `dns down` — the model's DNS fails with its callee (errors), it does not withdraw itself.
 # BACKLOG 19.
+# Since §32 (`dns -> backbone hard withdraws`, the DNS servers' designed reaction) the truth agrees with every fact and
+# is a minimal explanation; second to `backbone errors` (0.92 against 0.08): a change raises a component's errors ×30,
+# its going down ×5 — the right component, the kind told apart only by a look at it.

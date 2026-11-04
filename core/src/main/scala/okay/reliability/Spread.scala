@@ -132,8 +132,14 @@ object Spread:
             val alternatives = system.fallbackOf(d.from, d.to)
             val rescued = d.mode == Mode.Hard && bad(e.kind) &&
               alternatives.exists(a => !causes.keysIterator.exists(x => x.component == a && bad(x.kind)))
-            val shown = if rescued then EffectKind.Retries else k
+            // REACTIONS (spec §32): a caller that withdraws shows down; one a slow callee saturates fails too
+            val shown =
+              if rescued then EffectKind.Retries
+              else if d.withdraws && d.mode == Mode.Hard && k == EffectKind.Errors then EffectKind.Down
+              else k
             if add(Effect(d.from, shown), Cause.Through(d, e)) then changed = true
+            if !rescued && d.saturates && d.mode == Mode.Hard && shown == EffectKind.Slow &&
+              add(Effect(d.from, EffectKind.Errors), Cause.Through(d, e)) then changed = true
           }
         }
       }

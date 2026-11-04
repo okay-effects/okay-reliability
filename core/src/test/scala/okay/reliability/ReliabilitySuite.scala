@@ -598,3 +598,19 @@ class ReliabilitySuite extends munit.FunSuite:
     val any = Explain(s, Words.facts("symptom(api, errors)").toOption.get)
     assert(any.explanations.exists(_.faults.exists(_.component == "placement")))
   }
+
+  test("reactions (spec §32): a caller that withdraws shows down; one a slow callee saturates fails too") {
+    val s = ArchText.read("app: service entry\ndns: service\nnet: service\nweb: service entry\ngw: balancer\n" +
+      "app -> dns hard\ndns -> net hard withdraws\nweb -> gw hard saturates").toOption.get
+    assertEquals(ArchText.read(ArchText.print(s)).map(_.dependencies.toSet), Right(s.dependencies.toSet))
+    val down = Spread(s, Vector(Fault("net", FaultKind.Errors)))
+    assert(down.shows(Effect("dns", EffectKind.Down)) && !down.shows(Effect("dns", EffectKind.Errors)))
+    assert(down.shows(Effect("app", EffectKind.Errors)))
+    val slow = Spread(s, Vector(Fault("gw", FaultKind.Slow)))
+    assert(slow.shows(Effect("web", EffectKind.Slow)) && slow.shows(Effect("web", EffectKind.Errors)))
+    // without the words, as before
+    val plain = ArchText.read("dns: service\nnet: service\nweb: service entry\ngw: balancer\n" +
+      "dns -> net hard\nweb -> gw hard").toOption.get
+    assert(Spread(plain, Vector(Fault("net", FaultKind.Errors))).shows(Effect("dns", EffectKind.Errors)))
+    assert(!Spread(plain, Vector(Fault("gw", FaultKind.Slow))).shows(Effect("web", EffectKind.Errors)))
+  }

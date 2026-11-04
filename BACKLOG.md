@@ -67,7 +67,8 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 18. ~~**Facts of a world**~~ — DONE 2026-11-04 (spec §31; S3 second → first).
     `symptom(s3, errors, reads)` — what failed for reads, for writes (S3 2017: the write path
     explains as well as the index when "GET failed too" cannot be said).
-19. **Reactions**: a component that turns a callee's failure into its own `down` (DNS withdrawing its routes,
+19. ~~**Reactions**~~ — DONE 2026-11-04 (spec §32: `withdraws`, `saturates`; Slack, Facebook agree with every fact).
+    a component that turns a callee's failure into its own `down` (DNS withdrawing its routes,
     Facebook 2021); a caller saturated by a slow callee fails rather than slows (Slack 2021).
 
 ## Later, when a server is needed

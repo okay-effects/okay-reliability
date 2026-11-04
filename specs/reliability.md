@@ -599,6 +599,24 @@ write path shows nothing among the reads). Without it, as before: either world. 
 Measured: S3 2017 second → first (`s3-index down` 0.27; `s3 full`, `s3-index full` 0.26 each — the index checked
 next); the real incidents' truth first in 6 of 8. A symptom with no world matches as before: `bench` unchanged.
 
+## 32. Reactions (BACKLOG 19, 2026-11-04)
+
+Two behaviours of real callers the model had no word for (§28), each a word on a hard dependency:
+
+- `withdraws` — the caller takes itself out when the callee fails: `dns -> backbone hard withdraws` (Facebook 2021:
+  the DNS servers, cut off from the data centers, withdrew their BGP routes). The callee down or in errors, the caller
+  shows `down`, not `errors`.
+- `saturates` — a slow callee exhausts the caller's threads, and the caller fails as well as slows:
+  `web -> tgw hard saturates` (Slack 2021). The callee slow, the caller shows `slow` and `errors`.
+
+Neither changes a fallback's rescue (a caller rescued shows retries) nor anything on another mode. Both are read and
+printed by `ArchText` (`hard withdraws`, `hard saturates`) and simulated by `Spread`, so the numbers (§9), the
+remedies and the generator see them.
+
+Measured: Slack 2021 — the truth agrees with every fact now, the only minimal explanation, 0.99; Facebook 2021 —
+agrees with every fact, minimal, second to `backbone errors` (0.92 against 0.08: a change raises errors ×30, down ×5;
+the right component). No `!` left in the real incidents' table; the generator does not use the words: `bench` unchanged.
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a

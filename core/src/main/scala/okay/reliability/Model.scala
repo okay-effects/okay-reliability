@@ -39,7 +39,7 @@ enum Use:
 
 /** a call from `from` to `to`: its mode, what it carries, and whether a circuit breaker fails it fast */
 final case class Dependency(from: String, to: String, mode: Mode = Mode.Hard, use: Use = Use.Both,
-  breaker: Boolean = false, retries: Boolean = false)
+  breaker: Boolean = false, retries: Boolean = false, withdraws: Boolean = false, saturates: Boolean = false)
 /** when `to` is bad, `from` uses `alternative` — unless that is bad too */
 final case class Fallback(from: String, to: String, alternative: String)
 

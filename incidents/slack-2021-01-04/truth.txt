@@ -7,3 +7,5 @@ source: https://slack.engineering/slacks-outage-on-january-4th-2021/
 # replicas, not a traffic jump), the autoscaler's own moves. The web tier's errors come from its saturation: the model
 # says a slow hard callee makes the caller slow, not failing.
 # The analyzer (spec §28): first, though it contradicts the web tier's and the balancer's errors. BACKLOG 19.
+# Since §32 (`web -> tgw hard saturates`, the web tier's threads exhausted waiting on the network) the only minimal
+# explanation, 0.99.
