@@ -153,7 +153,7 @@ object Read:
   def log(system: System, c: String, lines: Vector[String]): Vector[Observation] =
     val found = lines.zipWithIndex.flatMap((l, i) => parse(l).toVector.flatMap((level, msg) =>
       facts(system, c, level, msg, l).map {
-        case Observation.Symptom(x, k, _, _) => Observation.Symptom(x, k, s"log:$c:${i + 1}", time(l))
+        case Observation.Symptom(x, k, _, _, _) => Observation.Symptom(x, k, s"log:$c:${i + 1}", time(l))
         case Observation.Alive(x, _) => Observation.Alive(x, s"log:$c:${i + 1}")
         case Observation.Changed(x, w, _, _) => Observation.Changed(x, w, s"log:$c:${i + 1}", time(l))
         case h => h
@@ -196,6 +196,6 @@ object Read:
   def all(system: System, logs: Map[String, Vector[String]], chatLines: Vector[String]): Vector[Observation] =
     (logs.toVector.sortBy(_._1).flatMap((c, ls) => log(system, c, ls)) ++ chat(system, chatLines))
       .distinctBy(o => (o.productPrefix, o.component, o match
-        case Observation.Symptom(_, k, _, _) => k.word
+        case Observation.Symptom(_, k, _, _, _) => k.word
         case Observation.Changed(_, w, _, at) => s"$w$at"
         case _ => ""))

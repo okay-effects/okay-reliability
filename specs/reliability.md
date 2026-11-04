@@ -588,6 +588,17 @@ first 29% → 31%, top three 130 → 140; two faults with changes, first 44% →
 third → second (`web slow` 0.50, `mysql slow` 0.35 — the slowness was seen only at web; the check next is mysql); the
 link no longer in the top three. The other incidents unchanged.
 
+## 31. Facts of a world (BACKLOG 18, 2026-11-04)
+
+S3 2017 (§28): "GET, LIST, PUT, DELETE all failed" could not be said, so the placement service — on the write path
+only — explained the symptoms as well as the index. A symptom may now say the world it was seen in:
+`symptom(s3, errors, reads)`, `symptom(s3, errors, writes)` — matched in that world's spread only (a fault of the
+write path shows nothing among the reads). Without it, as before: either world. Read from logs, a symptom has no world
+(a line rarely says); a person or a postmortem says it.
+
+Measured: S3 2017 second → first (`s3-index down` 0.27; `s3 full`, `s3-index full` 0.26 each — the index checked
+next); the real incidents' truth first in 6 of 8. A symptom with no world matches as before: `bench` unchanged.
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a

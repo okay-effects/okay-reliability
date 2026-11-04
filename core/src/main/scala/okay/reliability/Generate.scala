@@ -167,7 +167,8 @@ object Generate:
       val located = ls.map { l =>
         n += 1; val at = n; if formatOf(c) == "plain" then n += l.stack.size; (l, at) }
       located.foreach((l, at) => l.facts.foreach {
-        case Observation.Symptom(x, k, _, _) => facts += Observation.Symptom(x, k, s"log:$c:$at", Some(origin + l.at))
+        case Observation.Symptom(x, k, _, _, _) =>
+          facts += Observation.Symptom(x, k, s"log:$c:$at", Some(origin + l.at))
         case Observation.Healthy(x, _) => facts += Observation.Healthy(x, s"log:$c:$at")
         case Observation.Alive(x, _) => facts += Observation.Alive(x, s"log:$c:$at")
         case Observation.Changed(x, w, _, _) => facts += Observation.Changed(x, w, s"log:$c:$at", Some(origin + l.at))
@@ -177,7 +178,7 @@ object Generate:
     }
     val (chat, chatFacts) = chatOf(system, r, rnd)
     val all = (facts.result() ++ chatFacts).distinctBy(o => (o.productPrefix, o.component, o match
-      case Observation.Symptom(_, k, _, _) => k.word
+      case Observation.Symptom(_, k, _, _, _) => k.word
       case _ => ""))
     Scenario(system, chosen, r, logs, formatOf, chat, all, system.names.filterNot(seen.contains))
 
@@ -255,7 +256,7 @@ object Generate:
           val status = l.level match
             case "ERROR" => if l.message.contains("connection refused") then 502 else 500
             case "WARN" if l.facts.exists {
-                case Observation.Symptom(_, EffectKind.Slow, _, _) => true
+                case Observation.Symptom(_, EffectKind.Slow, _, _, _) => true
                 case _ => false
               } =>
               504
@@ -288,7 +289,7 @@ object Generate:
     say("lead: let's find the cause before we restart anything", None)
     val lines = out.result()
     (lines.map(_._1), lines.zipWithIndex.flatMap { case ((_, o), i) => o.map {
-      case Observation.Symptom(c, k, _, _) => Observation.Symptom(c, k, s"chat:${i + 1}")
+      case Observation.Symptom(c, k, _, _, _) => Observation.Symptom(c, k, s"chat:${i + 1}")
       case Observation.Healthy(c, _) => Observation.Healthy(c, s"chat:${i + 1}")
       case Observation.Alive(c, _) => Observation.Alive(c, s"chat:${i + 1}")
       case ch: Observation.Changed => ch.copy(source = s"chat:${i + 1}")

@@ -4,8 +4,9 @@ import okay.effects.time.Instant
 
 /** WHAT WAS SEEN: a component's effect, or that it is fine — each from somewhere (`log:checkout:17`, `chat:5`) */
 enum Observation:
-  /** `at`: when it was seen, epoch seconds — a log line's time */
-  case Symptom(component: String, kind: EffectKind, source: String = "", at: Option[Long] = None)
+  /** `at`: when it was seen, epoch seconds — a log line's time; `world`: seen in reads or in writes only (spec §31) */
+  case Symptom(component: String, kind: EffectKind, source: String = "", at: Option[Long] = None,
+    world: Option[Spread.World] = None)
   case Healthy(component: String, source: String = "")
   /** it wrote to its log: not down as a whole */
   case Alive(component: String, source: String = "")
@@ -14,7 +15,8 @@ enum Observation:
   def component: String
   def source: String
   override def toString: String = this match
-    case Symptom(c, k, s, t) => s"symptom($c, ${k.word})" + (if s.nonEmpty then s" [$s]" else "") +
+    case Symptom(c, k, s, t, w) => s"symptom($c, ${k.word}" + w.fold("")(x => s", ${x.toString.toLowerCase}") + ")" +
+      (if s.nonEmpty then s" [$s]" else "") +
       t.fold("")(x => s" @${Instant(x).toString}")
     case Healthy(c, s) => s"healthy($c)" + (if s.nonEmpty then s" [$s]" else "")
     case Alive(c, s) => s"alive($c)" + (if s.nonEmpty then s" [$s]" else "")
@@ -85,7 +87,7 @@ object Explain:
   def direct(observations: Vector[Observation]): Set[String] = observations.collect {
     case Observation.Healthy(c, _) => c
     case Observation.Alive(c, _) => c
-    case Observation.Symptom(c, _, src, _) if !src.startsWith("log:") || src.startsWith(s"log:$c:") => c
+    case Observation.Symptom(c, _, src, _, _) if !src.startsWith("log:") || src.startsWith(s"log:$c:") => c
     case Observation.Changed(c, _, src, _) if src.startsWith(s"log:$c") => c
   }.toSet
 
@@ -94,8 +96,9 @@ object Explain:
   /** a symptom shown by a spread: its effect, or (for errors seen) the component down */
   def matching(r: Spread.Result, s: Observation.Symptom): Option[Effect] =
     val e = Effect(s.component, s.kind)
-    if r.shows(e) then Some(e)
-    else if s.kind == EffectKind.Errors && r.shows(Effect(s.component, EffectKind.Down)) then
+    def shows(x: Effect) = s.world.fold(r.shows(x))(w => r.in(w).contains(x))
+    if shows(e) then Some(e)
+    else if s.kind == EffectKind.Errors && shows(Effect(s.component, EffectKind.Down)) then
       Some(Effect(s.component, EffectKind.Down))
     else None
 

@@ -57,7 +57,8 @@ object Tools:
     }
 
   private val factsHelp = "one a line: symptom(component, kind) [source] — kind one of " +
-    EffectKind.values.map(_.word).mkString(", ") + "; healthy(component) [source] — nothing wrong seen with it; " +
+    EffectKind.values.map(_.word).mkString(", ") + " (`symptom(component, kind, reads)` or `writes`: seen in that " +
+    "world only — reads failed, writes failed); healthy(component) [source] — nothing wrong seen with it; " +
     "alive(component) [source] — it writes to its log (so it is not down as a whole); " +
     "changed(component, deploy) [source] " +
     "@time — it was deployed (or `config`: reconfigured) then. A source is where you saw it: " +

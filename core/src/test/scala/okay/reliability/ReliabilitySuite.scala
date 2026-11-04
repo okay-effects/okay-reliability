@@ -584,3 +584,17 @@ class ReliabilitySuite extends munit.FunSuite:
       val reached = plain.entries.flatMap(e => Reliability.reach(plain, e)).toSet
       assertEquals(shown(back.system), (cs.filter(c => reached(c._1)), ds.filter(d => reached(d._1))), s"seed $seed")
     }
+
+  test("a fact of a world (spec §31): a fault of the write path does not explain reads that failed") {
+    val s = ArchText.read("api: service entry\nindex: database\nplacement: service\n" +
+      "api -> index hard\napi -> placement hard writes\nplacement -> index hard").toOption.get
+    val both = Words.facts("symptom(api, errors, reads)\nsymptom(api, errors, writes)").toOption.get
+    assertEquals(both.head.toString, "symptom(api, errors, reads)")
+    assertEquals(Words.facts(both.head.toString).toOption.get.head, both.head)
+    val r = Explain(s, both)
+    assert(r.explanations.exists(_.faults == Vector(Fault("index", FaultKind.Down))))
+    assert(!r.explanations.exists(_.faults.exists(_.component == "placement")))
+    // said with no world, the write path explains as well
+    val any = Explain(s, Words.facts("symptom(api, errors)").toOption.get)
+    assert(any.explanations.exists(_.faults.exists(_.component == "placement")))
+  }

@@ -16,7 +16,7 @@ class IncidentsSuite extends munit.FunSuite:
 
   test("the truth's rank, and whether it is among the minimal explanations and agrees with every fact") {
     val expected = Map(
-      "aws-2017-02-28" -> (Some(2), true, true), // the facts cannot say reads failed: the write path explains too
+      "aws-2017-02-28" -> (Some(1), true, true), // reads and writes failed (spec §31): not the write path
       "aws-2025-10-20" -> (Some(1), true, true),
       "cloudflare-2019-07-02" -> (Some(1), true, true),
       "cloudflare-2025-11-18" -> (Some(1), true, true),

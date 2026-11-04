@@ -2,7 +2,8 @@ package okay.reliability
 
 /** THE WORDS A MODEL WRITES: facts (`symptom(checkout, errors) [log:checkout:17]`), faults (`db down, web#1 down`) */
 object Words:
-  private val fact = """^\s*(symptom|healthy|alive|changed)\s*\(\s*([A-Za-z0-9_.-]+)\s*(?:,\s*([a-z]+)\s*)?\)\s*""" +
+  private val fact = """^\s*(symptom|healthy|alive|changed)\s*\(\s*([A-Za-z0-9_.-]+)\s*(?:,\s*([a-z]+)\s*)?""" +
+    """(?:,\s*(reads|writes)\s*)?\)\s*""" +
     """(?:\[([^\]]*)\])?\s*(?:@\s*(\S+))?\s*\.?\s*$"""
   private val factRe = fact.r
   private val faultRe = """^\s*([A-Za-z0-9_.:-]+?)(?:#(\d+))?\s+([a-z]+)\s*$""".r
@@ -10,14 +11,16 @@ object Words:
   def facts(text: String): Either[String, Vector[Observation]] =
     val lines = text.split("[\n;]").toVector.map(_.trim).filter(l => l.nonEmpty && !l.startsWith("#"))
     val read = lines.map {
-      case factRe("symptom", c, k, src, at) => EffectKind.of(Option(k).getOrElse("")).toRight(
+      case factRe("symptom", c, k, world, src, at) => EffectKind.of(Option(k).getOrElse("")).toRight(
           s"$c: what is ${Option(k).getOrElse("(none)")}? (${EffectKind.values.map(_.word).mkString(", ")})")
-          .map(Observation.Symptom(c, _, Option(src).getOrElse(""), Option(at).flatMap(Read.time)))
-      case factRe("healthy", c, null, src, _) => Right(Observation.Healthy(c, Option(src).getOrElse("")))
-      case factRe("alive", c, null, src, _) => Right(Observation.Alive(c, Option(src).getOrElse("")))
-      case factRe("changed", c, w, src, at) => Right(Observation.Changed(c, Option(w).getOrElse("deploy"),
+          .map(Observation.Symptom(c, _, Option(src).getOrElse(""), Option(at).flatMap(Read.time),
+            Option(world).map(x => if x == "reads" then Spread.World.Reads else Spread.World.Writes)))
+      case factRe("healthy", c, null, null, src, _) => Right(Observation.Healthy(c, Option(src).getOrElse("")))
+      case factRe("alive", c, null, null, src, _) => Right(Observation.Alive(c, Option(src).getOrElse("")))
+      case factRe("changed", c, w, null, src, at) => Right(Observation.Changed(c, Option(w).getOrElse("deploy"),
           Option(src).getOrElse(""), Option(at).flatMap(Read.time)))
-      case l => Left(s"not a fact: $l — symptom(component, kind) [source], healthy(component), alive(component), " +
+      case l => Left(s"not a fact: $l — symptom(component, kind[, reads|writes]) [source], healthy(component), " +
+        "alive(component), " +
         "changed(component, deploy|config)")
     }
     val errors = read.collect { case Left(e) => e }

@@ -5,4 +5,5 @@ source: https://aws.amazon.com/message/41926/
 # that was seen; the placement's own loss is hidden behind it (it showed only after the index came back).
 # The change known was to the billing subsystem — which nothing in the request path uses: a change beside the cause.
 # The analyzer (spec §28): second, behind `s3-placement errors` — the facts cannot say that reads failed too, so the
-# write path explains as well; it asks about s3-placement next. BACKLOG 18.
+# write path explains as well; it asks about s3-placement next. Since §31 (facts of a world: reads failed, writes
+# failed) first, 0.27 — beside `s3 full` and `s3-index full` (0.26 each): which way the index failed is the next check.

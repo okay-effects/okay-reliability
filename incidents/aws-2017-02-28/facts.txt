@@ -1,6 +1,7 @@
 # what was seen before the cause was known (times UTC, the postmortem's 9:37 AM PST)
 changed(s3-billing, config) [postmortem: a command to remove a few billing servers] @2017-02-28T17:37:00Z
-symptom(s3, errors) [postmortem: S3 APIs unavailable] @2017-02-28T17:37:00Z
+symptom(s3, errors, reads) [postmortem: GET and LIST failed] @2017-02-28T17:37:00Z
+symptom(s3, errors, writes) [postmortem: PUT and DELETE failed] @2017-02-28T17:37:00Z
 symptom(s3-console, errors) [postmortem] @2017-02-28T17:40:00Z
 symptom(ec2-launch, errors) [postmortem: new instance launches failed] @2017-02-28T17:40:00Z
 symptom(ebs-restore, errors) [postmortem: volumes needing snapshot data failed] @2017-02-28T17:40:00Z
