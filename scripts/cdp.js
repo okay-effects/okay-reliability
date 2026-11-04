@@ -18,6 +18,8 @@ module.exports = async (port = 9341, width = 1280, height = 900, mobile = false)
     const id = ++n; pending[id] = r; ws.send(JSON.stringify({ id, method, params }));
   });
   await cdp("Page.enable"); await cdp("Runtime.enable");
+  // a page as it is now: a site's cache (GitHub Pages: ten minutes) would give the one before
+  await cdp("Network.enable"); await cdp("Network.setCacheDisabled", { cacheDisabled: true });
   await cdp("Emulation.setDeviceMetricsOverride",
     { width, height, deviceScaleFactor: 1, mobile });
   const js = async ex =>
