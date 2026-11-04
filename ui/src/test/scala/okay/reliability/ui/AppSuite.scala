@@ -82,7 +82,7 @@ class AppSuite extends munit.FunSuite:
 
   test("no places before a system: only the field, Analyze, Examples; the places once one is loaded"):
     val first = play().at.toList.flatMap(_.buttons.map(_.label))
-    assertEquals(first, List("Analyze", "Examples"))
+    assertEquals(first, List("Analyze", "Read the files", "Examples"))
     val examples = play(Act.press("Examples")).at.toList.flatMap(_.buttons.map(_.label))
     assert(examples.contains("Back") && !examples.contains("Architecture"), examples.toString)
     val loaded = play(Act.press("Examples"), Act.press("Load the shop")).at.toList.flatMap(_.buttons.map(_.label))
@@ -157,3 +157,13 @@ class AppSuite extends munit.FunSuite:
       val first = t.linesIterator.dropWhile(_ != "Probable causes").drop(1).nextOption().getOrElse("")
       assert(first.contains(cause), s"$title: $first")
     }
+
+  test("a folder, or several (spec §38): the system and its logs read at once, the incident shown"):
+    val bundle = okay.business.model.Bundle.write(List(
+      "shop/arch.txt" -> Examples.shop,
+      "shop/logs/checkout.log" -> "2026-11-04T14:01:02Z ERROR connection refused to db:5432\n",
+      "other/logs/web-1.log" -> "2026-11-04T14:01:05Z ERROR upstream checkout returned 503\n"))
+    val p = play(Act.press("Read the files", "Or a folder, or several: configurations and logs (arch.txt, compose, " +
+      "manifests, traces, *.log, logs/, chat.txt, *.prom, facts.txt)" -> bundle))
+    val t = texts(p)
+    assert(t.contains("read the system from shop/arch.txt; logs of checkout, web") && t.contains("Probable causes"), t)

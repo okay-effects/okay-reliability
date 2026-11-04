@@ -626,3 +626,27 @@ class ReliabilitySuite extends munit.FunSuite:
     val r = Spread(s, Vector(Fault("cp", FaultKind.Down)))
     assert(r.shows(Effect("net", EffectKind.Slow)) && !r.shows(Effect("net", EffectKind.Errors)))
   }
+
+  test("a folder, or several (spec §38): the system merged, logs by their component's name, the rest sorted") {
+    val files = List(
+      "shop/arch.txt" -> "web: service entry\ncheckout: service\nweb -> checkout hard\n",
+      "more/compose.yml" ->
+        "services:\n  checkout:\n    environment:\n      DB: postgres://db:5432/x\n  db:\n    image: postgres\n",
+      "shop/logs/web-1.log" -> "2026-11-04T14:01:05Z ERROR upstream checkout returned 503\n",
+      "shop/logs/checkout/app.log" -> "2026-11-04T14:01:02Z ERROR connection refused to db:5432\n",
+      "shop/chat.txt" -> "oncall: checked db, it is fine\n",
+      "shop/facts.txt" -> "changed(checkout, deploy) [git] @2026-11-04T14:00:00Z\n",
+      "shop/logs/unknown.log" -> "x\n", "shop/picture.png" -> "?")
+    val s = Folder.read(files)
+    assertEquals(s.systemFrom, Vector("shop/arch.txt", "more/compose.yml"))
+    val sys = s.system.get
+    assert(Set("web", "checkout", "db").subsetOf(sys.names.toSet), ArchText.print(sys))
+    assertEquals(s.logs.map(_._1), Vector("web", "checkout"))
+    assertEquals(s.skipped.map(_._1), Vector("shop/logs/unknown.log", "shop/picture.png"))
+    val os = Folder.observations(sys, s).toOption.get
+    assert(os.exists(_.isInstanceOf[Observation.Changed]), os.toString)
+    assert(os.exists(_.isInstanceOf[Observation.Symptom]), os.toString)
+    assert(s.said.contains("logs of web, checkout") && s.said.contains("skipped"), s.said)
+    // no system among them: the one loaded
+    assertEquals(Folder.read(List("web.log" -> "x\n"), Some(sys)).logs.map(_._1), Vector("web"))
+  }

@@ -35,6 +35,13 @@ module.exports = async (port = 9341, width = 1280, height = 900, mobile = false)
     // a button by its text, clicked
     click: async text => js(`(()=>{const b=[...document.querySelectorAll('button,a')]
       .find(b=>b.textContent.trim()===${JSON.stringify(text)}); b && b.click(); return !!b})()`),
+    // files given to a file input, as if chosen (a folder's: give its files)
+    files: async (selector, paths) => {
+      const root = (await cdp("DOM.getDocument", { depth: -1 })).root.nodeId;
+      const { nodeId } = await cdp("DOM.querySelector", { nodeId: root, selector });
+      if (!nodeId) return false;
+      await cdp("DOM.setFileInputFiles", { nodeId, files: paths }); return true;
+    },
     text: () => js("document.body.innerText"),
     close: () => { ws.close(); chrome.kill(); },
     sleep,

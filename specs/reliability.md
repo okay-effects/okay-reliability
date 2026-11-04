@@ -698,17 +698,6 @@ are the enumeration's, now on a system with all three (found missing 2026-11-04,
 Measured: Google 2019 not found (against a fact) → fourth, agreeing with every fact, a minimal explanation; the
 control plane first, as `slow` (0.40). The other 20 unchanged; the generator does not use the word: `bench` unchanged.
 
-## 37. Congestion shows both (BACKLOG 24, 2026-11-04)
-
-AWS 2021 (§34): one congested network, and its callers both slow and failing; a fault was one kind. A fifth kind of
-fault, `congested`: the component slow **and** in errors, at once (`Spread`: both effects, its own). Its prior is
-rarer than either alone (a service every 90 d for 30 min, a balancer 180 d / 20 min, a database 180 d / 30 min, an
-external 60 d / 30 min; none for a cache or a queue); a change raises it as it raises errors and slowness (×30).
-Parsimony of kind: an explanation with a congested fault is kept only when neither of its kinds alone (`errors`,
-`slow`, the rest the same) explains as well — so it never doubles the explanations of a plain error or slowness. The
-generator does not draw it (the bench's scenarios stay what they were); the fault tree has it in both errors and
-slowness; the remedies: shed load, add capacity, a breaker.
-
 ## 37. Congestion shows both (BACKLOG 24, 2026-11-04) — tried, refuted, reverted
 
 AWS 2021 (§34): one congested network, its callers both slow and failing; a fault is one kind. Tried: a fifth kind,
@@ -721,6 +710,27 @@ one and a failing one) and wins on the prior of one event against two. Reverted.
 
 What it says: a kind that is the union of two others is too cheap an explanation for the analyzer as it is; if it
 comes back, it needs evidence of its own (the same component seen both slow and failing), not just its callers.
+
+## 38. A folder, or several (2026-11-04)
+
+The owner: "open not only a file but a whole folder of logs and configurations — maybe more than one". On the page the
+System screen has, beside the system's field, a field of many files (okay-ui's `Field.files`: "Choose a folder…",
+"Choose files…", each choice added, so several folders; or a bundle pasted, what `tail -n +1` prints for several
+files). `Folder.read` sorts the files by name, nothing else asked:
+
+- **the system**: `arch.txt` (or `*.arch.txt`), `*.yml`/`*.yaml` (a compose file, Kubernetes manifests), `*.json`
+  that are traces (OTLP, Jaeger) — each read as the System field reads it, all merged into one system (`System.merge`:
+  the first file's components and dependencies kept, the others' added);
+- **facts**: `facts.txt`, `*.facts`; **metrics**: `*.prom`; **a chat**: `chat.txt`, `notes*.txt`, `*.md`;
+- **logs**: `*.log`, and any other text file under a directory named `logs`, each the log of the component its name
+  names (`web.log`, `web-1.log`, `logs/web/app.log`: the longest component's name the file's or its directory's name
+  begins with); a log no component is named by is skipped, said;
+- anything else skipped, said.
+
+Its facts (`Folder.observations`) are the logs' (`Read.log`), the chats' (`Read.chat`), the metrics' and the facts
+written. On the page: the system loaded, the facts added, and the Incident shown when there are any (else the
+Architecture); a note says what was read from where and what was skipped. With no system among the files, the system
+already loaded is used; with neither, it says so.
 
 ## 15. Not yet
 

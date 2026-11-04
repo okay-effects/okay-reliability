@@ -22,6 +22,8 @@ object App:
     case Load(text: String)
     /** a real incident: its system loaded, its facts added, the incident shown */
     case LoadIncident(system: String, facts: String)
+    /** a folder, or several (spec §38): each file its path and text */
+    case LoadFolder(files: List[(String, String)])
     case Random(services: Int, seed: Long)
     case Simulate
     case AddFault(f: Fault)
@@ -136,6 +138,19 @@ object App:
           val found = Metrics.facts(sys, Metrics.exposition(text))
           clean.copy(seen = (s.seen ++ found).distinct, note = Some(t("{0} facts from the metrics.", found.size)))
         }
+      case Msg.LoadFolder(files) =>
+        val sorted = Folder.read(files, s.system)
+        sorted.system match
+          case None => clean.copy(problem = Some(t("No system among the files, and none loaded: add an arch.txt, a " +
+            "compose file, manifests or traces.")))
+          case Some(sys) =>
+            val loaded = if sorted.systemFrom.nonEmpty then step(s, Msg.Load(ArchText.print(sys))) else clean
+            loaded.system.fold(loaded)(now => Folder.observations(now, sorted) match
+              case Left(e) => loaded.copy(problem = Some(e))
+              case Right(os) =>
+                val seen = (loaded.seen ++ os).distinct
+                loaded.copy(seen = seen, note = Some(sorted.said),
+                  place = if os.nonEmpty then "incident" else "architecture"))
       case Msg.LoadIncident(system, facts) =>
         val loaded = step(s, Msg.Load(system))
         if loaded.system.isEmpty then loaded else step(loaded, Msg.AddFacts(facts)).copy(place = "incident")
@@ -210,17 +225,25 @@ object App:
       "available every entry point is, what a failure would do, what an incident's cause is, and what fixes it. " +
       "Everything is computed in this page; nothing leaves it. Paste a system, choose or drop its file — or start " +
       "from one of the Examples."))
+    // a folder, or several, or files (spec §38): the system, logs, chats, metrics and facts sorted by their names
+    val folder = folderForm
     val format = Part.block("small")(Part.text("arch.txt: `name: kind [entry] [replicas N] [zones a,b] [needs K]` " +
       "(kinds: service, database, cache, queue, balancer, external), `from -> to [hard|soft|cached|async] " +
       "[reads|writes] [breaker] [retries] [withdraws] [saturates] [congests] [fallback alt]` — withdraws: the caller " +
       "takes itself out when the callee fails (DNS withdrawing its routes); saturates: a slow callee makes the " +
       "caller fail too; congests: the callee lost, the caller slows (capacity gone), not fails; " +
       "`x fails down every 90d for 30m`, `zone a fails every 365d for 2h`, `web slo 99.9%`, `web writes 20%`."))
-    (List(intro, form, format) ++ s.system.toList.map(sys => Scheme.picture(sys, Scheme.kindMark(sys),
+    (List(intro, form, folder, format) ++ s.system.toList.map(sys => Scheme.picture(sys, Scheme.kindMark(sys),
       t("the system loaded"))),
-      List(Button.submit(t("Analyze"), form)(Msg.Load(_): Msg), Button(t("Examples"))(Msg.Go("examples"): Msg)) ++
+      List(Button.submit(t("Analyze"), form)(Msg.Load(_): Msg), Button.submit(t("Read the files"), folder)(
+        Msg.LoadFolder(_): Msg), Button(t("Examples"))(Msg.Go("examples"): Msg)) ++
         (if s.system.nonEmpty then List(Button(t("Copy a link to this system"))(Msg.CopyLink(false): Msg),
           Button(t("Forget it here"), Style.Danger)(Msg.ForgetHere: Msg)) else Nil))
+
+  /** a folder, or several (spec §38): a field of many files, each choice added */
+  def folderForm(using Lang): Form[List[(String, String)]] =
+    Form.one(Field.files(t("Or a folder, or several: configurations and logs (arch.txt, compose, manifests, traces, " +
+      "*.log, logs/, chat.txt, *.prom, facts.txt)")).keyed("folder"))
 
   /** the shop's traces, made when asked: its fallback aside (traces do not show one) */
   def shopTraces: String =
@@ -384,6 +407,10 @@ object App:
     buttons += Button.submit(t("Read the chat"), chat)(Msg.AddChat(_): Msg)
     parts += metrics
     buttons += Button.submit(t("Read the metrics"), metrics)(Msg.AddMetrics(_): Msg)
+    // a folder of logs, or several (spec §38): read with the system loaded
+    val folder = folderForm
+    parts += folder
+    buttons += Button.submit(t("Read the files"), folder)(Msg.LoadFolder(_): Msg)
     parts += facts
     buttons += Button.submit(t("Add the facts"), facts)(Msg.AddFacts(_): Msg)
     if s.seen.nonEmpty then

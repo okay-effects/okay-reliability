@@ -1,6 +1,7 @@
 // THE PAGE, END TO END: headless Chrome loads it (URL: GitHub Pages, or target/site served locally), presses through
 // the places, takes a picture of each (/tmp/okr-*.png).
 const cdpOf = require("./cdp.js");
+const fs = require("fs");
 (async () => {
   const c = await cdpOf(9361, Number(process.env.WIDTH || 1280), 900, process.env.WIDTH === "390");
   let failed = 0;
@@ -40,6 +41,22 @@ const cdpOf = require("./cdp.js");
     const t=h && h.parentElement.querySelector("td");
     return !!t && t.textContent.includes("backbone")})()`));
   await c.shot("/tmp/okr-real.png");
+  // a folder: the system and its logs, chosen as files (spec §38)
+  const dir = "/tmp/okr-e2e-folder";
+  fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir + "/logs", { recursive: true });
+  fs.writeFileSync(dir + "/arch.txt",
+    "web: service entry\ncheckout: service\ndb: database\nweb -> checkout hard\ncheckout -> db hard\n");
+  fs.writeFileSync(dir + "/logs/checkout.log", "2026-11-04T14:01:02Z ERROR connection refused to db:5432\n");
+  fs.writeFileSync(dir + "/logs/web.log", "2026-11-04T14:01:05Z ERROR upstream checkout returned 503\n");
+  await c.click("System"); await c.sleep(800);
+  ok("a folder: its files chosen", await c.files(
+    "textarea#f-folder ~ label.okay-file:not(:has([webkitdirectory])) input",
+    [dir + "/arch.txt", dir + "/logs/checkout.log", dir + "/logs/web.log"]));
+  await c.sleep(800); await c.click("Read the files"); await c.sleep(2500);
+  const folderText = await c.text();
+  ok("a folder: the system and the logs read, the incident shown", folderText.includes("logs of checkout, web") &&
+    folderText.toLowerCase().includes("probable causes"));
+  await c.shot("/tmp/okr-folder.png");
   ok("the foot: built on okay-effects, Need more?", await c.js(`(()=>{const f=document.querySelector("body > footer");
     return !!f && f.textContent.includes("okay-effects") && !!f.querySelector("a.more[href*='#author']")})()`));
   c.close();
