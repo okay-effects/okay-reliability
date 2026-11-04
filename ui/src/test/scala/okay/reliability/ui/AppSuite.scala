@@ -82,7 +82,7 @@ class AppSuite extends munit.FunSuite:
 
   test("no places before a system: only the field, Analyze, Examples; the places once one is loaded"):
     val first = play().at.toList.flatMap(_.buttons.map(_.label))
-    assertEquals(first, List("Русский", "Analyze", "Examples"))
+    assertEquals(first, List("Analyze", "Examples"))
     val examples = play(Act.press("Examples")).at.toList.flatMap(_.buttons.map(_.label))
     assert(examples.contains("Back") && !examples.contains("Architecture"), examples.toString)
     val loaded = play(Act.press("Examples"), Act.press("Load the shop")).at.toList.flatMap(_.buttons.map(_.label))
@@ -135,7 +135,7 @@ class AppSuite extends munit.FunSuite:
     assert(md.startsWith("# The system") && md.contains("## Availability") && md.contains("## Weak points"), md)
     assert(md.contains("## The incident") && md.contains("Probable causes") && md.contains("okay-reliability"), md)
 
-  test("in Russian: chosen by the browser, the page's words and the core's; switched back, kept"):
+  test("in Russian: chosen by the browser, the page's words and the core's; no button to switch"):
     kept.clear(); copied.clear()
     val ru = Play(steps(keptIn(kept)(copiedTo(copied)(Here.at("https://example.org/okr/", None, "ru-RU")(
       App.main[Row])))), Act.press("Примеры"), Act.press("Загрузить магазин"), Act.press("Что если"),
@@ -144,10 +144,8 @@ class AppSuite extends munit.FunSuite:
     assert(t.contains("Эффекты") && t.contains("перезапустить db") && t.contains("Решения, каждое"), t)
     assertEquals(I18n.core("  A. checkout errors — explains 2 of 2 symptoms, after checkout's deploy")(using Lang.Ru),
       "  A. checkout errors — объясняет 2 из 2 симптомов, после изменения (deploy) checkout")
-    val back = Play(steps(keptIn(kept)(copiedTo(copied)(Here.at("https://example.org/okr/", None, "ru-RU")(
-      App.main[Row])))), Act.press("English"))
-    assert(kept.get("lang").contains("en"), kept.toString)
-    assert(back.at.exists(_.buttons.exists(_.label == "Русский")))
+    assert(!ru.at.exists(_.buttons.exists(b => b.label == "English" || b.label == "Русский")))
+    assert(!kept.contains("lang"), kept.toString)
 
   test("real incidents (spec §28, §31, §32): loaded and diagnosed, the postmortem's cause first"):
     val expected = Map("Facebook 2021" -> "backbone", "Slack 2021" -> "tgw slow", "S3 2017" -> "s3-index down")

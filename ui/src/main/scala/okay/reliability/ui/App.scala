@@ -40,7 +40,6 @@ object App:
     case CopyLink(withFacts: Boolean)
     case CopyReport
     case ForgetHere
-    case SetLang(lang: Lang)
 
   val places: List[(String, String)] = List("system" -> "System", "architecture" -> "Architecture",
     "reliability" -> "Reliability", "whatif" -> "What if", "incident" -> "Incident", "training" -> "Training")
@@ -56,9 +55,8 @@ object App:
       fragment <- Here.fragment[R]
       keptSystem <- setting[R]("system")
       keptFacts <- setting[R]("facts")
-      keptLang <- setting[R]("lang")
       browser <- Here.language[R]
-      lang = Lang.of(keptLang.filter(_.nonEmpty).getOrElse(browser))
+      lang = Lang.of(browser)    // the browser's language, no button (spec §25)
       begun = fragment.flatMap(Links.read) match
         case Some((sys, facts)) => resume(sys, facts, lang)
         case None => keptSystem.filter(_.nonEmpty).fold(State(lang = lang))(resume(_, keptFacts, lang))
@@ -95,7 +93,6 @@ object App:
             t("Copied: the report, as Markdown.") else t("The clipboard is not reachable from this page.")))))
       case Msg.ForgetHere => keep[R]("system", "").flatMap(_ => keep[R]("facts", "")).map(_ =>
           State(lang = next.lang, foot = next.foot, note = Some(t("Forgotten in this browser."))))
-      case Msg.SetLang(l) => keep[R]("lang", l.toString.toLowerCase).map(_ => next)
       case _ =>
         val system: Unit ! R = if next.system.nonEmpty && next.source != s.source then keep[R]("system", next.source)
           else pure(())
@@ -171,7 +168,6 @@ object App:
       case Msg.Reveal => clean.copy(revealed = true)
       case Msg.Focus(c) => clean.copy(focus = Some(c))
       case Msg.Unfocus => clean.copy(focus = None)
-      case Msg.SetLang(l) => clean.copy(lang = l)
       // the world's part is `after`'s
       case Msg.CopyLink(_) | Msg.ForgetHere | Msg.CopyReport => clean
 
@@ -183,14 +179,9 @@ object App:
     else places.map((p, label) => Button(t(label), if s.place == p then Style.Primary else Style.Plain)(
       Msg.Go(p): Msg).at("places"))
 
-  /** the other language, always at hand */
-  private def language(s: State): Button[Msg] =
-    if s.lang == Lang.Ru then Button("English")(Msg.SetLang(Lang.En): Msg).at("lang")
-    else Button("Русский")(Msg.SetLang(Lang.Ru): Msg).at("lang")
-
   def render(s: State): Screen[Msg] =
     given Lang = s.lang
-    val head = List(Part.block("top")(Part.block("brand")(Part.text("okay-reliability")), Part.slot("lang")),
+    val head = List(Part.block("top")(Part.block("brand")(Part.text("okay-reliability"))),
       Part.block("places")(Part.slot("places"))) ++ s.problem.toList.map(Part.problem) ++ s.note.toList.map(Part.info)
     val (parts, buttons) = (s.place, s.system) match
       case ("examples", _) => examples
@@ -205,7 +196,7 @@ object App:
       Part.text("Built on okay-effects — algebraic effects for Scala"),
       Part.link("okay-effects", "https://github.com/okay-effects"),
       Part.link("Need more?", "https://okay-effects.github.io/#author")))
-    Screen[Msg]("okay-reliability", head ++ parts ++ foot, language(s) :: nav(s) ++ buttons)
+    Screen[Msg]("okay-reliability", head ++ parts ++ foot, nav(s) ++ buttons)
 
   private def pct(x: Double) = f"${x * 100}%.4f%%"
   private def mins(x: Double) = f"$x%.1f"

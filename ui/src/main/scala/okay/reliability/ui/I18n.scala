@@ -1,6 +1,6 @@
 package okay.reliability.ui
 
-/** THE PAGE'S LANGUAGE: English, or Russian — chosen by the browser, switched by a button, kept */
+/** THE PAGE'S LANGUAGE: English, or Russian — the browser's */
 enum Lang:
   case En, Ru
 

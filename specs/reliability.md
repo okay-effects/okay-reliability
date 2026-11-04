@@ -486,8 +486,8 @@ Reliability and Incident); the MCP tool `report` answers it.
 
 ## 25. Russian (BACKLOG 9, 2026-11-04)
 
-The page speaks English or Russian: the browser's language first (`Here.language`), then the choice kept (`Settings`
-"lang"); a button at the top switches. Its own words by a dictionary keyed by the English (`I18n.t`, `{0}` its
+The page speaks English or Russian: the browser's language (`Here.language`); no button switches it (the
+owner, 2026-11-04: the button removed), nothing kept. Its own words by a dictionary keyed by the English (`I18n.t`, `{0}` its
 places); what the core writes — the explanations, the remedies, the changes, the arch's reasons — by templates of its
 sentences (`I18n.core`); a component's name, a chain's effects (`down`, `errors`, `slow`), arch.txt and the facts'
 syntax stay as written. Fields keep English keys (`.keyed`), so a form reads the same in either.
