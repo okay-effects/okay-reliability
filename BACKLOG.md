@@ -19,7 +19,8 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 
 ## 2. Inputs from real sources
 
-4. **The dependency graph from OpenTelemetry traces** — spans (OTLP JSON, Jaeger's JSON) to components and calls,
+4. ~~**The dependency graph from OpenTelemetry traces**~~ — DONE 2026-11-04 (spec §20).
+   spans (OTLP JSON, Jaeger's JSON) to components and calls,
    their modes guessed (errors on a call, a cache's name, a messaging span) and said; merged with a compose or
    Kubernetes reading.
 5. **Logs of the usual stacks** — the reader's patterns for Spring Boot, nginx, Postgres, Envoy/Istio, Node, Go, with a

@@ -107,6 +107,7 @@ object Manifests:
 
   /** a system from a file's text, by what it looks like */
   def read(text: String): Either[String, System] =
-    if text.contains("services:") && !text.contains("apiVersion:") then compose(text)
+    if Traces.looksLike(text) then Traces.read(text).map(_.system)
+    else if text.contains("services:") && !text.contains("apiVersion:") then compose(text)
     else if text.contains("apiVersion:") then kubernetes(text)
     else ArchText.read(text)

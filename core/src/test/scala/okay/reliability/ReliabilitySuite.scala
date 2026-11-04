@@ -541,3 +541,46 @@ class ReliabilitySuite extends munit.FunSuite:
     val changes = Remedies.prevention(loaded)
     assert(changes.exists(c => c.what.contains("run api with 4 replicas") && c.minutes > 0), changes.mkString("\n"))
     assert(changes.exists(c => c.what.contains("no retry storm")), changes.map(_.what).mkString("\n"))
+
+  // ---- §20: TRACES
+
+  /** what traces can show of a system: its components and calls with their modes, no more — an uninstrumented
+   * callee's replicas are not in them */
+  def shown(s: System): (Set[(String, Kind, Int, Boolean)], Set[(String, String, Mode)]) =
+    (s.components.map(c => (c.name, c.kind, if c.kind == Kind.Service then c.replicas else 1, c.entry)).toSet,
+      s.dependencies.map(d => (d.from, d.to, d.mode)).toSet)
+
+  test("a system's traces read back to it: components, replicas, entry points, calls and their modes"):
+    val sys = ArchText.read("""
+      web: service entry replicas 2
+      api: service replicas 3
+      recs: service
+      db: database
+      cache: cache
+      events: queue
+      pay: external
+      web -> api hard
+      web -> recs soft
+      api -> db hard
+      api -> cache cached
+      api -> events async
+      api -> pay hard
+    """).fold(e => fail(e), identity)
+    val otlp = Traces.read(Traces.render(sys)).fold(e => fail(e), identity)
+    assertEquals(shown(otlp.system), shown(sys), otlp.notes.mkString("\n"))
+    assert(otlp.notes.exists(_.contains("web -> recs soft")), otlp.notes.mkString("\n"))
+    val jaeger = Traces.read(Traces.render(sys, jaegerForm = true)).fold(e => fail(e), identity)
+    assertEquals(shown(jaeger.system), shown(sys))
+    assert(Traces.looksLike(Traces.render(sys)) && Traces.looksLike(Traces.render(sys, jaegerForm = true)))
+
+  test("random systems' traces read back, fallbacks aside"):
+    (1L to 12L).foreach { seed =>
+      val sys = Generate.system(seed)
+      val plain = sys.copy(fallbacks = Vector.empty,
+        components = sys.components.filterNot(c => sys.fallbacks.exists(_.alternative == c.name)))
+      val back = Traces.read(Traces.render(plain)).fold(e => fail(e), identity)
+      val (cs, ds) = shown(plain)
+      // a component no trace reaches is not seen: what the entry points reach
+      val reached = plain.entries.flatMap(e => Reliability.reach(plain, e)).toSet
+      assertEquals(shown(back.system), (cs.filter(c => reached(c._1)), ds.filter(d => reached(d._1))), s"seed $seed")
+    }

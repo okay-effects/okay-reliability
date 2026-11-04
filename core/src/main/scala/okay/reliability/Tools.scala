@@ -64,7 +64,8 @@ object Tools:
     "log:<component>:<line>, chat:<line>, metrics."
 
   val all: Vector[Tool] = Vector(
-    tool("load_system", "Load the system to reason about: a path to an arch.txt, a docker-compose.yml or Kubernetes " +
+    tool("load_system", "Load the system to reason about: a path to an arch.txt, a docker-compose.yml, " +
+      "Kubernetes manifests or traces " +
       "manifests, or their text. arch.txt is one fact a line: `name: kind [entry] [replicas N]` (kinds: service, " +
       "database, cache, queue, balancer, external; entry = users reach it) and `from -> to [hard|soft|cached|async] " +
       "[fallback alt]`. Replaces the system and forgets the facts.",
@@ -84,6 +85,32 @@ object Tools:
                       s"entry points: ${if s.entries.isEmpty then "none (mark them `entry`)"
                         else s.entries.mkString(", ")}" +
                       (if p.nonEmpty then s"\nproblems: ${p.mkString("; ")}" else "") + "\n" + ArchText.print(s))
+                  }
+          }),
+    tool("load_traces", "Read the system from traces — OpenTelemetry's OTLP JSON or Jaeger's JSON export: " +
+      "a service per " +
+      "service.name, its replicas the instances seen, entry points where traces begin, a call where a span's parent " +
+      "is another service's, databases, caches, queues and externals from the client spans' attributes, a call soft " +
+      "where its failures did not fail the caller. With merge=true, added to the loaded system.",
+      schema(("path", "string", "a file of traces"), ("text", "string", "the traces' JSON instead of a file"),
+        ("merge", "boolean", "add to the loaded system rather than replace it"))())(
+      new Run:
+        def apply[R[_]: Has[Desk]: Has[Files]: Has[Http]: Has[Clock]](a: Json) =
+          val text: Option[String] ! R = str(a, "text") match
+            case Some(t) => pure(Some(t))
+            case None => str(a, "path").fold(pure[Option[String], R](None))(p => Files.read[R](p))
+          text.flatMap {
+            case None => pure(Left("give a path (that can be read) or a text"))
+            case Some(t) => Traces.read(t) match
+                case Left(e) => pure(Left(e))
+                case Right(r) => Desk.current[R].flatMap { cur =>
+                    val merge = a.field("merge").exists { case Json.Bool(b) => b; case Json.Str(x) => x == "true"
+                      case _ => false }
+                    val s = if merge then cur.fold(r.system)(_.merge(r.system)) else r.system
+                    Desk.load[R](s).map(_ => Right(s"${r.spans} spans of ${r.traces} traces: " +
+                      s"${r.system.components.size} components, ${r.system.dependencies.size} calls" +
+                      (if merge then " (merged)" else "") + "\n" + r.notes.map("  " + _).mkString("\n") +
+                      "\n" + ArchText.print(s)))
                   }
           }),
     tool("arch", "Analyze the loaded system: what each component's loss fails (blast radius), single points of " +

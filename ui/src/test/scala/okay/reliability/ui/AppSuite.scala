@@ -67,7 +67,8 @@ class AppSuite extends munit.FunSuite:
     val form = first.at.toList.flatMap(_.inputs).collect { case f: Form[?] => f }.head
     assertEquals(form.fields.head.initial, Entry.Blank)
     assert(form.fields.head.kind.isInstanceOf[Kind.File])
-    val typed = play(Act.press("Analyze", "The system: arch.txt, docker-compose.yml or Kubernetes manifests" ->
+    val label = "The system: arch.txt, docker-compose.yml, Kubernetes manifests or traces (OTLP, Jaeger)"
+    val typed = play(Act.press("Analyze", label ->
       "web: service entry\ndb: database\nweb -> db hard"))
     assert(texts(typed).contains("Loaded: 2 components"), texts(typed))
 
@@ -78,3 +79,7 @@ class AppSuite extends munit.FunSuite:
     assert(examples.contains("Back") && !examples.contains("Architecture"), examples.toString)
     val loaded = play(Act.press("Examples"), Act.press("Load the shop")).at.toList.flatMap(_.buttons.map(_.label))
     assert(loaded.contains("Architecture") && !loaded.contains("Examples"), loaded.toString)
+
+  test("the shop's traces load as a system"):
+    val p = play(Act.press("Examples"), Act.press("Load the shop's traces"))
+    assert(texts(p).contains("Loaded: 6 components"), texts(p))

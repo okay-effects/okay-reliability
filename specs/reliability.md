@@ -413,6 +413,25 @@ callee multiplies the load on it.
 - Laws: the fault tree equals the enumeration with capacities and storms; `Life` agrees; one instance of three lost
   with `needs 3` slows the component, with `needs 2` it does not.
 
+## 20. The architecture from traces (BACKLOG 4, 2026-11-04)
+
+What calls what is in the traces already: every span knows its service and its parent. `Traces.read` takes OTLP JSON
+(an export of `resourceSpans`) or Jaeger's JSON (`data[].spans`, `processes`) and gives a system, each guess said:
+
+- **Components**: a service per `service.name` (Jaeger: the process's `serviceName`); its replicas the distinct
+  `service.instance.id` (or `host.name`) seen; an entry point when its server spans begin traces (no parent).
+- **Uninstrumented callees**, from a client span's attributes: `db.system` (+ `db.name` or `peer.service`) →
+  a database (`redis`, `memcached` → a cache), `messaging.system` (+ the destination) → a queue, `peer.service` or
+  the host of `server.address` / `http.url` not a service seen → an external.
+- **Calls and their modes**: a span whose parent is another service's → the parent's service calls it; a cache →
+  `cached`, a producer span or a queue → `async`; else `hard` — unless the traces show it soft: when the callee's
+  span failed, the caller's did not, in at least 80% of at least 3 such traces.
+- **Merged** with a system read otherwise (`load_traces` with `merge`): components and calls added, a written
+  component kept as written.
+- The page reads a trace file on System like any other; the tool `load_traces`.
+- The law: a system's traces as `Traces.render` writes them (OTLP, errors sampled) read back to the same components,
+  calls and modes — hard, soft, cached, async; Jaeger's form too.
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a

@@ -92,6 +92,13 @@ final case class System(components: Vector[Component], dependencies: Vector[Depe
   /** an entry point's share of writes among its requests (default 10%) */
   def writeShare(entry: String): Double = writeShares.getOrElse(entry, 0.1)
   def withWriteShare(entry: String, w: Double): System = copy(writeShares = writeShares + (entry -> w))
+  /** another reading of the system added: its components and calls this one lacks, this one's kept as written */
+  def merge(other: System): System =
+    val have = names.toSet
+    val withComponents = other.components.filterNot(c => have(c.name)).foldLeft(this)(_.withComponent(_))
+    other.dependencies.filterNot(d => dependencies.exists(x => x.from == d.from && x.to == d.to))
+      .foldLeft(withComponents)(_.withDependency(_))
+
   def withFallback(f: Fallback): System = copy(fallbacks = (fallbacks :+ f).distinct)
   def withRate(component: String, kind: FaultKind, r: Rate): System = copy(rates = rates + ((component, kind) -> r))
   def withSlo(entry: String, s: Slo): System = copy(slos = slos + (entry -> s))

@@ -128,7 +128,8 @@ object App:
 
   def systemScreen(s: State): (List[Part], List[Button[Msg]]) =
     // empty until something is loaded: typed, pasted, or a file chosen or dropped (a file field: its text into it)
-    val field = Field.file("The system: arch.txt, docker-compose.yml or Kubernetes manifests", ".txt,.yml,.yaml,.json")
+    val field = Field.file("The system: arch.txt, docker-compose.yml, Kubernetes manifests or traces (OTLP, Jaeger)",
+      ".txt,.yml,.yaml,.json")
     val form = Form.one(if s.source.nonEmpty then field.initially(s.source) else field)
     val intro = Part.text("The reliability of a system, on one model of it: what each component's loss does, how " +
       "available every entry point is, what a failure would do, what an incident's cause is, and what fixes it. " +
@@ -140,6 +141,11 @@ object App:
     (List(intro, form, format) ++ s.system.toList.map(sys => Scheme.picture(sys, Scheme.kindMark(sys),
       "the system loaded")),
       List(Button.submit("Analyze", form)(Msg.Load(_): Msg), Button("Examples")(Msg.Go("examples"): Msg)))
+
+  /** the shop's traces, made when asked: its fallback aside (traces do not show one) */
+  def shopTraces: String =
+    Manifests.read(Examples.shop).fold(_ => "", s => Traces.render(s.copy(fallbacks = Vector.empty,
+      components = s.components.filterNot(_.name == "payments-backup"))))
 
   /** THE EXAMPLES, a page of their own: each said what it shows, its text, a button that loads it */
   def examples: (List[Part], List[Button[Msg]]) =
@@ -154,11 +160,16 @@ object App:
         "Redis, RabbitMQ — the dependencies read from depends_on and the URLs in the environment.", Examples.compose),
       one("kubernetes", "Kubernetes manifests", "A Deployment, a StatefulSet of Postgres, a cache, a LoadBalancer " +
         "Service — the dependencies from the containers' environment.", Examples.kubernetes),
+      Part.section("Traces")(Part.text("The shop as OpenTelemetry would see it: its traces (OTLP JSON), made " +
+        "here, read " +
+        "back into a system — services and their instances, the database, the cache and the payments provider from " +
+        "the client spans, the soft call to reports from the failures that did not fail web."), Part.slot("traces")),
       Part.section("Made at random")(Part.text("A layered system of services, databases, caches, a queue and " +
         "externals; a large one to see the searches at scale."), Part.slot("random"))),
       List(Button("Load the shop", Style.Primary)(Msg.Load(Examples.shop): Msg).at("shop"),
         Button("Load the compose file", Style.Primary)(Msg.Load(Examples.compose): Msg).at("compose"),
         Button("Load the manifests", Style.Primary)(Msg.Load(Examples.kubernetes): Msg).at("kubernetes"),
+        Button("Load the shop's traces", Style.Primary)(Msg.Load(shopTraces): Msg).at("traces"),
         Button("A random system")(Msg.Random(8, java.lang.System.currentTimeMillis() % 1000): Msg).at("random"),
         Button("A large one (60)")(Msg.Random(60, java.lang.System.currentTimeMillis() % 1000): Msg).at("random")) :+
         Button("Back")(Msg.Go("system"): Msg))
