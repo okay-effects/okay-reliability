@@ -70,7 +70,9 @@ cli / stage := {
 /** THE PAGE: the front's program in a browser (okay-ui's DOM face) — `sbt pageDist` → target/site, for GitHub Pages */
 lazy val web = (project in file("web")).enablePlugins(ScalaJSPlugin).dependsOn(ui.js)
   .settings(name := "okay-reliability-web", publish / skip := true, scalaJSUseMainModuleInitializer := true,
-    scalaJSLinkerConfig ~= (_.withModuleKind(org.scalajs.linker.interface.ModuleKind.ESModule)),
+    // a plain script, so the Closure Compiler (ADVANCED) links it: 3.4 MB → 1.1 MB, 509 → 302 KB gzipped (spec §27)
+    scalaJSLinkerConfig ~= (_.withModuleKind(org.scalajs.linker.interface.ModuleKind.NoModule)),
+    Compile / fullLinkJS / scalaJSLinkerConfig ~= (_.withClosureCompiler(true)),
     libraryDependencies ++= Seq("io.github.okay-effects" %%% "okay-ui" % "0.1.0"))
 
 /** the page's files: the site's and the linked page.js, in target/site */

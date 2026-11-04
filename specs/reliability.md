@@ -506,6 +506,17 @@ by its mode, a breaker amber, a fallback the accent.
 Built by `scripts/ios.sh lib|app|ipa` (Scala Native XCFramework, xcodegen, an unsigned ipa for SideStore at
 `dist/okay-reliability.ipa`); checked by `PhoneSuite` (JVM) and the simulator test `testTheShop` (screenshots).
 
+## 27. A smaller page (BACKLOG 11, 2026-11-04)
+
+page.js was 3.42 MB (509 KB gzipped, what Pages sends). What is linked: our own code across many classes — the
+front (`ui`, 203 KB), okay-faces' DOM face (193 KB), okay-ui's model (113 KB), the core's objects (30–55 KB each),
+the Scala collections; no one dependency to drop. What made it big: an ES module is not run through the Closure
+Compiler, and Scala.js' own `minify` (on for `fullLinkJS`) left the output with its full names and indentation.
+The page imports and exports nothing, so it is linked as a plain script (`NoModule`, `<script defer>`) with the
+Closure Compiler in ADVANCED mode: **1.12 MB, 302 KB gzipped** (−67% / −41%); the page's e2e passes on it.
+Measured alternative: esbuild `--minify` over the ES module, 1.32 MB / 342 KB. Closure is deprecated in Scala.js
+1.21+; when it is removed, esbuild (or a working `minify`) is the way.
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a

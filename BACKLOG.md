@@ -39,7 +39,7 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 9. ~~**Russian**~~ — DONE 2026-11-04 (spec §25).
    the page's words in English and Russian, chosen by the browser, switchable.
 10. ~~**On a phone**~~ — DONE 2026-11-04 (spec §26). okay-faces' mobile face, as okay-remote's.
-11. **Smaller** — page.js is 2.9 MB: what is linked and why, and less of it.
+11. ~~**Smaller**~~ — DONE 2026-11-04 (spec §27). page.js is 2.9 MB: what is linked and why, and less of it.
 
 ## 4. Proof that it works
 
