@@ -15,7 +15,14 @@ object Generate:
 
   final case class Scenario(system: System, faults: Vector[Fault], spread: Spread.Result,
     logs: Map[String, Vector[String]], formats: Map[String, String], chat: Vector[String],
-    facts: Vector[Observation], unobserved: Vector[String]):
+    facts: Vector[Observation], unobserved: Vector[String], lines: Map[String, Vector[Line]] = Map.empty):
+    /** every rendered log line with the facts it states (a stack trace's lines state none), and every chat line with
+     * its fact — the training data of `Micro` */
+    def labelled: Vector[(String, String, Vector[Observation])] =
+      lines.toVector.sortBy(_._1).flatMap((c, ls) => ls.flatMap { l =>
+        val r = render(c, Vector(l), formats(c))
+        (r.head, c, l.facts) +: r.tail.map(t => (t, c, Vector.empty[Observation]))
+      }) ++ chat.zipWithIndex.map((t, i) => (t, "", facts.filter(_.source == s"chat:${i + 1}")))
     /** the files of a scenario: arch.txt, logs/<c>.log, chat.txt, facts.txt, gold.json */
     def files: Vector[(String, String)] =
       Vector("arch.txt" -> ArchText.print(system)) ++
@@ -180,7 +187,7 @@ object Generate:
     val all = (facts.result() ++ chatFacts).distinctBy(o => (o.productPrefix, o.component, o match
       case Observation.Symptom(_, k, _, _, _) => k.word
       case _ => ""))
-    Scenario(system, chosen, r, logs, formatOf, chat, all, system.names.filterNot(seen.contains))
+    Scenario(system, chosen, r, logs, formatOf, chat, all, system.names.filterNot(seen.contains), lines)
 
   /** how far each effect is from its fault: the order of time */
   private def depths(r: Spread.Result): Map[Effect, Int] =

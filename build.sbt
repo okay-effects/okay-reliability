@@ -102,3 +102,15 @@ lazy val phone = crossProject(JVMPlatform, NativePlatform).crossType(CrossType.P
       "io.github.okay-effects" %%% "okay-ui-faces" % "0.1.0",
       "io.github.okay-effects" %%% "okay-effects-machine" % "0.1.1", munit.value))
   .nativeSettings(IosBuild.library, Test / sources := Nil, Test / test := {})
+
+/** MICRO'S TRAINING (specs/reader.md): the reader trained on MLX through mlx-scala — JVM, Apple's GPU; the model
+ * itself (Micro.forward) lives in core and runs everywhere. mlx-scala's native libraries: MLX_SCALA_LIB, else
+ * ../mlx-scala/native-lib/out/lib */
+val mlxNativeLib = sys.env.get("MLX_SCALA_LIB").map(file).getOrElse(file("../mlx-scala/native-lib/out/lib")).getCanonicalFile
+lazy val micro = (project in file("micro")).dependsOn(core.jvm)
+  .settings(name := "okay-reliability-micro", publish / skip := true,
+    resolvers += "mlx-scala" at "https://sergey-scherbina.github.io/mlx-scala/maven",
+    libraryDependencies ++= Seq("io.github.sergey-scherbina" %% "mlx-scala" % "0.1.0",
+      "io.github.sergey-scherbina" %% "mlx-scala-llm" % "0.1.0", munit.value),
+    fork := true, Test / fork := true, run / fork := true,
+    javaOptions ++= Seq("--enable-native-access=ALL-UNNAMED", s"-Dokm.lib=$mlxNativeLib/libokm.dylib", "-Xss16m"))
