@@ -98,3 +98,9 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 
 - A Worker again (its code: commit 30767db): an alert's webhook (Alertmanager) diagnosed with no page open and told in
   Telegram or Slack; shared incidents in Durable Objects; MCP with sessions for a remote agent.
+
+## 5. A reader in a few megabytes (operator, 2026-11-04)
+
+21. **Micro** — specs/reader.md: a byte-level reader (~1 MB) trained on the generator's logs, Qwen's paraphrases
+    and the corpus; `Micro` ⊇ `Read`; 99% on unseen phrasings; on the page without a server; the incidents' table
+    with `Micro`'s facts. No large model needed for extraction — it stays for conversation in okay-agent only.
