@@ -136,6 +136,7 @@ object Spread:
             val shown =
               if rescued then EffectKind.Retries
               else if d.withdraws && d.mode == Mode.Hard && k == EffectKind.Errors then EffectKind.Down
+              else if d.congests && d.mode == Mode.Hard && k == EffectKind.Errors then EffectKind.Slow
               else k
             if add(Effect(d.from, shown), Cause.Through(d, e)) then changed = true
             if !rescued && d.saturates && d.mode == Mode.Hard && shown == EffectKind.Slow &&

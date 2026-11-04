@@ -6,3 +6,5 @@ source: https://status.cloud.google.com/incident/cloud-networking/19009
 # model gives it nothing.
 # The analyzer (spec §34): not found — the control plane lost, the model says the network fails (errors); it
 # congested (slow): a loss that takes capacity, not service. BACKLOG 23.
+# Since §36 (`network-east -> control-plane hard congests`, as the postmortem says) fourth, agreeing with every fact,
+# a minimal explanation: the control plane first (`slow`, 0.40) — the kind told by a look.

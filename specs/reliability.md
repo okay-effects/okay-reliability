@@ -684,6 +684,16 @@ above `errors`), Cloudflare 2020 third → fourth: the truth first in 12 instead
 What it says: when every fact is explained as well by either kind, only a look tells them apart — and the analyzer
 already asks for that look (Facebook: "check backbone next"). No rule for the kind; the check is the answer.
 
+## 36. A loss that congests (BACKLOG 23, 2026-11-04)
+
+Google 2019 (§34): the network control plane lost, routes between sites withdrawn, capacity fell — the network slowed;
+it did not fail. A third reaction word on a hard dependency (§32): `congests` — the callee down or in errors, the
+caller shows `slow` (what is left carries the load, late), not `errors`. Read and printed by `ArchText`, simulated by
+`Spread`. Google 2019's system gets it, as the postmortem says (written after its answer was seen, like §32's).
+
+Measured: Google 2019 not found (against a fact) → fourth, agreeing with every fact, a minimal explanation; the
+control plane first, as `slow` (0.40). The other 20 unchanged; the generator does not use the word: `bench` unchanged.
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a

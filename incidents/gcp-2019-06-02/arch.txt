@@ -8,7 +8,7 @@ bigquery: service entry
 console: service entry
 youtube: service entry
 services-europe: service entry
-network-east -> control-plane hard        # without it, routes between sites are withdrawn
+network-east -> control-plane hard congests  # without it, routes withdrawn: capacity falls, it congests
 network-europe -> control-plane soft      # its own sites' jobs were not descheduled
 compute -> network-east hard
 storage -> network-east hard

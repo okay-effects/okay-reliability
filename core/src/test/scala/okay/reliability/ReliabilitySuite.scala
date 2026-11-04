@@ -614,3 +614,10 @@ class ReliabilitySuite extends munit.FunSuite:
     assert(Spread(plain, Vector(Fault("net", FaultKind.Errors))).shows(Effect("dns", EffectKind.Errors)))
     assert(!Spread(plain, Vector(Fault("gw", FaultKind.Slow))).shows(Effect("web", EffectKind.Errors)))
   }
+
+  test("a loss that congests (spec §36): the callee lost, the caller slow, not failing") {
+    val s = ArchText.read("net: service entry\ncp: service\nnet -> cp hard congests").toOption.get
+    assertEquals(ArchText.read(ArchText.print(s)).map(_.dependencies), Right(s.dependencies))
+    val r = Spread(s, Vector(Fault("cp", FaultKind.Down)))
+    assert(r.shows(Effect("net", EffectKind.Slow)) && !r.shows(Effect("net", EffectKind.Errors)))
+  }

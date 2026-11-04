@@ -212,9 +212,9 @@ object App:
       "from one of the Examples."))
     val format = Part.block("small")(Part.text("arch.txt: `name: kind [entry] [replicas N] [zones a,b] [needs K]` " +
       "(kinds: service, database, cache, queue, balancer, external), `from -> to [hard|soft|cached|async] " +
-      "[reads|writes] [breaker] [retries] [withdraws] [saturates] [fallback alt]` — withdraws: the caller takes " +
+      "[reads|writes] [breaker] [retries] [withdraws] [saturates] [congests] [fallback alt]` — withdraws: the caller takes " +
       "itself out when the callee fails (DNS withdrawing its routes); saturates: a slow callee makes the caller fail " +
-      "too; `x fails down every 90d for 30m`, `zone a fails every 365d for 2h`, `web slo 99.9%`, `web writes 20%`."))
+      "too; congests: the callee lost, the caller slows (capacity gone), not fails; `x fails down every 90d for 30m`, `zone a fails every 365d for 2h`, `web slo 99.9%`, `web writes 20%`."))
     (List(intro, form, format) ++ s.system.toList.map(sys => Scheme.picture(sys, Scheme.kindMark(sys),
       t("the system loaded"))),
       List(Button.submit(t("Analyze"), form)(Msg.Load(_): Msg), Button(t("Examples"))(Msg.Go("examples"): Msg)) ++

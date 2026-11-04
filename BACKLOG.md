@@ -86,7 +86,8 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 
 ## 8. What the twenty-one taught (spec §34)
 
-23. **A loss that congests**: a dependency whose loss takes capacity — the caller slow, not failing (Google 2019).
+23. ~~**A loss that congests**~~ — DONE 2026-11-04 (spec §36: `congests`; Google 2019 not found → fourth).
+    a dependency whose loss takes capacity — the caller slow, not failing (Google 2019).
 24. **Congestion shows both**: one fault, latency and errors at once (AWS 2021).
 25. **A rare kind stays rare**: a balancer's prior too low for a change at the onset to lift (Cloudflare 2022).
 26. **An alert's time is not an onset**: a time said as an alert's, weighed as later than it began (Cloudflare

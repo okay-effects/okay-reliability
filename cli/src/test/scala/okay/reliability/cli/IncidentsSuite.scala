@@ -29,7 +29,7 @@ class IncidentsSuite extends munit.FunSuite:
       "datadog-2023-03-08" -> (Some(1), true, true),
       "facebook-2021-10-04" -> (Some(2), true, true), // the backbone; `errors` first (a change: errors ×30, down ×5)
       "fastly-2021-06-08" -> (Some(4), true, true), // the change seen was the configuration's, the bug the edge's
-      "gcp-2019-06-02" -> (None, false, false), // a loss that congests: slow, not errors (BACKLOG 23)
+      "gcp-2019-06-02" -> (Some(4), true, true), // congests (spec §36): the control plane, `slow` before `down`
       "gcp-2020-12-14" -> (Some(2), true, true),
       "gcp-2025-06-12" -> (Some(1), true, true),
       "github-2018-10-21" -> (Some(2), true, true), // web or MySQL: the slowness seen only at web
