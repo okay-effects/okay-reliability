@@ -465,6 +465,16 @@ model (`assert`).
   entry points, and what it calls, two steps down. Said: "showing 18 of 60 — choose a component to see its part".
 - The tables stay whole.
 
+## 23. Kept and shared with no server (BACKLOG 7, 2026-11-04)
+
+- **Kept**: the system loaded and the incident's facts are kept in the browser (okay-ui's `Settings`: local storage);
+  the page opens where it was left. "Forget it here" forgets them.
+- **Shared**: "Copy a link to this system" (and on Incident "… to this incident") copies the page's address with the
+  system — and the facts — in its fragment: `#s=<base64url of the text>&f=<base64url of the facts>`. A fragment is
+  never sent to a server: GitHub Pages sees the page asked for, nothing of what is in it. Opened, the link loads them.
+- The program asks these of effects — `Settings`, `Clipboard` (okay-ui's) and `Here` (the page's address and its
+  fragment); the page's handlers are the browser's, the tests' are memory.
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a

@@ -32,14 +32,53 @@ object App:
     case Reveal
     case Focus(component: String)
     case Unfocus
+    case CopyLink(withFacts: Boolean)
+    case ForgetHere
 
   val places: List[(String, String)] = List("system" -> "System", "architecture" -> "Architecture",
     "reliability" -> "Reliability", "whatif" -> "What if", "incident" -> "Incident", "training" -> "Training")
 
-  def main[R[_]](using In[Ui, R]): Unit ! R = loop[R](State())
+  /** THE PROGRAM: begun from a link (its fragment) or from what this browser kept, then a screen at a time */
+  def main[R[_]](using In[Ui, R], In[Settings, R], In[Clipboard, R], In[Here, R]): Unit ! R =
+    for
+      fragment <- Here.fragment[R]
+      keptSystem <- setting[R]("system")
+      keptFacts <- setting[R]("facts")
+      begun = fragment.flatMap(Links.read) match
+        case Some((sys, facts)) => resume(sys, facts)
+        case None => keptSystem.filter(_.nonEmpty).fold(State())(resume(_, keptFacts))
+      _ <- loop[R](begun)
+    yield ()
 
-  def loop[R[_]](s: State)(using In[Ui, R]): Unit ! R =
-    show[Msg, R](render(s)).flatMap(m => loop[R](step(s, m)))
+  /** a system and its facts taken up: loaded, the facts read, the place where they matter */
+  def resume(system: String, facts: Option[String]): State =
+    val loaded = step(State(), Msg.Load(system))
+    val seen = facts.filter(_.nonEmpty).flatMap(f => Words.facts(f).toOption).getOrElse(Vector.empty)
+    if seen.isEmpty then loaded else loaded.copy(seen = seen, place = "incident")
+
+  def loop[R[_]](s: State)(using In[Ui, R], In[Settings, R], In[Clipboard, R], In[Here, R]): Unit ! R =
+    show[Msg, R](render(s)).flatMap { m =>
+      val next = step(s, m)
+      after[R](s, next, m).flatMap(loop[R](_))
+    }
+
+  /** WHAT A STEP ASKS OF THE WORLD: the system and the facts kept when they change; a link copied; all forgotten */
+  def after[R[_]](s: State, next: State, m: Msg)(using In[Settings, R], In[Clipboard, R], In[Here, R]): State ! R =
+    def facts(st: State) = st.seen.map(_.toString).mkString("\n")
+    m match
+      case Msg.CopyLink(withFacts) => Here.address[R].flatMap { at =>
+          val link = at + "#" + Links.fragment(next.source, Option.when(withFacts)(facts(next)))
+          copy[R](link).map(ok => next.copy(note = Some(if ok then "Copied: the system" +
+            (if withFacts then " and the facts are" else " is") + " in the link itself, after #, which no server " +
+            "sees." else s"Copy this link: $link")))
+        }
+      case Msg.ForgetHere => keep[R]("system", "").flatMap(_ => keep[R]("facts", "")).map(_ =>
+          State(note = Some("Forgotten in this browser.")))
+      case _ =>
+        val system: Unit ! R = if next.system.nonEmpty && next.source != s.source then keep[R]("system", next.source)
+          else pure(())
+        val seen: Unit ! R = if next.seen != s.seen then keep[R]("facts", facts(next)) else pure(())
+        system.flatMap(_ => seen).map(_ => next)
 
   // ---- WHAT A MESSAGE DOES
 
@@ -104,6 +143,8 @@ object App:
       case Msg.Reveal => clean.copy(revealed = true)
       case Msg.Focus(c) => clean.copy(focus = Some(c))
       case Msg.Unfocus => clean.copy(focus = None)
+      // the world's part is `after`'s
+      case Msg.CopyLink(_) | Msg.ForgetHere => clean
 
   // ---- THE SCREENS
 
@@ -144,7 +185,9 @@ object App:
       "[fallback alt]`, `x fails down every 90d for 30m`, `web slo 99.9%`, `web writes 20%`."))
     (List(intro, form, format) ++ s.system.toList.map(sys => Scheme.picture(sys, Scheme.kindMark(sys),
       "the system loaded")),
-      List(Button.submit("Analyze", form)(Msg.Load(_): Msg), Button("Examples")(Msg.Go("examples"): Msg)))
+      List(Button.submit("Analyze", form)(Msg.Load(_): Msg), Button("Examples")(Msg.Go("examples"): Msg)) ++
+        (if s.system.nonEmpty then List(Button("Copy a link to this system")(Msg.CopyLink(false): Msg),
+          Button("Forget it here", Style.Danger)(Msg.ForgetHere: Msg)) else Nil))
 
   /** the shop's traces, made when asked: its fallback aside (traces do not show one) */
   def shopTraces: String =
@@ -285,6 +328,7 @@ object App:
     buttons += Button.submit("Add the facts", facts)(Msg.AddFacts(_): Msg)
     if s.seen.nonEmpty then
       parts += Part.section(s"Seen (${s.seen.size})")(seen)
+      buttons += Button("Copy a link to this incident")(Msg.CopyLink(true): Msg)
       buttons += Button("Forget the facts", Style.Danger)(Msg.ClearFacts: Msg)
       val exact = Explain(sys, s.seen)
       val probable = Probable(sys, s.seen)

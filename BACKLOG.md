@@ -31,7 +31,8 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 
 6. ~~**Large systems**~~ — DONE 2026-11-04 (spec §22).
    the picture zoomed and grouped by layer; a component pressed shows its blast radius.
-7. **Kept and shared with no server** — the system in `localStorage`; a link with the system in its `#` fragment (never
+7. ~~**Kept and shared with no server**~~ — DONE 2026-11-04 (spec §23).
+   the system in `localStorage`; a link with the system in its `#` fragment (never
    sent to a server), the incident's facts too.
 8. **A report** — the architecture, the numbers, an incident's causes and remedies as Markdown, for a postmortem.
 9. **Russian** — the page's words in English and Russian, chosen by the browser, switchable.

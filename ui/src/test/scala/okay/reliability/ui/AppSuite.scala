@@ -4,7 +4,15 @@ import okay.business.scala3.*
 
 /** THE FRONT, played as a person would: a system loaded, its numbers, a fault tried, an incident diagnosed */
 class AppSuite extends munit.FunSuite:
-  def play(acts: Act*): Played[Unit] = Play(steps(App.main[Ui]), acts*)
+  type Row[X] = (Ui + Settings + Clipboard + Here)[X]
+  val kept = scala.collection.mutable.Map.empty[String, String]
+  val copied = scala.collection.mutable.Buffer.empty[String]
+  /** the program played with a browser of its own: nothing kept, at an address, with a fragment if given */
+  def playAt(fragment: Option[String], keptBefore: Map[String, String], acts: Act*): Played[Unit] =
+    kept.clear(); kept ++= keptBefore; copied.clear()
+    Play(steps(keptIn(kept)(copiedTo(copied)(Here.at("https://example.org/okr/", fragment)(App.main[Row])))),
+      acts*)
+  def play(acts: Act*): Played[Unit] = playAt(None, Map.empty, acts*)
   def texts(p: Played[Unit]): String =
     def walk(ps: List[Part]): List[String] = ps.flatMap {
       case Part.Text(t) => List(t)
@@ -101,3 +109,21 @@ class AppSuite extends munit.FunSuite:
       case _: Part.Shape.Box => true
       case _ => false } }.head
     assert(boxes < 60, boxes.toString)
+
+  test("kept: the system and the facts, between visits; a link carries them; forgotten when asked"):
+    play(Act.press("Examples"), Act.press("Load the shop"), Act.press("Incident"),
+      Act.press("Add the facts", "Facts" -> facts))
+    assert(kept.get("system").exists(_.contains("checkout")), kept.toString)
+    assert(kept.get("facts").exists(_.contains("symptom(web, errors)")), kept.toString)
+    val again = playAt(None, kept.toMap)
+    assert(texts(again).contains("Probable causes"), texts(again).take(300))
+    // a link to the incident: copied, and opened elsewhere it is the same incident
+    play(Act.press("Examples"), Act.press("Load the shop"), Act.press("Incident"),
+      Act.press("Add the facts", "Facts" -> facts), Act.press("Copy a link to this incident"))
+    val link = copied.last
+    assert(link.startsWith("https://example.org/okr/#s=") && link.contains("&f="), link)
+    val opened = playAt(Some(link.dropWhile(_ != '#').drop(1)), Map.empty)
+    assert(texts(opened).contains("Probable causes"), texts(opened).take(300))
+    val forgotten = playAt(None, Map("system" -> Examples.shop), Act.press("System"), Act.press("Forget it here"))
+    assertEquals(kept.get("system"), Some(""))
+    assert(texts(forgotten).contains("Forgotten in this browser"), texts(forgotten).take(300))
