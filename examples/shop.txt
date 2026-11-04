@@ -12,3 +12,5 @@ checkout -> payments hard fallback payments-backup
 checkout -> redis cached
 checkout -> db hard
 reports -> db hard
+web slo 99.9%
+web latency slo 99%

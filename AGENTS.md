@@ -1,8 +1,9 @@
 # AGENTS.md — okay-reliability
 
-Four products on one model of a system: the architecture analyzer, the failure generator, the failure analyzer, the
-remedy generator. Read `specs/reliability.md` first (the model, the simulator, each product, the laws); it is the source of
-truth — change it before the code.
+Four products on one model of a system — the architecture analyzer, the failure generator, the failure analyzer, the
+remedy generator — and the numbers of reliability (availability, SLOs, probable causes, rates from history). Read
+`specs/reliability.md` first (the model, the simulator, each product, the laws); it is the source of truth — change
+it before the code.
 
 - One simulator (`Spread`) for all four: the generator spreads faults forward, the analyzer searches the faults that
   explain what was seen, the remedies spread again after each action. Never a second notion of how a failure spreads.

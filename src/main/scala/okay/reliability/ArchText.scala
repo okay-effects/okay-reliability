@@ -1,7 +1,7 @@
 package okay.reliability
 
 /**
- * A SYSTEM AS TEXT (specs/reliability.md §3), one fact a line: `web: service entry replicas 2`, `web -> checkout hard`,
+ * A SYSTEM AS TEXT (spec §3), one fact a line: `web: service entry replicas 2`, `web -> checkout hard`,
  * `checkout -> payments hard fallback payments-backup`; `#` starts a comment. A component used in a dependency and
  * not declared is a service. Printed back in the same words: reading the print gives the same system.
  */
@@ -27,6 +27,22 @@ object ArchText:
               fb + 1 && fb >= 0)
             if unknown.nonEmpty then errors += s"line $n: what is ${unknown.mkString(" ")}?"
           case _ => errors += s"line $n: a dependency is `from -> to [mode] [fallback alt]`"
+      else if words.lift(1).contains("fails") then words match
+        case Vector(c, "fails", k, "every", mtbf, "for", mttr) =>
+          (FaultKind.of(k), Rates.hours(mtbf), Rates.hours(mttr)) match
+            case (Some(kind), Some(b), Some(r)) if b > 0 && r > 0 => system = system.withRate(c, kind, Rate(b, r))
+            case _ => errors += s"line $n: `$c fails <down|errors|slow|full> every <time> for <time>` " +
+                "(time: 30m, 2h, 90d, 1y)"
+        case _ => errors += s"line $n: `component fails <kind> every <time> for <time>`"
+      else if words.contains("slo") then
+        val pct = words.lastOption.map(_.stripSuffix("%")).flatMap(_.toDoubleOption).filter(p => p > 0 && p < 100)
+          .map(p => (BigDecimal(p) / 100).toDouble)
+        (words, pct) match
+          case (Vector(c, "slo", _), Some(p)) =>
+            system = system.withSlo(c, system.slos.getOrElse(c, Slo()).copy(availability = Some(p)))
+          case (Vector(c, "latency", "slo", _), Some(p)) =>
+            system = system.withSlo(c, system.slos.getOrElse(c, Slo()).copy(latency = Some(p)))
+          case _ => errors += s"line $n: `entry slo 99.9%` or `entry latency slo 99%`"
       else if words.head.endsWith(":") then
         val name = words.head.dropRight(1)
         val rest = words.tail
@@ -61,4 +77,9 @@ object ArchText:
       (Vector(d.from, "->", d.to, d.mode.word) ++
         s.fallbackOf(d.from, d.to).flatMap(a => Vector("fallback", a))).mkString(" ")
     }
-    (cs ++ ds).mkString("", "\n", "\n")
+    val rs = s.rates.toVector.sortBy((k, _) => (k._1, k._2.ordinal)).map { case ((c, k), r) =>
+      s"$c fails ${k.word} every ${Rates.show(r.mtbf)} for ${Rates.show(r.mttr)}" }
+    def pct(x: Double) = { val p = BigDecimal(x * 100).bigDecimal.stripTrailingZeros.toPlainString; s"$p%" }
+    val ss = s.slos.toVector.sortBy(_._1).flatMap((c, slo) => slo.availability.map(a => s"$c slo ${pct(a)}").toVector ++
+      slo.latency.map(l => s"$c latency slo ${pct(l)}"))
+    (cs ++ ds ++ rs ++ ss).mkString("", "\n", "\n")

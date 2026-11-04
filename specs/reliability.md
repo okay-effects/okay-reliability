@@ -1,11 +1,12 @@
 # okay-reliability — architecture, failures, diagnosis, remedies and the numbers of reliability, on one model (spec)
 
-Status: v0 built (four products); §9 being built. Renamed from okay-reason 2026-11-04. The operator's decision (2026-11-04): four products in one — an architecture analyzer, a
-failure generator for testing, a failure analyzer, a remedy generator — on ONE model of a system and ONE simulator of
-how a failure spreads. It grows out of okay-inlay `specs/reason.md` (exact reasoning as a tool the model
-uses): a model does what it is good at (reading architecture text, logs, chat; stating facts; leading an
-investigation), okay-reliability does what a model gets wrong (propagation through a graph, abduction, counting the explanations, uniqueness, checking
-that a fix fixes).
+Status: built — the four products (§3–§6) and the probabilities (§9). Renamed from okay-reason 2026-11-04. The
+operator's decision (2026-11-04): four products in one — an architecture analyzer, a failure generator for testing, a
+failure analyzer, a remedy generator — on ONE model of a system and ONE simulator of how a failure spreads; then the
+numbers of reliability on the same model. It grows out of okay-inlay `specs/reason.md` (exact reasoning as a tool the
+model uses): a model does what it is good at (reading architecture text, logs, chat; stating facts; leading an
+investigation), okay-reliability does what a model gets wrong (propagation through a graph, abduction, counting the
+explanations, uniqueness, probabilities, checking that a fix fixes).
 
 ## 1. One model
 
@@ -198,6 +199,19 @@ durations with the prior as one more. Written out as arch.txt lines, to paste.
 Every event over a span (seeded): `incidents.csv` (the truth), `sli.csv` (each hour, each entry point: the minutes
 unavailable, the minutes slow) — for testing alerts and SLO burn. The law: `estimate` over a long generated history
 recovers the rates written.
+
+### 9.7 Checked (2026-11-04)
+
+- The shop (examples/shop.txt, the priors): web availability computed 99.8509%, measured over 2000 simulated
+  years 99.8504% Â± 0.0026; 22.8 incidents a year computed, 22.9 measured; latency 99.7322% vs 99.7328% Â± 0.0021.
+  The analytic report in 86 ms, the 2000 years in 0.4 s. A test holds it within 4 standard errors + 5%.
+- `estimate` over 200 generated years recovers db down, checkout errors and checkout down within 25% (a test).
+- `bench`, faults drawn by their rates, 80% of components with logs: one fault â the gold first by probability 90%
+  (the exact search finds it alone in 70%), in the top 3 in 99%; two faults â first 24%, top 3 55% (a fault behind
+  another leaves no trace: no probability can find it). ~35 ms a scenario.
+- Optimistic, said: a read cache and a circuit breaker are modeled as hiding a dependency's loss (reads served
+  stale, the feature degraded); writes through them still fail in life, and the model does not tell reads from
+  writes yet.
 
 ## 10. Not yet
 

@@ -14,7 +14,7 @@ enum Observation:
     case Alive(c, s) => s"alive($c)" + (if s.nonEmpty then s" [$s]" else "")
 
 /**
- * PRODUCT 3 — THE FAILURE ANALYZER (specs/reliability.md §5): the smallest sets of faults whose spread shows every symptom
+ * PRODUCT 3 — THE FAILURE ANALYZER (spec §5): the smallest sets of faults whose spread shows every symptom
  * and touches no component seen healthy — all of them at the smallest size, counted; what to check next to tell them
  * apart; why a fault is not one. Abduction by enumeration over the candidates that alone explain something and
  * contradict nothing (monotone: a contradiction alone is one in every superset), each set checked by `Spread`.
@@ -30,7 +30,7 @@ object Explain:
 
   final case class Result(system: System, observations: Vector[Observation], size: Int,
     explanations: Vector[Explanation], next: Option[Check], unexplained: Vector[Observation.Symptom]):
-    def unobserved: Set[String] = system.names.toSet -- observations.map(_.component)
+    def unobserved: Set[String] = system.names.toSet -- Explain.direct(observations)
     def text: String =
       val b = StringBuilder()
       val symptoms = observations.collect { case s: Observation.Symptom => s }
@@ -59,6 +59,14 @@ object Explain:
           ('A' + i).toChar).mkString(", ")}").mkString("; ") + "\n"
       }
       b.toString
+
+  /** the components seen for themselves: their own log, a person's word — not only named in a caller's log (a
+   * component down writes nothing: what its callers say of it is still worth checking) */
+  def direct(observations: Vector[Observation]): Set[String] = observations.collect {
+    case Observation.Healthy(c, _) => c
+    case Observation.Alive(c, _) => c
+    case Observation.Symptom(c, _, src) if !src.startsWith("log:") || src.startsWith(s"log:$c:") => c
+  }.toSet
 
   private def source(o: Observation): String = if o.source.nonEmpty then s" [${o.source}]" else ""
 
@@ -96,7 +104,7 @@ object Explain:
           Explanation(faults, r))
       }.take(limit)
       if found.isEmpty then k += 1
-    val unobserved = system.names.toSet -- observations.map(_.component)
+    val unobserved = system.names.toSet -- direct(observations)
     Result(system, observations, k min maxSize, found, nextCheck(found, unobserved), unexplained)
 
   /** the sets of `k` of them, in order */

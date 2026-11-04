@@ -1,6 +1,6 @@
 package okay.reliability
 
-/** THE LAWS (specs/reliability.md §8), over a written system and over generated ones */
+/** THE LAWS (spec §8), over a written system and over generated ones */
 class ReliabilitySuite extends munit.FunSuite:
   val shop: System = ArchText.read("""
     web: service entry replicas 2
@@ -193,3 +193,77 @@ class ReliabilitySuite extends munit.FunSuite:
     assert(all.contains("one explanation (k = 1)") && all.contains("checkout errors"), all)
     assert(all.contains("roll checkout back"), all)
     assert(all.contains("reports would show"), all)
+
+  // ---- §9: THE PROBABILITIES
+
+  val rated: System = ArchText.read(ArchText.print(shop) + """
+    db fails down every 180d for 1h
+    checkout fails errors every 30d for 30m
+    web slo 99.9%
+    web latency slo 99%
+  """).fold(e => fail(e), identity)
+
+  test("rates and SLOs read back from their print"):
+    assertEquals(ArchText.read(ArchText.print(rated)).map(ArchText.print), Right(ArchText.print(rated)))
+    assertEquals(rated.rates.get(("db", FaultKind.Down)), Some(Rate(180 * 24, 1)))
+    assertEquals(rated.slos.get("web"), Some(Slo(Some(0.999), Some(0.99))))
+    assert(ArchText.read("db fails down every soon for 1h").isLeft)
+
+  test("the computed availability is what a simulation of 2000 years measures"):
+    val rep = Reliability.analyze(rated)
+    val life = Life.run(rated, 2000, 7)
+    life.measured.foreach { m =>
+      val e = rep.entries.find(x => x.entry == m.entry && x.sli == m.sli).get
+      // the rare-event sum is an upper bound, close when q is small
+      assert(math.abs(m.unavailability - e.unavailability) <= 4 * m.stdError + 0.05 * e.unavailability,
+        s"${m.entry} ${m.sli}: measured ${m.unavailability} ± ${m.stdError}, computed ${e.unavailability}")
+      assert(math.abs(m.perYear - e.perYear) <= 0.1 * e.perYear + 0.5, s"${m.perYear} vs ${e.perYear}")
+    }
+
+  test("cut sets: minimal, each failing the entry point; two instances together, never one"):
+    val e = Reliability.entry(rated, "web", Reliability.Sli.Availability, Rates.events(rated))
+    assert(e.cuts.exists(_.events == Vector(Fault("db", FaultKind.Down))))
+    assert(e.cuts.exists(c => c.events.toSet == Set(Fault("checkout", FaultKind.Down, Some(1)),
+      Fault("checkout", FaultKind.Down, Some(2)))), e.cuts.mkString("\n"))
+    assert(!e.cuts.exists(_.events == Vector(Fault("checkout", FaultKind.Down, Some(1)))))
+    e.cuts.foreach { c =>
+      assert(Reliability.Sli.Availability.failing(Spread(rated, c.events), "web"))
+      assert(!e.cuts.exists(o => o != c && o.events.forall(c.events.contains)), s"$c is not minimal")
+    }
+    assert(e.importance.forall(s => s.share > 0 && s.share <= 1.0 + 1e-9))
+
+  test("the rates read back from a long generated history"):
+    val life = Life.run(rated, 200, 3, record = true)
+    val origin = java.time.Instant.parse("2026-01-01T00:00:00Z")
+    val est = Estimate(rated, Life.csv(life.incidents, origin), Some(200 * Rates.hoursAYear))
+    assert(est.problems.isEmpty, est.problems.mkString)
+    def close(c: String, k: FaultKind) =
+      val e = est.estimated.find(x => x.component == c && x.kind == k).get
+      val truth = Rates.of(rated, c, k).get
+      assert(math.abs(e.posterior.mtbf / truth.mtbf - 1) < 0.25, s"$c $k: ${e.posterior} vs $truth")
+      assert(math.abs(e.posterior.mttr / truth.mttr - 1) < 0.25, s"$c $k: ${e.posterior} vs $truth")
+    close("db", FaultKind.Down)
+    close("checkout", FaultKind.Errors)
+    close("checkout", FaultKind.Down)
+    assert(Life.sliCsv(life.hourly, origin).linesIterator.drop(1).nonEmpty)
+
+  test("probable causes: the gold first at least as often as the exact search finds it alone"):
+    var first, alone = 0
+    (1 to 60).foreach { i =>
+      val s = Generate.system(i.toLong, 6 + i % 5)
+      val sc = Generate.scenario(s, i.toLong, 1, 0.8, byRates = true)
+      val seen = Read.all(s, sc.logs, sc.chat)
+      val exact = Explain(s, seen)
+      if exact.explanations.map(_.faults.toSet) == Vector(sc.faults.toSet) then alone += 1
+      val p = Probable(s, seen)
+      if p.ranked.headOption.exists(_.faults.toSet == sc.faults.toSet) then first += 1
+      assert(math.abs(p.ranked.map(_.p).sum - 1) < 1e-9)
+    }
+    assert(first >= alone, s"first $first, alone $alone")
+
+  test("remedies: times, and the changes priced in downtime saved, best first"):
+    val p = Remedies.plan(rated, Set(Fault("db", FaultKind.Down)))
+    assert(p.ranked.forall(_.action.minutes > 0))
+    val prevent = Remedies.prevention(rated)
+    assert(prevent.nonEmpty && prevent.map(_.minutes) == prevent.map(_.minutes).sorted.reverse, prevent.mkString)
+    assert(prevent.exists(c => c.what.contains("db with 2 replicas") && c.minutes > 0))

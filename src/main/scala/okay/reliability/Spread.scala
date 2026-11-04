@@ -1,7 +1,7 @@
 package okay.reliability
 
 /**
- * HOW A FAILURE SPREADS (specs/reliability.md §2): given faults, every component's effects, to a fixpoint — a fault's own
+ * HOW A FAILURE SPREADS (spec §2): given faults, every component's effects, to a fixpoint — a fault's own
  * effect, then along each dependency, callee → caller, by the dependency's mode; a fallback whose alternative is not
  * bad turns what would fail into retries. Monotone in the faults. Each effect kept with its first cause: a proof.
  */

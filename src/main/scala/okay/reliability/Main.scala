@@ -7,7 +7,7 @@ import okay.mcp.{Link, Servers, ToolCall, ToolResult}
 import okay.scala3.*
 
 /**
- * OKAY-RELIABILITY RUNNING (specs/reliability.md §7): the tools' effects given their handlers in one line (`Live.run`) — a
+ * OKAY-RELIABILITY RUNNING (spec §7): the tools' effects given their handlers in one line (`Live.run`) — a
  * session's desk in memory, the machine's files — under a CLI and an MCP server (okay-mcp's, on okay-scala's machine
  * through okay-simple's adapter, as symdex's).
  */
@@ -40,8 +40,12 @@ object Main:
       |  okay-reliability arch FILE                     the architecture: blast radius, single points of failure,
       |                                            cycles, unguarded dependencies, changes that help
       |                                            (FILE: arch.txt, docker-compose.yml, Kubernetes manifests)
+      |  okay-reliability reliability FILE [--years N]   availability, downtime, SLOs, where downtime comes from;
+      |                                            --years: checked by simulating N years
+      |  okay-reliability estimate --arch FILE --incidents CSV [--window 365d]   rates from your history
       |  okay-reliability generate --out DIR [--arch FILE | --random N] [--seed S] [--faults K] [--observed P]
       |                                            a failure scenario: logs, chat, gold answer
+      |  okay-reliability generate --out DIR --timeline 90d [--arch FILE]   a span of life: incidents, SLIs
       |  okay-reliability explain DIR                   the causes of a scenario (DIR/arch.txt, logs/, chat.txt)
       |  okay-reliability explain --arch FILE [--logs DIR] [--chat FILE] [--facts FILE]
       |  okay-reliability simulate --arch FILE --faults "db down, web#1 down"
@@ -72,6 +76,12 @@ object Main:
     val code = args.headOption match
       case Some("serve") => Serve.stdio(live); 0
       case Some("arch") if rest.nonEmpty => steps(live, "load_system" -> obj("path" -> rest.head), "arch" -> obj())
+      case Some("reliability") if rest.nonEmpty =>
+        steps(live, "load_system" -> obj("path" -> rest.head),
+          "reliability" -> obj(f.get("years").map("years" -> _).toSeq*))
+      case Some("estimate") if f.contains("arch") && f.contains("incidents") =>
+        steps(live, "load_system" -> obj("path" -> f("arch")), "estimate" -> obj((Seq("path" -> f("incidents")) ++
+          f.get("window").map("window" -> _))*))
       case Some("generate") if f.contains("out") =>
         val load = f.get("arch").toVector.map(p => "load_system" -> obj("path" -> p))
         steps(live, (load :+ ("generate" -> Json.Obj((f - "arch").toVector.map((k, v) => k -> Json.Str(v)))))*)

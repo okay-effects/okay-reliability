@@ -1,7 +1,7 @@
 package okay.reliability
 
 /**
- * A DETERMINISTIC READER OF LOGS AND CHAT (specs/reliability.md §5): the facts in the common lines — a call refused, a
+ * A DETERMINISTIC READER OF LOGS AND CHAT (spec §5): the facts in the common lines — a call refused, a
  * status 5xx, a timeout, stale data served, a fallback used, a feature degraded, a disk full, a backlog, a slow query,
  * an unhandled exception — in JSON lines, logfmt, plain text and access logs; a component whose log says nothing wrong
  * is healthy. Names are the system's. What it does not recognize it leaves to a model (MCP `assert`).

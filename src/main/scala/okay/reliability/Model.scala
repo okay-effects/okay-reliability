@@ -1,6 +1,6 @@
 package okay.reliability
 
-/** WHAT A COMPONENT IS (specs/reliability.md §1): what it does decides the remedies, not how a failure spreads */
+/** WHAT A COMPONENT IS (spec §1): what it does decides the remedies, not how a failure spreads */
 enum Kind:
   case Service, Database, Cache, Queue, Balancer, External
   def word: String = toString.toLowerCase
@@ -23,7 +23,8 @@ final case class Fallback(from: String, to: String, alternative: String)
 
 /** A SYSTEM: its components, who calls whom and how, the fallbacks */
 final case class System(components: Vector[Component], dependencies: Vector[Dependency] = Vector.empty,
-  fallbacks: Vector[Fallback] = Vector.empty):
+  fallbacks: Vector[Fallback] = Vector.empty, rates: Map[(String, FaultKind), Rate] = Map.empty,
+  slos: Map[String, Slo] = Map.empty):
   private lazy val byName = components.map(c => c.name -> c).toMap
   def component(name: String): Option[Component] = byName.get(name)
   def names: Vector[String] = components.map(_.name)
@@ -46,6 +47,8 @@ final case class System(components: Vector[Component], dependencies: Vector[Depe
   def withDependency(d: Dependency): System =
     copy(dependencies = dependencies.filterNot(x => x.from == d.from && x.to == d.to) :+ d)
   def withFallback(f: Fallback): System = copy(fallbacks = (fallbacks :+ f).distinct)
+  def withRate(component: String, kind: FaultKind, r: Rate): System = copy(rates = rates + ((component, kind) -> r))
+  def withSlo(entry: String, s: Slo): System = copy(slos = slos + (entry -> s))
 
 /** WHAT CAN GO WRONG WITH A COMPONENT: all of it, or one instance (`instance` set: of several) */
 enum FaultKind:

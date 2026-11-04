@@ -1,5 +1,5 @@
 /*
- * okay-reliability — four products on one model of a system (specs/reliability.md): the architecture analyzer, the failure
+ * okay-reliability — four products on one model of a system (spec): the architecture analyzer, the failure
  * generator, the failure analyzer, the remedy generator — over one simulator of how a failure spreads; okay-datalog for
  * the rules with proofs, okay-mcp for the server a model uses.
  */

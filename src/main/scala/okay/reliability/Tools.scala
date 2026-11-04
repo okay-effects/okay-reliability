@@ -5,7 +5,7 @@ import okay.mcp.ToolSpec
 import okay.scala3.*
 
 /**
- * THE TOOLS a model (or a person, by the CLI) uses (specs/reliability.md §7): each a program over the desk and the files,
+ * THE TOOLS a model (or a person, by the CLI) uses (spec §7): each a program over the desk and the files,
  * its answer compact text. One system on the desk at a time; the facts seen added to it.
  */
 object Tools:
@@ -136,10 +136,11 @@ object Tools:
         def apply[R[_]: Has[Desk]: Has[Files]](a: Json) = withSystem[R] { s =>
           Desk.seen[R].map { os =>
             val r = Explain(s, os, int(a, "max_size", 3))
+            val probable = Probable(s, os)
             val fix = r.explanations match
               case Vector(x) => "\nremedies (each checked by simulation):\n" + Remedies.plan(s, x.faults.toSet).text
               case _ => ""
-            Right(r.text + fix)
+            Right(r.text + (if probable.ranked.nonEmpty then "\n" + probable.text else "") + fix)
           }
         }),
     tool("why_not", "Why these faults are not the cause: the healthy components they would break, the symptoms " +
@@ -176,27 +177,81 @@ object Tools:
                   case xs => Left(s"${xs.size} explanations, not told apart: explain shows the check; or give faults")
               }
         }),
+    tool("reliability", "The numbers of the loaded system's reliability: for each entry point, its availability " +
+      "(neither down nor errors) and latency (not slow) — the downtime a month, incidents a year, the SLO met or " +
+      "missed and the error budget, where the downtime comes from — from the fault events' rates (written in " +
+      "arch.txt as `db fails down every 180d for 1h`, else by kind) by minimal cut sets; with `years`, checked by " +
+      "simulating that many years of failures and repairs.",
+      schema(("years", "integer", "years of life to simulate as a check (e.g. 1000); none: no simulation"))())(
+      new Run:
+        def apply[R[_]: Has[Desk]: Has[Files]](a: Json) = withSystem[R] { s =>
+          val rep = Reliability.analyze(s)
+          val check = a.field("years").map { _ =>
+            val life = Life.run(s, int(a, "years", 1000).toDouble, 1)
+            "\nsimulated " + int(a, "years", 1000) + " years:\n" + life.measured.map { m =>
+              val an = rep.entries.find(e => e.entry == m.entry && e.sli == m.sli).get
+              f"  ${m.entry} ${m.sli.word}: ${(1 - m.unavailability) * 100}%.4f%% ± ${m.stdError * 200}%.4f " +
+                f"(computed ${an.availability * 100}%.4f%%), ${m.perYear}%.1f incidents a year (computed " +
+                f"${an.perYear}%.1f)"
+            }.mkString("\n") + "\n"
+          }.getOrElse("")
+          val prevent = Remedies.prevention(s)
+          pure(Right(rep.text + check + (if prevent.isEmpty then "" else
+            "\nchanges, by the downtime they save:\n" + prevent.map(c => s"  ${c.text}\n").mkString)))
+        }),
+    tool("estimate", "Re-estimate the rates from your incident history: a CSV `start,end,component,kind[,instance]` " +
+      "(ISO times; kind down, errors, slow, full) — each event's MTBF and MTTR, the prior updated by what was seen; " +
+      "with apply=true the loaded system takes the new rates.",
+      schema(("path", "string", "the CSV file"), ("text", "string", "the CSV instead of a file"),
+        ("window", "string", "the span the history covers (e.g. 365d); default: first to last incident"),
+        ("apply", "boolean", "take the new rates into the loaded system"))())(
+      new Run:
+        def apply[R[_]: Has[Desk]: Has[Files]](a: Json) = withSystem[R] { s =>
+          val text: Option[String] ! R = str(a, "text") match
+            case Some(t) => pure(Some(t))
+            case None => str(a, "path").fold(pure[Option[String], R](None))(p => Files.read[R](p))
+          text.flatMap {
+            case None => pure(Left("give a path (that can be read) or a text"))
+            case Some(t) =>
+              val r = Estimate(s, t, str(a, "window").flatMap(Rates.hours))
+              val applied = a.field("apply").exists { case Json.Bool(b) => b; case Json.Str(x) => x == "true"
+                case _ => false }
+              if applied then Desk.load[R](r(s)).map(_ => Right(r.text + "\napplied: the loaded system has them"))
+              else pure(Right(r.text))
+          }
+        }),
     tool("generate", "Make a failure scenario for testing (an analyzer, an agent, a runbook): faults chosen in the " +
       "loaded system (or in a random one), spread, rendered as logs in several formats and a chat, with the gold " +
-      "answer, written to a directory: arch.txt, logs/, chat.txt, facts.txt, gold.json.",
+      "answer, written to a directory: arch.txt, logs/, chat.txt, facts.txt, gold.json. With `timeline` (e.g. 30d): " +
+      "a span of life instead — incidents.csv (the truth) and sli.csv (each hour's minutes failing, each entry point).",
       schema(("out", "string", "the directory to write"), ("seed", "integer", "the seed (default 1)"),
         ("faults", "integer", "how many faults (default 1)"),
         ("observed", "number", "the share of components with logs (default 0.8)"),
-        ("random", "integer", "a random system of this many services instead of the loaded one"))("out"))(
+        ("random", "integer", "a random system of this many services instead of the loaded one"),
+        ("timeline", "string", "a span of life to generate instead (30d, 1y)"))("out"))(
       new Run:
         def apply[R[_]: Has[Desk]: Has[Files]](a: Json) =
           val seed = int(a, "seed", 1).toLong
           Desk.current[R].flatMap { cur =>
             val system = a.field("random").map(_ => Generate.system(seed, int(a, "random", 6))).orElse(cur)
               .getOrElse(Generate.system(seed))
-            val sc = Generate.scenario(system, seed, int(a, "faults", 1), num(a, "observed", 0.8))
             val out = str(a, "out").getOrElse("scenario").stripSuffix("/")
-            sc.files.foldLeft(pure[Boolean, R](true))((acc, f) => acc.flatMap(ok =>
+            val (files, said) = str(a, "timeline").flatMap(Rates.hours) match
+              case Some(span) =>
+                val life = Life.run(system, span / Rates.hoursAYear, seed, record = true)
+                val origin = java.time.Instant.parse("2026-01-01T00:00:00Z")
+                (Vector("arch.txt" -> ArchText.print(system), "incidents.csv" -> Life.csv(life.incidents, origin),
+                  "sli.csv" -> Life.sliCsv(life.hourly, origin)),
+                  s"${life.incidents.size} incidents over ${Rates.show(span)}; " + life.measured.map(m =>
+                    f"${m.entry} ${m.sli.word} ${(1 - m.unavailability) * 100}%.3f%%").mkString(", "))
+              case None =>
+                val sc = Generate.scenario(system, seed, int(a, "faults", 1), num(a, "observed", 0.8))
+                (sc.files, s"${sc.logs.size} logs, ${sc.chat.size} chat lines, ${sc.unobserved.size} components " +
+                  "unobserved; the answer in gold.json (not for the one being tested)")
+            files.foldLeft(pure[Boolean, R](true))((acc, f) => acc.flatMap(ok =>
               Files.write[R](s"$out/${f._1}", f._2).map(_ && ok))).map { ok =>
               if !ok then Left(s"could not write into $out")
-              else Right(s"wrote $out: ${sc.files.map(_._1).mkString(", ")}\n" +
-                s"${sc.logs.size} logs, ${sc.chat.size} chat lines, ${sc.unobserved.size} components unobserved; " +
-                s"the answer in gold.json (not for the one being tested)")
+              else Right(s"wrote $out: ${files.map(_._1).mkString(", ")}\n$said")
             }
           }),
     tool("reset", "Forget the system and the facts.", schema()())(

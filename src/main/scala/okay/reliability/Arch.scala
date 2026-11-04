@@ -3,7 +3,7 @@ package okay.reliability
 import okay.datalog.{Eval, Fact, Parse}
 
 /**
- * PRODUCT 1 — THE ARCHITECTURE ANALYZER (specs/reliability.md §3): what a component's loss does to the entry points, by
+ * PRODUCT 1 — THE ARCHITECTURE ANALYZER (spec §3): what a component's loss does to the entry points, by
  * the same `Spread` the diagnosis uses; the single points of failure; the cycles of hard dependencies (okay-datalog,
  * with a proof); the hard edges from an entry point that nothing guards.
  */

@@ -1,7 +1,7 @@
 package okay.reliability
 
 /**
- * PRODUCT 2 — THE FAILURE GENERATOR (specs/reliability.md §4): systems (read, or made at random from a seed), faults
+ * PRODUCT 2 — THE FAILURE GENERATOR (spec §4): systems (read, or made at random from a seed), faults
  * chosen in them, spread, and rendered as what people and programs see — logs in several formats with noise, a chat —
  * with the gold: the faults, the effects, and the facts an ideal reader takes from the text (each line made with its
  * facts, so the gold is exact). Deterministic for a seed.
@@ -82,10 +82,17 @@ object Generate:
    * `faults` faults on different components, each alone failing something visible; observed: the entry points always,
    * another component with probability `observed`; a chat about one or two healthy components and the users' view
    */
-  def scenario(system: System, seed: Long, faults: Int = 1, observed: Double = 1.0): Scenario =
+  def scenario(system: System, seed: Long, faults: Int = 1, observed: Double = 1.0, byRates: Boolean = false):
+    Scenario =
     val rnd = scala.util.Random(seed)
     val useful = Spread.candidates(system).filter(f => Spread(system, Vector(f)).failedEntries.nonEmpty)
-    val chosen = rnd.shuffle(useful).foldLeft(Vector.empty[Fault])((acc, f) =>
+    // by rates: as incidents come, the frequent events more often (each drawn by its rate, no component twice)
+    val rate = Rates.events(system).toMap
+    val order =
+      if !byRates then rnd.shuffle(useful)
+      else useful.filter(rate.contains).map(f => f -> -math.log(1 - rnd.nextDouble()) / rate(f).lambda)
+        .sortBy(_._2).map(_._1)
+    val chosen = order.foldLeft(Vector.empty[Fault])((acc, f) =>
       if acc.size < faults && !acc.exists(_.component == f.component) then acc :+ f else acc)
     val r = Spread(system, chosen)
     val seen = system.names.filter(c => system.component(c).exists(_.entry) || rnd.nextDouble() < observed)
