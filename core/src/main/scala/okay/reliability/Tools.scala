@@ -318,6 +318,14 @@ object Tools:
             }
           }
         }),
+    tool("report", "The system as a Markdown report for a postmortem or a review: its arch.txt, its availability " +
+      "and SLOs, where the downtime comes from, its weak points, the changes that help — and the incident, when " +
+      "facts were stated: what was seen, the causes, their probabilities, the next check, the remedies.",
+      schema(("title", "string", "the report's title"))())(
+      new Run:
+        def apply[R[_]: Has[Desk]: Has[Files]: Has[Http]: Has[Clock]](a: Json) = withSystem[R] { s =>
+          Desk.seen[R].map(os => Right(Report.markdown(s, os, str(a, "title").getOrElse("The system"))))
+        }),
     tool("generate", "Make a failure scenario for testing (an analyzer, an agent, a runbook): faults chosen in the " +
       "loaded system (or in a random one), spread, rendered as logs in several formats and a chat, with the gold " +
       "answer, written to a directory: arch.txt, logs/, chat.txt, facts.txt, gold.json. With `timeline` (e.g. 30d): " +

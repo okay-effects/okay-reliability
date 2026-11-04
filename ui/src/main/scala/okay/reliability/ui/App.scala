@@ -33,6 +33,7 @@ object App:
     case Focus(component: String)
     case Unfocus
     case CopyLink(withFacts: Boolean)
+    case CopyReport
     case ForgetHere
 
   val places: List[(String, String)] = List("system" -> "System", "architecture" -> "Architecture",
@@ -72,6 +73,9 @@ object App:
             (if withFacts then " and the facts are" else " is") + " in the link itself, after #, which no server " +
             "sees." else s"Copy this link: $link")))
         }
+      case Msg.CopyReport => next.system.fold(pure[State, R](next))(sys =>
+          copy[R](Report.markdown(sys, next.seen)).map(ok => next.copy(note = Some(if ok then
+            "Copied: the report, as Markdown." else "The clipboard is not reachable from this page."))))
       case Msg.ForgetHere => keep[R]("system", "").flatMap(_ => keep[R]("facts", "")).map(_ =>
           State(note = Some("Forgotten in this browser.")))
       case _ =>
@@ -144,7 +148,7 @@ object App:
       case Msg.Focus(c) => clean.copy(focus = Some(c))
       case Msg.Unfocus => clean.copy(focus = None)
       // the world's part is `after`'s
-      case Msg.CopyLink(_) | Msg.ForgetHere => clean
+      case Msg.CopyLink(_) | Msg.ForgetHere | Msg.CopyReport => clean
 
   // ---- THE SCREENS
 
@@ -265,8 +269,9 @@ object App:
       (if changes.isEmpty then Nil else List(Part.section("Changes that help (checked by the model)")(
         Table(changes.toList)(Column.text("change")(_.what), Column.text("saves, min a month")(c => mins(c.minutes)))
       )))
-    (parts, Button.submit("Show", choose)(Msg.Focus(_): Msg) ::
-      (if focused.nonEmpty then List(Button("All")(Msg.Unfocus: Msg)) else Nil))
+    (parts, (Button.submit("Show", choose)(Msg.Focus(_): Msg) ::
+      (if focused.nonEmpty then List(Button("All")(Msg.Unfocus: Msg)) else Nil)) :+
+      Button("Copy the report (Markdown)")(Msg.CopyReport: Msg))
 
   def reliability(s: State, sys: System): (List[Part], List[Button[Msg]]) =
     val rep = Reliability.analyze(sys)
@@ -285,7 +290,8 @@ object App:
       Column.text("incidents a year")(m => f"${m.perYear}%.1f"))))
     (List(Part.text(s"${rep.eventsCount} fault events, their rates written (${sys.rates.size}) or by kind; " +
       "availability by minimal cut sets."), entries, Part.section("Where the downtime comes from")(where)) ++ sim,
-      List(Button("Check by simulating 1000 years")(Msg.Simulate: Msg)))
+      List(Button("Check by simulating 1000 years")(Msg.Simulate: Msg),
+        Button("Copy the report (Markdown)")(Msg.CopyReport: Msg)))
 
   def whatIf(s: State, sys: System): (List[Part], List[Button[Msg]]) =
     val faults = Spread.candidates(sys)
@@ -329,6 +335,7 @@ object App:
     if s.seen.nonEmpty then
       parts += Part.section(s"Seen (${s.seen.size})")(seen)
       buttons += Button("Copy a link to this incident")(Msg.CopyLink(true): Msg)
+      buttons += Button("Copy the report (Markdown)")(Msg.CopyReport: Msg)
       buttons += Button("Forget the facts", Style.Danger)(Msg.ClearFacts: Msg)
       val exact = Explain(sys, s.seen)
       val probable = Probable(sys, s.seen)

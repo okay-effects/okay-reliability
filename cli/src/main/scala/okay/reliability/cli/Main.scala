@@ -38,6 +38,7 @@ object Main:
       |                                            (FILE: arch.txt, docker-compose.yml, Kubernetes manifests)
       |  okay-reliability reliability FILE [--years N]   availability, downtime, SLOs, where downtime comes from;
       |                                            --years: checked by simulating N years
+      |  okay-reliability report FILE [--facts FILE]   the system (and an incident) as a Markdown report
       |  okay-reliability estimate --arch FILE --incidents CSV [--window 365d]   rates from your history
       |  okay-reliability generate --out DIR [--arch FILE | --random N] [--seed S] [--faults K] [--observed P]
       |                                            a failure scenario: logs, chat, gold answer
@@ -79,6 +80,10 @@ object Main:
       case Some("reliability") if rest.nonEmpty =>
         steps(live, "load_system" -> obj("path" -> rest.head),
           "reliability" -> obj(f.get("years").map("years" -> _).toSeq*))
+      case Some("report") if rest.nonEmpty =>
+        val facts = f.get("facts").flatMap(p => scala.util.Try(java.nio.file.Files.readString(Path.of(p))).toOption)
+          .map(t => "assert" -> obj("facts" -> t)).toVector
+        steps(live, (Vector("load_system" -> obj("path" -> rest.head)) ++ facts :+ ("report" -> obj()))*)
       case Some("estimate") if f.contains("arch") && f.contains("incidents") =>
         steps(live, "load_system" -> obj("path" -> f("arch")), "estimate" -> obj((Seq("path" -> f("incidents")) ++
           f.get("window").map("window" -> _))*))

@@ -127,3 +127,10 @@ class AppSuite extends munit.FunSuite:
     val forgotten = playAt(None, Map("system" -> Examples.shop), Act.press("System"), Act.press("Forget it here"))
     assertEquals(kept.get("system"), Some(""))
     assert(texts(forgotten).contains("Forgotten in this browser"), texts(forgotten).take(300))
+
+  test("the report: Markdown copied, with the incident when there are facts"):
+    play(Act.press("Examples"), Act.press("Load the shop"), Act.press("Incident"),
+      Act.press("Add the facts", "Facts" -> facts), Act.press("Copy the report (Markdown)"))
+    val md = copied.last
+    assert(md.startsWith("# The system") && md.contains("## Availability") && md.contains("## Weak points"), md)
+    assert(md.contains("## The incident") && md.contains("Probable causes") && md.contains("okay-reliability"), md)

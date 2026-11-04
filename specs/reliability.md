@@ -475,6 +475,15 @@ model (`assert`).
 - The program asks these of effects — `Settings`, `Clipboard` (okay-ui's) and `Here` (the page's address and its
   fragment); the page's handlers are the browser's, the tests' are memory.
 
+## 24. A report (BACKLOG 8, 2026-11-04)
+
+`Report.markdown(system, seen)`: the system as Markdown for a postmortem or a review — what it is (its arch.txt), its
+numbers (availability, latency, SLOs and budgets per entry point; where the downtime comes from), its weak points
+(single points of failure, zones, unguarded dependencies, cycles), the changes that help with their minutes; and when
+there are facts, the incident: what was seen (with its sources), the causes (the exact explanations, the probable
+ones), the check that settles them, the remedies. The page copies it ("Copy the report (Markdown)" on Architecture,
+Reliability and Incident); the MCP tool `report` answers it.
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a
