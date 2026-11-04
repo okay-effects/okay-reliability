@@ -1,5 +1,9 @@
 # okay-reliability
 
+**Live:** https://okay-reliability.okay-effects.workers.dev — the page (everything computed in your browser), and the tools
+for programs and agents: `GET /api`, `POST /api/<tool>` (JSON arguments; the system's text in `system`, the facts in
+`facts`), `POST /mcp` (MCP's JSON-RPC, nothing kept between calls).
+
 The reliability of a system, on one model of it and one simulator of how a failure spreads:
 
 1. **The architecture analyzer** — reads `docker-compose.yml`, Kubernetes manifests or a one-fact-a-line `arch.txt`;

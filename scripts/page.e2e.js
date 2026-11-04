@@ -6,7 +6,7 @@ const cdpOf = require("./cdp.js");
   let failed = 0;
   const ok = (what, cond) => { console.log(`${cond ? "✓" : "✗"} ${what}`); if (!cond) failed++; };
   await c.js(`(()=>{})()`);
-  await c.go("http://127.0.0.1:8798/");
+  await c.go(process.env.URL || "http://127.0.0.1:8798/");
   ok("the page", (await c.text()).includes("okay-reliability"));
   await c.click("Example: a shop"); await c.sleep(1500);
   ok("the architecture", (await c.text()).toLowerCase().includes("single points of failure"));
