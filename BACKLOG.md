@@ -73,7 +73,8 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 
 ## 7. After the real incidents (the owner, 2026-11-04: "the rest — do it"; the phone app later)
 
-20. **The new words on the page**: `reads`/`writes` in a symptom, `withdraws`/`saturates` on a dependency — said in
+20. ~~**The new words on the page**~~ — DONE 2026-11-04 (spec §33).
+    `reads`/`writes` in a symptom, `withdraws`/`saturates` on a dependency — said in
     the fields' hints and shown by an example on the Examples page.
 21. **More postmortems**: 10–15 more public ones beside the eight (spec §28), the same rules: facts only from before
     the cause was known; the table re-measured.

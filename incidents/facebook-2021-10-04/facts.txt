@@ -4,4 +4,4 @@ symptom(dns, down) [public: Facebook's DNS prefixes withdrawn from BGP] @2021-10
 symptom(facebook, errors) [postmortem] @2021-10-04T15:40:00Z
 symptom(instagram, errors) [postmortem] @2021-10-04T15:40:00Z
 symptom(whatsapp, errors) [postmortem] @2021-10-04T15:40:00Z
-symptom(internal-tools, errors) [postmortem: the loss of DNS broke the tools used to investigate] @2021-10-04T15:40:00Z
+symptom(internal-tools, errors) [postmortem: no DNS, no tools to investigate] @2021-10-04T15:40:00Z

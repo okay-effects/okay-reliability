@@ -1,7 +1,7 @@
 # Facebook, 2021-10-04: the backbone, the data centers, the DNS servers and the apps
 backbone: service                  # the global backbone network between data centers
 datacenter: service replicas 3
-dns: service replicas 3            # authoritative DNS: withdraws its BGP routes when it cannot reach the data centers
+dns: service replicas 3            # authoritative DNS: withdraws its BGP routes, cut off
 facebook: service entry
 instagram: service entry
 whatsapp: service entry

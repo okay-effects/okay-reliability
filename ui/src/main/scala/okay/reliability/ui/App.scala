@@ -20,6 +20,8 @@ object App:
   enum Msg:
     case Go(place: String)
     case Load(text: String)
+    /** a real incident: its system loaded, its facts added, the incident shown */
+    case LoadIncident(system: String, facts: String)
     case Random(services: Int, seed: Long)
     case Simulate
     case AddFault(f: Fault)
@@ -138,6 +140,9 @@ object App:
           val found = Metrics.facts(sys, Metrics.exposition(text))
           clean.copy(seen = (s.seen ++ found).distinct, note = Some(t("{0} facts from the metrics.", found.size)))
         }
+      case Msg.LoadIncident(system, facts) =>
+        val loaded = step(s, Msg.Load(system))
+        if loaded.system.isEmpty then loaded else step(loaded, Msg.AddFacts(facts)).copy(place = "incident")
       case Msg.AddFacts(text) => s.system.fold(clean)(sys => Words.facts(text) match
           case Left(e) => clean.copy(problem = Some(e))
           case Right(os) =>
@@ -217,8 +222,9 @@ object App:
       "from one of the Examples."))
     val format = Part.block("small")(Part.text("arch.txt: `name: kind [entry] [replicas N] [zones a,b] [needs K]` " +
       "(kinds: service, database, cache, queue, balancer, external), `from -> to [hard|soft|cached|async] " +
-      "[reads|writes] [breaker] [retries] [fallback alt]`, `x fails down every 90d for 30m`, " +
-      "`zone a fails every 365d for 2h`, `web slo 99.9%`, `web writes 20%`."))
+      "[reads|writes] [breaker] [retries] [withdraws] [saturates] [fallback alt]` — withdraws: the caller takes " +
+      "itself out when the callee fails (DNS withdrawing its routes); saturates: a slow callee makes the caller fail " +
+      "too; `x fails down every 90d for 30m`, `zone a fails every 365d for 2h`, `web slo 99.9%`, `web writes 20%`."))
     (List(intro, form, format) ++ s.system.toList.map(sys => Scheme.picture(sys, Scheme.kindMark(sys),
       t("the system loaded"))),
       List(Button.submit(t("Analyze"), form)(Msg.Load(_): Msg), Button(t("Examples"))(Msg.Go("examples"): Msg)) ++
@@ -249,15 +255,31 @@ object App:
         "provider from the client spans, the soft call to reports from the failures that did not fail web.")),
         Part.slot("traces")),
       Part.section(t("Made at random"))(Part.text(t("A layered system of services, databases, caches, a queue and " +
-        "externals; a large one to see the searches at scale.")), Part.slot("random"))),
+        "externals; a large one to see the searches at scale.")), Part.slot("random")),
+      Part.section(t("Real incidents"))((Part.text(t("Public postmortems: the system as each describes it and what " +
+        "its operators saw before they knew the cause. Load one: the analysis says what the postmortem found.")) ::
+        Examples.incidents.flatMap(i => List(Part.code(i.name, i.facts.linesIterator.toList, Set.empty),
+          Part.text(t(incidentSaid(i.name))), Part.slot(i.name))))*)),
       List(Button(t("Load the shop"), Style.Primary)(Msg.Load(Examples.shop): Msg).at("shop"),
         Button(t("Load the compose file"), Style.Primary)(Msg.Load(Examples.compose): Msg).at("compose"),
         Button(t("Load the manifests"), Style.Primary)(Msg.Load(Examples.kubernetes): Msg).at("kubernetes"),
         Button(t("Load the shop's traces"), Style.Primary)(Msg.Load(shopTraces): Msg).at("traces"),
         Button(t("A random system"))(Msg.Random(8, java.lang.System.currentTimeMillis() % 1000): Msg).at("random"),
         Button(t("A large one (60)"))(Msg.Random(60, java.lang.System.currentTimeMillis() % 1000): Msg)
-          .at("random")) :+
+          .at("random")) ++
+        Examples.incidents.map(i => Button(s"${t("Load and diagnose")}: ${i.title}", Style.Primary)(
+          Msg.LoadIncident(i.arch, i.facts): Msg).at(i.name)) :+
         Button(t("Back"))(Msg.Go("system"): Msg))
+
+  /** what a real incident shows: the word of the model it needs */
+  private def incidentSaid(name: String): String = name match
+    case "facebook-2021-10-04" => "Facebook, 4 October 2021: the backbone taken down by a command; the DNS servers, " +
+        "cut off, withdrew their routes (`dns -> backbone hard withdraws`) and the world lost Facebook."
+    case "slack-2021-01-04" => "Slack, 4 January 2021: the AWS Transit Gateway overloaded after the holidays; " +
+        "the web tier, its threads waiting on the network, failed (`web -> tgw hard saturates`)."
+    case "aws-2017-02-28" => "S3, 28 February 2017: a mistyped command removed the index's servers; reads and " +
+        "writes both failed (`symptom(s3, errors, reads)`), so not the write path alone."
+    case other => other
 
   def architecture(s: State, sys: System)(using Lang): (List[Part], List[Button[Msg]]) =
     val r = Arch.analyze(sys)
@@ -357,7 +379,8 @@ object App:
     val chat = Form.one(Field.file(t("A chat, notes"), ".txt,.md").keyed("chat"))
     val metrics = Form.one(Field.file(t("Prometheus metrics (the text format)"), ".prom,.txt").keyed("metrics"))
     val facts = Form.one(Field.longText(t("Facts")).keyed("facts")
-      .hinted("symptom(c, errors) [source] @time, healthy(c), alive(c), changed(c, deploy)"))
+      .hinted("symptom(c, errors) [source] @time, symptom(c, errors, reads) — seen in reads (or writes) only, " +
+        "healthy(c), alive(c), changed(c, deploy)"))
     val seen = Table(s.seen.toList)(Column.text(t("fact"))(o => o.toString.takeWhile(_ != '[').trim),
       Column.text(t("source"))(_.source))
     val parts = List.newBuilder[Part]

@@ -148,3 +148,14 @@ class AppSuite extends munit.FunSuite:
       App.main[Row])))), Act.press("English"))
     assert(kept.get("lang").contains("en"), kept.toString)
     assert(back.at.exists(_.buttons.exists(_.label == "Русский")))
+
+  test("real incidents (spec §28, §31, §32): loaded and diagnosed, the postmortem's cause first"):
+    val expected = Map("Facebook 2021" -> "backbone", "Slack 2021" -> "tgw slow", "S3 2017" -> "s3-index down")
+    expected.foreach { (title, cause) =>
+      val p = play(Act.press("Examples"), Act.press(s"Load and diagnose: $title"))
+      val t = texts(p)
+      assert(t.contains("Probable causes"), t)
+      // the section's title, then its first row's cause
+      val first = t.linesIterator.dropWhile(_ != "Probable causes").drop(1).nextOption().getOrElse("")
+      assert(first.contains(cause), s"$title: $first")
+    }

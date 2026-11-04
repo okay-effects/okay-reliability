@@ -73,6 +73,23 @@ object I18n:
     "Load the shop" -> "Загрузить магазин", "Load the compose file" -> "Загрузить compose",
     "Load the manifests" -> "Загрузить манифесты", "Load the shop's traces" -> "Загрузить трейсы магазина",
     "A random system" -> "Случайная система", "A large one (60)" -> "Большая (60)",
+    "Real incidents" -> "Реальные аварии", "Load and diagnose" -> "Загрузить и разобрать",
+    "Public postmortems: the system as each describes it and what its operators saw before they knew the cause. " +
+      "Load one: the analysis says what the postmortem found." ->
+      ("Публичные разборы аварий: система, как её описывает разбор, и то, что видели дежурные, пока причина была " +
+        "неизвестна. Загрузите — анализ скажет то, что нашёл разбор."),
+    "Facebook, 4 October 2021: the backbone taken down by a command; the DNS servers, cut off, withdrew their " +
+      "routes (`dns -> backbone hard withdraws`) and the world lost Facebook." ->
+      ("Facebook, 4 октября 2021: магистраль отключена командой; DNS-серверы, отрезанные от неё, отозвали свои " +
+        "маршруты (`dns -> backbone hard withdraws`), и мир потерял Facebook."),
+    "Slack, 4 January 2021: the AWS Transit Gateway overloaded after the holidays; the web tier, its threads " +
+      "waiting on the network, failed (`web -> tgw hard saturates`)." ->
+      ("Slack, 4 января 2021: AWS Transit Gateway перегружен после праздников; веб-слой, чьи потоки ждали сеть, " +
+        "упал (`web -> tgw hard saturates`)."),
+    "S3, 28 February 2017: a mistyped command removed the index's servers; reads and writes both failed " +
+      "(`symptom(s3, errors, reads)`), so not the write path alone." ->
+      ("S3, 28 февраля 2017: команда с опечаткой убрала серверы индекса; не работали и чтение, и запись " +
+        "(`symptom(s3, errors, reads)`) — значит, дело не только в пути записи."),
     // architecture
     "A component" -> "Компонент", "Show" -> "Показать", "All" -> "Все",
     "what losing {0} does: it dark red, what fails red, what degrades amber" ->

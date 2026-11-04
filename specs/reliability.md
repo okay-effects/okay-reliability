@@ -617,6 +617,14 @@ Measured: Slack 2021 — the truth agrees with every fact now, the only minimal 
 agrees with every fact, minimal, second to `backbone errors` (0.92 against 0.08: a change raises errors ×30, down ×5;
 the right component). No `!` left in the real incidents' table; the generator does not use the words: `bench` unchanged.
 
+## 33. The new words on the page (BACKLOG 20, 2026-11-04)
+
+The system's format line says `[withdraws] [saturates]` and what each means; the Facts field's hint says
+`symptom(c, errors, reads)`. The Examples page has a section "Real incidents": Facebook 2021 (`withdraws`), Slack 2021
+(`saturates`), S3 2017 (facts of a world) — each its facts shown, a sentence on what it needs, and "Load and diagnose"
+(`Msg.LoadIncident`: the system loaded, the facts added, the incident shown). The texts are the files of
+`incidents/<name>`, kept equal by `AppSuite`; the e2e loads Facebook 2021 and finds the backbone first.
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a
