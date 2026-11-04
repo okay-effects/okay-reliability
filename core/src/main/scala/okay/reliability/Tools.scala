@@ -328,22 +328,6 @@ object Tools:
         def apply[R[_]: Has[Desk]: Has[Files]: Has[Http]: Has[Clock]](a: Json) =
           Desk.clear[R].map(_ => Right("forgotten"))))
 
-  /** A CALL THAT KEEPS NOTHING (a Worker's): the system (`system`, its text) and the facts (`facts`) in the call's
-   * own arguments, loaded first, then the tool */
-  def stateless[R[_]: Has[Desk]: Has[Files]: Has[Http]: Has[Clock]](name: String, a: Json): Either[String, String] ! R =
-    val system: Either[String, String] ! R = str(a, "system").fold(pure[Either[String, String], R](Right("")))(t =>
-      call[R]("load_system", Json.obj("text" -> Json.Str(t))))
-    system.flatMap {
-      case Left(e) => pure(Left(e))
-      case Right(_) =>
-        val facts: Either[String, String] ! R = str(a, "facts").fold(pure[Either[String, String], R](Right("")))(
-          f => call[R]("assert", Json.obj("facts" -> Json.Str(f))))
-        facts.flatMap {
-          case Left(e) => pure(Left(e))
-          case Right(_) => if name == "load_system" && str(a, "system").isDefined then system else call[R](name, a)
-        }
-    }
-
   def call[R[_]: Has[Desk]: Has[Files]: Has[Http]: Has[Clock]](name: String, a: Json): Either[String, String] ! R =
     all.find(_.spec.name == name) match
       case None => pure(Left(s"no such tool '$name' (there are: ${all.map(_.spec.name).mkString(", ")})"))

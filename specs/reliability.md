@@ -351,16 +351,18 @@ spread on the picture, their chains, the remedies), an incident (logs, a chat, m
 probabilities, the check to make as buttons — "inventory is fine" — the remedies) and training (an incident made, read
 in, the answer revealed). Tested on the JVM by okay-ui's `Play` (`AppSuite`).
 
-- **The page** (`web`): the program on okay-ui's DOM face — everything computed in the browser, nothing sent.
-- **The Worker** (`worker`, okay-serverless): the page, and the tools for programs and agents with nothing kept —
-  `GET /api` the tools, `POST /api/<tool>` (JSON arguments; `system` the system's text, `facts` the facts),
-  `POST /mcp` (MCP's JSON-RPC; a call not begun by `initialize` is begun for it). `sbt workerDist`, then
-  `npx wrangler deploy` in `worker/`. The same page is a static site anywhere (`sbt pageDist` → target/site).
-- `scripts/page.e2e.js`: headless Chrome through the places against `wrangler dev` — all five checks pass.
+- **The page** (`web`): the program on okay-ui's DOM face — everything computed in the browser, nothing sent; a
+  static site, on GitHub Pages (https://okay-effects.github.io/okay-reliability/, RELEASING.md).
+- `scripts/page.e2e.js`: headless Chrome through the places against a URL (`URL=…`) — all checks pass.
+- A Cloudflare Worker (the page, `/api/<tool>`, MCP over HTTP, nothing kept) was built and deployed on 2026-11-04 and
+  taken down the same day (the operator: a static site, Workers later where one is needed — an alert's webhook
+  diagnosed with no page open, shared incidents, a remote agent's MCP with sessions). Its code is in the history
+  (commit 30767db, `worker/`).
 
 ## 15. Not yet
 
-MCP sessions in a Durable Object (a model's facts kept between its calls); the front on a phone (okay-faces' mobile
+Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a
+remote agent); the front on a phone (okay-faces' mobile
 face, as okay-remote's); 
 
 okay-inlay's handler (the exact part as transformer weights).

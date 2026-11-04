@@ -1,8 +1,7 @@
 # okay-reliability
 
-**Live:** https://okay-reliability.okay-effects.workers.dev — the page (everything computed in your browser), and the tools
-for programs and agents: `GET /api`, `POST /api/<tool>` (JSON arguments; the system's text in `system`, the facts in
-`facts`), `POST /mcp` (MCP's JSON-RPC, nothing kept between calls).
+**Live:** https://okay-effects.github.io/okay-reliability/ — the page, everything computed in your browser: nothing you
+paste leaves it. For agents: `okay-reliability serve`, an MCP server on your machine.
 
 The reliability of a system, on one model of it and one simulator of how a failure spreads:
 
@@ -21,8 +20,8 @@ The reliability of a system, on one model of it and one simulator of how a failu
 5. **The remedies** — for an incident, actions each checked by simulating the faults left after it (what it restores,
    how long it takes, its risk); for the architecture, changes priced in the downtime a month they save.
 
-A front: the same program as screens (okay-ui) — in a browser, everything computed in the page (`sbt pageDist`), or
-on Cloudflare, the page plus the tools as `/api/<tool>` and MCP over HTTP (`sbt workerDist`, `npx wrangler deploy`).
+A front: the same program as screens (okay-ui), in a browser — everything computed in the page (`sbt pageDist`, on
+GitHub Pages: RELEASING.md).
 
 The model does what it is good at — reading text, stating facts, leading an investigation; okay-reliability does what
 a model gets wrong — propagation through a graph, abduction, counting, probabilities, checking that a fix fixes. All of

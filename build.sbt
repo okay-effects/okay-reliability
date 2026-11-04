@@ -1,7 +1,7 @@
 /*
  * okay-reliability — the reliability of a system on one model of it (spec): the architecture, the numbers, failures
  * generated, diagnosed and remedied — over one simulator of how a failure spreads. `core` on the JVM and in
- * JavaScript (a browser, a Cloudflare Worker); `cli` the machine's (a CLI, an MCP server on stdio); `web` the page.
+ * JavaScript (a browser); `cli` the machine's (a CLI, an MCP server on stdio); `web` the page — on GitHub Pages.
  */
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
@@ -46,7 +46,7 @@ lazy val ui = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in
   .settings(name := "okay-reliability-ui", publish / skip := true,
     libraryDependencies ++= Seq("io.github.okay-effects" %%% "okay-ui-scala3" % "0.1.0", munit.value))
 
-lazy val root = (project in file(".")).aggregate(core.jvm, core.js, cli, ui.jvm, ui.js, web, worker)
+lazy val root = (project in file(".")).aggregate(core.jvm, core.js, cli, ui.jvm, ui.js, web)
   .settings(publish / skip := true)
 
 // a runnable okay-reliability without sbt: `sbt stage` → target/okay-reliability (jars in lib, a launcher in bin)
@@ -66,17 +66,11 @@ cli / stage := {
   out
 }
 
-/** THE PAGE: the front's program in a browser (okay-ui's DOM face) — `sbt pageDist` → site files with page.js */
+/** THE PAGE: the front's program in a browser (okay-ui's DOM face) — `sbt pageDist` → target/site, for GitHub Pages */
 lazy val web = (project in file("web")).enablePlugins(ScalaJSPlugin).dependsOn(ui.js)
   .settings(name := "okay-reliability-web", publish / skip := true, scalaJSUseMainModuleInitializer := true,
     scalaJSLinkerConfig ~= (_.withModuleKind(org.scalajs.linker.interface.ModuleKind.ESModule)),
     libraryDependencies ++= Seq("io.github.okay-effects" %%% "okay-ui" % "0.1.0"))
-
-/** THE WORKER: the page and the tools on Cloudflare (okay-serverless) — `sbt workerDist`, then wrangler */
-lazy val worker = (project in file("worker")).enablePlugins(ScalaJSPlugin).dependsOn(core.js)
-  .settings(name := "okay-reliability-worker", publish / skip := true,
-    scalaJSLinkerConfig ~= (_.withModuleKind(org.scalajs.linker.interface.ModuleKind.ESModule)),
-    libraryDependencies ++= Seq("io.github.okay-effects" %%% "okay-serverless-cloudflare" % "0.1.0"))
 
 /** the page's files: the site's and the linked page.js, in target/site */
 val pageDist = taskKey[File]("the page in target/site")
@@ -88,23 +82,5 @@ pageDist := {
   IO.copyFile(w / "main.js", out / "page.js")
   (w * "*.js").get.filterNot(_.getName == "main.js").foreach(f => IO.copyFile(f, out / f.getName))
   ((ThisBuild / baseDirectory).value / "site" * "*").get.foreach(f => IO.copyFile(f, out / f.getName))
-  out
-}
-
-/** the Worker, linked, with the page's files as text modules: worker/dist — then `npx wrangler deploy` */
-val workerDist = taskKey[File]("the Worker in worker/dist")
-workerDist := {
-  val r = (worker / Compile / fullLinkJS / scalaJSLinkerOutputDirectory).value
-  val _ = (worker / Compile / fullLinkJS).value
-  val site = pageDist.value
-  val out = (ThisBuild / baseDirectory).value / "worker" / "dist"
-  IO.delete(out)
-  IO.copyFile(r / "main.js", out / "okay-reliability-worker.js")
-  (r * "*.js").get.filterNot(_.getName == "main.js").foreach(f => IO.copyFile(f, out / f.getName))
-  val named = (site * "*").get.sortBy(_.getName).zipWithIndex
-  named.foreach { case (f, _) => IO.copyFile(f, out / "web" / (f.getName + ".txt")) }
-  IO.write(out / "assets.js", "// the page's files, by name (sbt workerDist)\n" +
-    named.map { case (f, i) => s"""import f$i from "./web/${f.getName}.txt";""" }.mkString("\n") +
-    "\nexport default {\n" + named.map { case (f, i) => s"""  "${f.getName}": f$i,""" }.mkString("\n") + "\n};\n")
   out
 }

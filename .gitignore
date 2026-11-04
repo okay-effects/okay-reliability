@@ -3,6 +3,3 @@ target/
 .idea/
 .metals/
 out/
-worker/dist/
-worker/node_modules/
-worker/.wrangler/
