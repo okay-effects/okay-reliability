@@ -70,3 +70,11 @@ class AppSuite extends munit.FunSuite:
     val typed = play(Act.press("Analyze", "The system: arch.txt, docker-compose.yml or Kubernetes manifests" ->
       "web: service entry\ndb: database\nweb -> db hard"))
     assert(texts(typed).contains("Loaded: 2 components"), texts(typed))
+
+  test("no places before a system: only the field, Analyze, Examples; the places once one is loaded"):
+    val first = play().at.toList.flatMap(_.buttons.map(_.label))
+    assertEquals(first, List("Analyze", "Examples"))
+    val examples = play(Act.press("Examples")).at.toList.flatMap(_.buttons.map(_.label))
+    assert(examples.contains("Back") && !examples.contains("Architecture"), examples.toString)
+    val loaded = play(Act.press("Examples"), Act.press("Load the shop")).at.toList.flatMap(_.buttons.map(_.label))
+    assert(loaded.contains("Architecture") && !loaded.contains("Examples"), loaded.toString)

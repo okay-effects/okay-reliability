@@ -32,8 +32,7 @@ object App:
     case Reveal
 
   val places: List[(String, String)] = List("system" -> "System", "architecture" -> "Architecture",
-    "reliability" -> "Reliability", "whatif" -> "What if", "incident" -> "Incident", "training" -> "Training",
-    "examples" -> "Examples")
+    "reliability" -> "Reliability", "whatif" -> "What if", "incident" -> "Incident", "training" -> "Training")
 
   def main[R[_]](using In[Ui, R]): Unit ! R = loop[R](State())
 
@@ -104,8 +103,10 @@ object App:
 
   // ---- THE SCREENS
 
+  /** the places, once there is a system to look at: before, none would show anything */
   private def nav(s: State): List[Button[Msg]] =
-    places.map((p, label) => Button(label, if s.place == p then Style.Primary else Style.Plain)(Msg.Go(p): Msg)
+    if s.system.isEmpty then Nil
+    else places.map((p, label) => Button(label, if s.place == p then Style.Primary else Style.Plain)(Msg.Go(p): Msg)
       .at("places"))
 
   def render(s: State): Screen[Msg] =
@@ -138,7 +139,7 @@ object App:
       "[fallback alt]`, `x fails down every 90d for 30m`, `web slo 99.9%`, `web writes 20%`."))
     (List(intro, form, format) ++ s.system.toList.map(sys => Scheme.picture(sys, Scheme.kindMark(sys),
       "the system loaded")),
-      List(Button.submit("Analyze", form)(Msg.Load(_): Msg)))
+      List(Button.submit("Analyze", form)(Msg.Load(_): Msg), Button("Examples")(Msg.Go("examples"): Msg)))
 
   /** THE EXAMPLES, a page of their own: each said what it shows, its text, a button that loads it */
   def examples: (List[Part], List[Button[Msg]]) =
@@ -158,7 +159,8 @@ object App:
         Button("Load the compose file", Style.Primary)(Msg.Load(Examples.compose): Msg).at("compose"),
         Button("Load the manifests", Style.Primary)(Msg.Load(Examples.kubernetes): Msg).at("kubernetes"),
         Button("A random system")(Msg.Random(8, java.lang.System.currentTimeMillis() % 1000): Msg).at("random"),
-        Button("A large one (60)")(Msg.Random(60, java.lang.System.currentTimeMillis() % 1000): Msg).at("random")))
+        Button("A large one (60)")(Msg.Random(60, java.lang.System.currentTimeMillis() % 1000): Msg).at("random")) :+
+        Button("Back")(Msg.Go("system"): Msg))
 
   def architecture(sys: System): (List[Part], List[Button[Msg]]) =
     val r = Arch.analyze(sys)
