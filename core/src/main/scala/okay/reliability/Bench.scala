@@ -33,7 +33,8 @@ object Bench:
     }
     val ms = (java.lang.System.nanoTime() - t0) / 1000000
     val how = if byRates then "drawn by their rates" else "drawn evenly"
-    val blindLine = if changes then f"  the changes not read: first      $blind (${100.0 * blind / total}%.0f%%)\n" else ""
+    val blindLine =
+      if changes then f"  the changes not read: first      $blind (${100.0 * blind / total}%.0f%%)\n" else ""
     val also = (if metrics then ", and a scrape of metrics" else "") +
       (if changes then "; deploys before 60% of the errors and slowness, and decoys" else "")
     val pct = f"${observed * 100}%.0f%%"
