@@ -52,7 +52,8 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 
 ## 5. The rest
 
-14. okay-faces republished on Pages with the `Session` fix (an event heard as a step listens), okay-ui after it.
+14. ~~okay-faces republished~~ — DONE 2026-11-04 (okay-faces f62577f: JVM, JS, Native, Android; okay-ui with Native;
+    okay-reliability green from Pages alone, the page republished). okay-faces republished on Pages with the `Session` fix (an event heard as a step listens), okay-ui after it.
 15. okay-reliability released as a library on Pages (Maven): `core`, `cli`.
 16. CI (GitHub Actions) — needs a token with the workflow scope.
 
