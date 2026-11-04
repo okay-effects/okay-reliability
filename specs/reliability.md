@@ -289,6 +289,20 @@ okay-agent, asked "what failed, and why":
 Scored by the answer's root cause set against the gold (exact; the components named), with the time and the turns.
 The runs journaled by okay-agent; the table in this section with the date, the model, the seeds.
 
+Measured 2026-11-04: Qwen3.6-35B-A3B (4-bit, okay-mlx) in okay-agent 0.1.0, seeds 101–108, one fault each (drawn by
+its rate), 80% of the components with logs, metrics not given; scored on the last `ROOT CAUSE:` line:
+
+| arm | runs | the cause exactly (component and kind) | the component right | median time |
+|---|---|---|---|---|
+| A, the files alone | 8 | 2 | 6 | 215 s |
+| T, with okay-reliability's tools | 8 | 7 | 8 | 316 s |
+| E, the gold facts and the analyzer (`bench`) | 200 | 64–70% alone, 100% among the explanations | — | 0.1 s |
+
+Alone the model names the right component most of the time but the wrong kind (down for slow), or adds a second
+cause, or none (seed 108: no answer line). With the tools it named the exact cause in 7 of 8; the one miss (seed 102,
+`pricing-db errors` answered `down`) is a fact it asserted against the logs. The tools cost a turn or two: 316 s against
+215 s. Eight runs: a direction, not a rate.
+
 ## 14. Large systems (2026-11-04)
 
 Enumerating every set of up to 3 events is C(n, 3) spreads — fine for tens of components, hopeless for hundreds.

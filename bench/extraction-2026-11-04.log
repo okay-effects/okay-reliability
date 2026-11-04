@@ -1,0 +1,19 @@
+seed 101 A: gold (email-provider,slow) answer (orders,slow) wrong 149s
+seed 101 T: gold (email-provider,slow) answer (email-provider,slow) EXACT 163s
+seed 102 A: gold (pricing-db,errors) answer (pricing-db,down),(pricing,down) component 168s
+seed 102 T: gold (pricing-db,errors) answer (pricing-db,down) component 406s
+seed 103 A: gold (pricing,slow) answer (pricing,slow),(search,down) component 206s
+seed 103 T: gold (pricing,slow) answer (pricing,slow) EXACT 220s
+seed 104 A: gold (pricing,slow) answer (pricing,slow) EXACT 215s
+seed 104 T: gold (pricing,slow) answer (pricing,slow) EXACT 316s
+seed 105 A: gold (payments-db,slow) answer (payments-db,slow),(payments,slow) component 270s
+seed 105 T: gold (payments-db,slow) answer (payments-db,slow) EXACT 445s
+seed 106 A: gold (reviews,slow) answer (reviews-db,down),(reviews,slow) component 306s
+seed 106 T: gold (reviews,slow) answer (reviews,slow) EXACT 458s
+seed 107 A: gold (reports,down) answer (reports,down) EXACT 191s
+seed 107 T: gold (reports,down) answer (reports,down) EXACT 247s
+seed 108 A: gold (checkout,errors) answer  wrong 314s
+seed 108 T: gold (checkout,errors) answer (checkout,errors) EXACT 232s
+arm	runs	exact	component	median s
+A	8	2	6	215
+T	8	7	8	316
