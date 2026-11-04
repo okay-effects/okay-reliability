@@ -31,9 +31,9 @@ object App:
     case ReadTraining
     case Reveal
 
-  val places: List[(String, String)] = List("system" -> "System", "examples" -> "Examples",
-    "architecture" -> "Architecture", "reliability" -> "Reliability", "whatif" -> "What if", "incident" -> "Incident",
-    "training" -> "Training")
+  val places: List[(String, String)] = List("system" -> "System", "architecture" -> "Architecture",
+    "reliability" -> "Reliability", "whatif" -> "What if", "incident" -> "Incident", "training" -> "Training",
+    "examples" -> "Examples")
 
   def main[R[_]](using In[Ui, R]): Unit ! R = loop[R](State())
 
