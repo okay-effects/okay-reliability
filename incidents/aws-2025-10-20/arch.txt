@@ -1,0 +1,21 @@
+# AWS us-east-1, 2025-10-20: DynamoDB's endpoint and the services that use it
+dynamodb: database entry replicas 3       # the regional endpoint, dynamodb.us-east-1.amazonaws.com
+dynamodb-dns: service                     # the endpoint's DNS records, kept by the DNS Planner and Enactors
+route53: service                          # where the records are served
+dynamodb -> dynamodb-dns hard             # reached by its name
+dynamodb-dns -> route53 hard
+ec2-dwfm: service                         # EC2's DropletWorkflow Manager: leases on the physical servers
+ec2-launch: service entry
+ec2-running: service entry                # instances already running
+lambda: service entry
+sts: service entry
+iam-signin: service entry
+redshift: service entry
+support: service entry                    # AWS Support Center: account metadata
+ec2-dwfm -> dynamodb hard
+ec2-launch -> ec2-dwfm hard
+lambda -> dynamodb hard
+sts -> dynamodb hard
+iam-signin -> sts hard
+redshift -> dynamodb hard
+support -> dynamodb hard

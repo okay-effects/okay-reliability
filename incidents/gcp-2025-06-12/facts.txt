@@ -1,0 +1,8 @@
+# what was seen before the cause was known (times UTC, the postmortem's 10:45 and 10:49 PDT)
+changed(policy-db, config) [postmortem: a policy change inserted into the regional Spanner tables] @2025-06-12T17:45:00Z
+changed(service-control, deploy) [postmortem: a new quota-check feature rolled out] @2025-05-29T00:00:00Z
+symptom(api-frontend, errors) [postmortem: 503s on external API requests, every region] @2025-06-12T17:49:00Z
+symptom(console, errors) [postmortem: API and UI access issues] @2025-06-12T17:49:00Z
+symptom(bigquery, errors) [postmortem: 503s] @2025-06-12T17:49:00Z
+symptom(vertex-ai, errors) [postmortem: elevated 5xx] @2025-06-12T17:49:00Z
+healthy(compute-running) [postmortem: existing streaming and IaaS resources not impacted]

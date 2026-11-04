@@ -1,0 +1,16 @@
+# Cloudflare, 2019-07-02: the edge and what reaches the world through it (the parts the incident touched)
+edge: service entry replicas 3    # the HTTP/HTTPS proxy on every edge machine
+waf: service replicas 3           # the Lua WAF, run on every request in the proxy
+quicksilver: database             # the key-value store that pushes the WAF's rules to the edge
+origin: external                  # customers' servers behind the edge
+dashboard: service entry
+api: service entry
+access: service                   # Cloudflare Access, in front of the internal tools
+internal-tools: service entry     # control panel, Jira, the build system
+edge -> waf hard
+edge -> origin hard
+waf -> quicksilver cached
+dashboard -> edge hard
+api -> edge hard
+internal-tools -> access hard
+access -> edge hard

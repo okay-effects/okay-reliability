@@ -1,0 +1,6 @@
+# what was seen before the cause was known (times UTC, the postmortem's PST + 8)
+symptom(web, errors) [postmortem: error rates rising, 99% message success at 6:57] @2021-01-04T14:57:00Z
+symptom(lb, errors) [postmortem: Slack down at ~7:00] @2021-01-04T15:00:00Z
+symptom(web, slow) [postmortem: thread saturation, higher latency calling backends] @2021-01-04T15:00:00Z
+symptom(dashboards, slow) [postmortem: dashboards and alerting unavailable early in the incident] @2021-01-04T15:00:00Z
+symptom(provision, slow) [postmortem: provision-service slow, then overloaded] @2021-01-04T15:05:00Z

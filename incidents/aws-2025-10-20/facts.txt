@@ -1,0 +1,10 @@
+# the first hour (times UTC), before the cause was known
+symptom(dynamodb, errors) [postmortem: increased API error rates for the regional endpoint] @2025-10-20T06:48:00Z
+symptom(redshift, errors) [postmortem: queries and API calls failed] @2025-10-20T06:47:00Z
+symptom(support, errors) [postmortem: cases could not be created or viewed] @2025-10-20T06:48:00Z
+symptom(lambda, errors) [postmortem: API errors] @2025-10-20T06:51:00Z
+symptom(sts, errors) [postmortem: API errors] @2025-10-20T06:51:00Z
+symptom(iam-signin, errors) [postmortem: IAM user sign-in failed] @2025-10-20T06:51:00Z
+symptom(ec2-launch, errors) [postmortem: instance launches failed] @2025-10-20T06:48:00Z
+healthy(ec2-running) [postmortem: instances running before the event were not affected]
+healthy(route53) [postmortem: Route53 not reported failing, other names resolved]

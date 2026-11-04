@@ -1,0 +1,5 @@
+# what was seen before the cause was known (times UTC)
+changed(east-link, config) [postmortem: maintenance replaced failing 100G optical equipment] @2018-10-21T22:52:00Z
+symptom(web, slow) [postmortem: alerts, pages slow, writes across the country] @2018-10-21T22:54:00Z
+healthy(east-link) [postmortem: connectivity restored in 43 seconds]
+alive(orchestrator) [postmortem: the topology showed only West Coast servers]

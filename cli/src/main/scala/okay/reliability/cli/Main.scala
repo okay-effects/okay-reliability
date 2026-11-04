@@ -45,6 +45,8 @@ object Main:
       |  okay-reliability generate --out DIR --timeline 90d [--arch FILE]   a span of life: incidents, SLIs
       |  okay-reliability explain DIR                   the causes of a scenario (DIR/arch.txt, logs/, chat.txt)
       |  okay-reliability explain --arch FILE [--logs DIR] [--chat FILE] [--facts FILE] [--metrics FILE]
+      |  okay-reliability incidents DIR               the analyzer on real postmortems (DIR/<name>/arch.txt,
+      |                                            facts.txt, truth.txt): the truth's rank, the top three
       |  okay-reliability simulate --arch FILE --faults "db down, web#1 down"
       |  okay-reliability remedies --arch FILE --faults "..."   the actions, each checked by simulation
       |  okay-reliability bench [--seeds N] [--faults K] [--observed P]   the analyzer on generated scenarios
@@ -104,6 +106,10 @@ object Main:
             val facts = f.get("facts").toVector.flatMap(p => scala.util.Try(java.nio.file.Files.readString(
               java.nio.file.Path.of(p))).toOption).map(t => "assert" -> obj("facts" -> t))
             steps(live, (Vector("load_system" -> obj("path" -> a)) ++ read ++ facts :+ ("explain" -> obj()))*)
+      case Some("incidents") =>
+        IncidentsDir.load(Path.of(rest.headOption.getOrElse("incidents"))) match
+          case Left(e) => Console.err.println(e); 2
+          case Right(cs) => print(Incidents.table(cs.map(c => (c, Incidents.answer(c))))); 0
       case Some("simulate") if f.contains("arch") && f.contains("faults") =>
         steps(live, "load_system" -> obj("path" -> f("arch")), "simulate" -> obj("faults" -> f("faults")))
       case Some("remedies") if f.contains("arch") && f.contains("faults") =>

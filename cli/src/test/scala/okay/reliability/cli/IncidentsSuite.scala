@@ -1,0 +1,37 @@
+package okay.reliability.cli
+
+import okay.reliability.Incidents
+
+import java.nio.file.{Files, Path}
+
+/** THE POSTMORTEMS' TABLE (spec §28): each incident's rank kept, so a change in the analyzer that moves one shows */
+class IncidentsSuite extends munit.FunSuite:
+  private val dir = Vector(Path.of("incidents"), Path.of("../incidents")).find(Files.isDirectory(_)).get
+  private val cases = IncidentsDir.load(dir).fold(e => fail(e), identity)
+  private def answer(name: String) = Incidents.answer(cases.find(_.name == name).get)
+
+  test("eight postmortems, every one read") {
+    assertEquals(cases.size, 8)
+  }
+
+  test("the truth's rank, and whether it is among the minimal explanations and agrees with every fact") {
+    val expected = Map(
+      "aws-2017-02-28" -> (Some(2), true, true), // the facts cannot say reads failed: the write path explains too
+      "aws-2025-10-20" -> (Some(1), true, true),
+      "cloudflare-2019-07-02" -> (Some(1), true, true),
+      "cloudflare-2025-11-18" -> (Some(1), true, true),
+      "facebook-2021-10-04" -> (Some(2), false, false), // DNS withdrew itself: a reaction the model has no word for
+      "gcp-2025-06-12" -> (Some(1), true, true),
+      "github-2018-10-21" -> (Some(3), true, true), // a change outweighs a check that found the link healthy
+      "slack-2021-01-04" -> (Some(1), false, false)) // a slow gateway: the model says slow, the web tier failed
+    expected.foreach { case (name, (rank, minimal, consistent)) =>
+      val a = answer(name)
+      assertEquals((a.rank, a.truthMinimal, a.consistent), (rank, minimal, consistent), name)
+    }
+  }
+
+  test("the check it makes next is where the cause is, or on its way") {
+    assertEquals(answer("aws-2025-10-20").next, Some("dynamodb-dns"))
+    assertEquals(answer("facebook-2021-10-04").next, Some("backbone"))
+    assertEquals(answer("github-2018-10-21").next, Some("mysql"))
+  }

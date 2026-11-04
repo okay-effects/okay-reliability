@@ -1,0 +1,9 @@
+# what was seen before the cause was known (times UTC)
+changed(clickhouse, config) [postmortem: a database access control change deployed] @2025-11-18T11:05:00Z
+symptom(fl2, errors) [postmortem: HTTP 5xx from the core proxy] @2025-11-18T11:28:00Z
+symptom(fl, retries) [postmortem: the old proxy, no 5xx, every bot score 0] @2025-11-18T11:28:00Z
+alive(fl) [postmortem: the old proxy served traffic]
+symptom(workers-kv, errors) [postmortem: elevated 5xx] @2025-11-18T11:28:00Z
+symptom(access, errors) [postmortem: authentication failures] @2025-11-18T11:28:00Z
+symptom(turnstile, errors) [postmortem: failed to load] @2025-11-18T11:30:00Z
+symptom(dashboard, errors) [postmortem: most users could not log in] @2025-11-18T11:30:00Z

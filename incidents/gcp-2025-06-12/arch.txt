@@ -1,0 +1,13 @@
+# Google Cloud, 2025-06-12: the API front ends, Service Control and its policy data
+api-frontend: service entry replicas 3    # the front ends of Google Cloud's APIs
+service-control: service replicas 3       # authorization and quota checks on every API call
+policy-db: database replicas 3            # the quota policies, in regional Spanner tables, replicated globally
+console: service entry
+bigquery: service entry
+vertex-ai: service entry
+compute-running: service entry            # existing VMs and streaming jobs
+api-frontend -> service-control hard
+service-control -> policy-db hard
+console -> api-frontend hard
+bigquery -> api-frontend hard
+vertex-ai -> api-frontend hard

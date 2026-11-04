@@ -1,0 +1,10 @@
+cause: backbone down
+source: https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/
+# A maintenance command took the whole backbone down (a bug in the audit tool let it through); the DNS servers, cut
+# off from the data centers, withdrew their routes — as designed — and the world could not find Facebook at all.
+# `dns down` explains everything seen from outside as well: only the change on the backbone, or looking at the
+# backbone, tells the two apart. The postmortem gives no clock times; the BGP withdrawal's is public (Cloudflare,
+# "Understanding how Facebook disappeared from the Internet").
+# The analyzer (spec §28): `backbone errors` first, `backbone down` second, the backbone the check it makes next; the
+# truth contradicts `dns down` — the model's DNS fails with its callee (errors), it does not withdraw itself.
+# BACKLOG 19.

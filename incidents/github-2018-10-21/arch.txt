@@ -1,0 +1,12 @@
+# GitHub, 2018-10-21: the application, its MySQL clusters, the East Coast link
+web: service entry replicas 3        # github.com, the application tier on the East Coast
+mysql: database replicas 3           # the MySQL clusters, their primaries
+east-link: service                   # the network between the East Coast hub and the East Coast data center
+orchestrator: service                # promotes MySQL primaries when it sees a failure
+webhooks: service entry
+pages: service entry                 # Pages builds
+web -> mysql hard
+mysql -> east-link hard
+mysql -> orchestrator soft
+webhooks -> mysql hard
+pages -> mysql hard

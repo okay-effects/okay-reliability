@@ -1,0 +1,7 @@
+cause: service-control down | policy-db errors
+source: https://status.cloud.google.com/incidents/ow5i3PPK96RduMcb1SsW
+# A policy with blank fields reached every region in seconds; Service Control's new code path (deployed two weeks
+# before, with no flag and no error handling) followed a null pointer and crash-looped everywhere. In the model's words
+# the service is down, or the store served data that broke it: the postmortem says both.
+# Not in the model: the restarts with no backoff that then overloaded Spanner in us-central1 (a herd: a load the
+# recovery made, which kept that region down hours longer).

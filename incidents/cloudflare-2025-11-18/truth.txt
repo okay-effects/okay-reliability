@@ -1,0 +1,7 @@
+cause: clickhouse errors | feature-file errors
+source: https://blog.cloudflare.com/18-november-2025-outage/
+# A permissions change let ClickHouse's query return duplicate rows: the feature file doubled, Bot Management (room for
+# 200 features) panicked, FL2 answered 5xx; FL set every bot score to 0. In the model's words the store served bad
+# data (`clickhouse errors`), or the file made of it was bad (`feature-file errors`): the postmortem says both.
+# Not in the model: the file good and bad by turns every five minutes (the errors came and went, at first read as an
+# attack); Email Security's lost reputation source (a separate path).

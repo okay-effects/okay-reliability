@@ -1,0 +1,8 @@
+cause: s3-index down
+source: https://aws.amazon.com/message/41926/
+# One input was mistyped: far more servers were removed than meant, from the index subsystem and the placement
+# subsystem, and both had to restart in full. Placement depends on the index, so `s3-index down` alone explains all
+# that was seen; the placement's own loss is hidden behind it (it showed only after the index came back).
+# The change known was to the billing subsystem — which nothing in the request path uses: a change beside the cause.
+# The analyzer (spec §28): second, behind `s3-placement errors` — the facts cannot say that reads failed too, so the
+# write path explains as well; it asks about s3-placement next. BACKLOG 18.

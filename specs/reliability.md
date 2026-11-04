@@ -517,6 +517,55 @@ Closure Compiler in ADVANCED mode: **1.12 MB, 302 KB gzipped** (−67% / −41%)
 Measured alternative: esbuild `--minify` over the ES module, 1.32 MB / 342 KB. Closure is deprecated in Scala.js
 1.21+; when it is removed, esbuild (or a working `minify`) is the way.
 
+## 28. Real incidents (BACKLOG 13, 2026-11-04)
+
+Eight public postmortems, each a directory under `incidents/`: `arch.txt` — the system as the postmortem describes
+it, only the parts the incident touched; `facts.txt` — what the operators saw **before** they knew the cause
+(symptoms, what they checked and found fine, the changes they knew of), each fact citing the postmortem; `truth.txt`
+— `cause:` the faults the postmortem found, in the model's words (`a | b` when the postmortem's cause is said as well
+by either: bad data in a store, or the service it crashed), `source:` the postmortem, and `#` lines: how the mapping
+was made and what the model cannot say. Nothing in `facts.txt` is known only from the root cause.
+
+`okay-reliability incidents incidents` runs the analyzer on each (`Explain`, `Probable`) and prints: the rank of the
+truth among the probable causes, the minimal explanations and whether the truth is one of them, the top three, the
+check it would make next. `IncidentsSuite` keeps the table: a change in the analyzer that moves a rank shows.
+
+The point is the honest table, not a perfect one: where the truth is not first, the notes say why (an unobserved
+component the cause hid behind, a behaviour the model has no word for: a failover across regions, replication lag,
+a load surge).
+
+**Measured** (2026-11-04, `okay-reliability incidents incidents`):
+
+```
+incident                 truth                               rank   minimal  top three; next check
+aws-2017-02-28           s3-index down                          2        8*  s3-placement errors (0.30), s3-index down (0.15), s3-placement down (0.15); check s3-placement
+aws-2025-10-20           dynamodb-dns errors | dynamodb-dns down     1        5*  dynamodb-dns errors (0.44), dynamodb-dns down (0.22), dynamodb full (0.22); check dynamodb-dns
+cloudflare-2019-07-02    waf errors                             1        9*  waf errors (0.86), origin down (0.04), edge errors (0.03); check waf
+cloudflare-2025-11-18    clickhouse errors | feature-file errors     1        7*  clickhouse errors (0.39), clickhouse down (0.26), bots errors (0.10); check clickhouse
+facebook-2021-10-04      backbone down                         2!         1  backbone errors (0.86), backbone down (0.07), dns errors (0.03); check backbone
+gcp-2025-06-12           service-control down | policy-db errors     1        7*  policy-db errors (0.56), api-frontend errors (0.15), service-control errors (0.15); check policy-db
+github-2018-10-21        mysql slow                             3        2*  east-link slow (0.48), web slow (0.30), mysql slow (0.21); check mysql
+slack-2021-01-04         tgw slow                              1!         6  tgw slow (0.44), web errors (0.14), backend errors (0.14); check tgw
+8 incidents: the truth first in 5, in the top three in 8; * the truth among the minimal explanations; ! the truth contradicts a fact seen
+```
+
+The truth first in 5 of 8, in the top three in all 8; where it is not first, the check the analyzer makes next is
+where the cause is (S3: placement or the index; Facebook: the backbone; GitHub: MySQL). What the misses teach:
+
+- **A postmortem's times are minutes.** Redshift failed at 06:47, DynamoDB at 06:48: with the logs' 10 s the one true
+  fault ran against the clock and only pairs of faults were left. `Explain` and `Probable` take a `tolerance`; the
+  postmortems are read with a minute.
+- **A change outweighs a check** (GitHub): the link changed (×30 for its slowness) and was then seen healthy, which
+  a source other than a log weighs as ε = 0.05 (×1/20): the link stays first. A person's direct look at a component
+  should perhaps weigh more than a symptom read from a line. BACKLOG 17.
+- **Facts have no world** (S3): "GET, LIST, PUT, DELETE all failed" cannot be said, so the placement service (on the
+  write path only) explains as well as the index. A symptom of reads, of writes. BACKLOG 18.
+- **Reactions the model has no word for** (Facebook, Slack): DNS servers withdraw their own routes when they lose the
+  data centers (a callee's failure turned into one's own `down`); a web tier saturated by a slow callee fails rather
+  than slows. Both leave the truth contradicting one fact; it still ranks first or second. BACKLOG 19.
+- Not modelled, said in the notes: a failover across regions (GitHub), replication lag (stale reads), a load surge
+  (Slack's holiday traffic), recovery storms (Google's restarts with no backoff, AWS's congested leases).
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a

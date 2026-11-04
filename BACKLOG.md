@@ -43,9 +43,11 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 
 ## 4. Proof that it works
 
-12. **The extraction at scale** — DEFERRED 2026-11-04 (the owner decides how to run the models). 50+ incidents, two faults and partial observation among them, two or three models
+12. **The extraction at scale** — DEFERRED 2026-11-04 (the owner decides how to run the models).
+    50+ incidents, two faults and partial observation among them, two or three models
     (Qwen3.6-35B, a small one, Claude) — A / T / E with confidence intervals.
-13. **Real incidents** — public postmortems (GitHub, Cloudflare, AWS, Google Cloud, Slack): their systems and symptoms
+13. ~~**Real incidents**~~ — DONE 2026-11-04 (spec §28: 8 postmortems, the truth first in 5, top three in 8).
+    Public postmortems (GitHub, Cloudflare, AWS, Google Cloud, Slack): their systems and symptoms
     written as arch.txt and facts, and the analyzer's answer against what the postmortem found.
 
 ## 5. The rest
@@ -53,6 +55,15 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 14. okay-faces republished on Pages with the `Session` fix (an event heard as a step listens), okay-ui after it.
 15. okay-reliability released as a library on Pages (Maven): `core`, `cli`.
 16. CI (GitHub Actions) — needs a token with the workflow scope.
+
+## 6. What the real incidents taught (spec §28)
+
+17. **A look outweighs a change**: a person's direct check that a component is healthy should weigh more than the
+    ×30 a change gives its faults (GitHub 2018: the link changed, then was seen healthy, and still ranks first).
+18. **Facts of a world**: `symptom(s3, errors, reads)` — what failed for reads, for writes (S3 2017: the write path
+    explains as well as the index when "GET failed too" cannot be said).
+19. **Reactions**: a component that turns a callee's failure into its own `down` (DNS withdrawing its routes,
+    Facebook 2021); a caller saturated by a slow callee fails rather than slows (Slack 2021).
 
 ## Later, when a server is needed
 

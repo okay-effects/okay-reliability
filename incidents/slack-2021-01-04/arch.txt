@@ -1,0 +1,14 @@
+# Slack, 2021-01-04: the web tier, the backends, and the AWS Transit Gateway between their VPCs
+lb: balancer entry
+web: service replicas 3 needs 2
+backend: service replicas 3
+tgw: balancer                       # AWS Transit Gateway: the network between VPCs
+db: database
+dashboards: service entry           # monitoring and alerting
+provision: service                  # brings new instances into service
+lb -> web hard
+web -> tgw hard
+web -> backend hard
+dashboards -> tgw hard
+dashboards -> db hard
+provision -> tgw hard

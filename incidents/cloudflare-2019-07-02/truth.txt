@@ -1,0 +1,7 @@
+cause: waf errors
+source: https://blog.cloudflare.com/details-of-the-cloudflare-outage-on-july-2-2019/
+# A regular expression in a new WAF rule backtracked and exhausted the CPU of every core serving HTTP/HTTPS. The proxy
+# answered 502: the WAF's failure reached the world as errors, so the fault is `waf errors` (with `waf slow` the model
+# says the edge is slow, not failing; it has no CPU of a machine shared by the proxy and the WAF).
+# Not in the facts: the CPU exhaustion reports (they name the machines: the cause in all but name), the attack
+# ruled out.

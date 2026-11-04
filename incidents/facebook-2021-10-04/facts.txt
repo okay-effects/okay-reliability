@@ -1,0 +1,7 @@
+# what was seen before the cause was known (times UTC, from outside: BGP routes withdrawn ~15:40)
+changed(backbone, config) [postmortem: a routine maintenance command to assess the backbone's capacity]
+symptom(dns, down) [public: Facebook's DNS prefixes withdrawn from BGP] @2021-10-04T15:40:00Z
+symptom(facebook, errors) [postmortem] @2021-10-04T15:40:00Z
+symptom(instagram, errors) [postmortem] @2021-10-04T15:40:00Z
+symptom(whatsapp, errors) [postmortem] @2021-10-04T15:40:00Z
+symptom(internal-tools, errors) [postmortem: the loss of DNS broke the tools used to investigate] @2021-10-04T15:40:00Z

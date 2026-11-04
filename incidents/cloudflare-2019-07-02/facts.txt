@@ -1,0 +1,6 @@
+# what was seen before the cause was known (times UTC), from the postmortem's timeline
+changed(waf, config) [postmortem: a WAF Managed Rules change deployed globally] @2019-07-02T13:42:00Z
+symptom(edge, errors) [postmortem: 502 errors on Cloudflare domains, ~80% traffic loss] @2019-07-02T13:45:00Z
+symptom(dashboard, errors) [postmortem: dashboard unreachable for customers] @2019-07-02T13:45:00Z
+symptom(api, errors) [postmortem: API unreachable for customers] @2019-07-02T13:45:00Z
+symptom(internal-tools, errors) [postmortem: control panel, Jira, builds hard to reach] @2019-07-02T13:45:00Z

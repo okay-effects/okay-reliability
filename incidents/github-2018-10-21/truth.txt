@@ -1,0 +1,10 @@
+cause: mysql slow
+source: https://github.blog/news-insights/company-news/oct21-post-incident-analysis/
+# A 43-second partition; Orchestrator, as configured, promoted primaries on the West Coast; the application on the
+# East Coast then wrote across the country — slow — and the writes diverged, so failing back was unsafe for hours.
+# In the model's words: the database is slow. What made it slow — a failover across regions — the model has no word
+# for, and the link that started it was healthy again within a minute (a change that is not the cause now).
+# Not in the facts: the stale data (replicas behind: the model has no replication lag); webhooks and Pages paused by
+# the operators (their action, not a symptom).
+# The analyzer (spec §28): third, behind `east-link slow` — the change on the link (×30) outweighs the check that found
+# it healthy (ε = 0.05); it asks about mysql next. BACKLOG 17.

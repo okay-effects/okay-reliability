@@ -1,0 +1,7 @@
+cause: dynamodb-dns errors | dynamodb-dns down
+source: https://aws.amazon.com/message/101925/
+# A race between two DNS Enactors: a delayed one applied an old plan over a newer one, the cleanup deleted the old plan,
+# and the endpoint's record was left with no addresses. The servers of DynamoDB were fine; its name led nowhere.
+# Not in the facts: anything about dynamodb-dns itself — the operators found it by looking (the postmortem's point), so
+# here it is the component the analyzer must ask about. Not in the model: EC2's congestive collapse of leases after
+# DynamoDB came back, the NLB health checks flapping hours later (a second incident on the first one's recovery).

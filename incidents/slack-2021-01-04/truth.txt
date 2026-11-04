@@ -1,0 +1,9 @@
+cause: tgw slow
+source: https://slack.engineering/slacks-outage-on-january-4th-2021/
+# Traffic back from the holidays: the Transit Gateway did not scale fast enough and dropped packets. Everything that
+# crossed it was slow; the web tier's threads saturated and it failed; autoscaling then failed for want of
+# provisioning, which crossed the gateway too.
+# In the model's words the gateway is slow. Not in the model: the load surge itself (the capacity model knows lost
+# replicas, not a traffic jump), the autoscaler's own moves. The web tier's errors come from its saturation: the model
+# says a slow hard callee makes the caller slow, not failing.
+# The analyzer (spec §28): first, though it contradicts the web tier's and the balancer's errors. BACKLOG 19.

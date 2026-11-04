@@ -1,0 +1,19 @@
+# Cloudflare, 2025-11-18: the core proxies, Bot Management and the services behind them
+fl2: service entry replicas 3     # the new core proxy
+fl: service entry replicas 3      # the old core proxy
+bots: service replicas 3          # the Bot Management module, in both proxies
+feature-file: service             # the generator of Bot Management's feature file, every five minutes
+clickhouse: database              # the query the file is made from
+workers-kv: service entry
+access: service entry
+turnstile: service entry
+dashboard: service entry
+email-security: service entry
+fl2 -> bots hard
+fl -> bots soft                   # the old proxy: no errors, a bot score of 0
+bots -> feature-file hard
+feature-file -> clickhouse hard
+workers-kv -> fl2 hard
+access -> workers-kv hard
+turnstile -> fl2 hard
+dashboard -> turnstile hard       # logging in needs Turnstile

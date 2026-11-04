@@ -52,7 +52,8 @@ object Probable:
       case FaultKind.Down if f.instance.isEmpty => 5.0
       case _ => 1.0
 
-  def apply(system: System, observations: Vector[Observation], maxSize: Int = 3, most: Int = 40): Result =
+  def apply(system: System, observations: Vector[Observation], maxSize: Int = 3, most: Int = 40,
+    tolerance: Long = 10): Result =
     val events = Rates.events(system)
     val q = events.map((f, r) => f -> r.q * boost(f, observations)).toMap
     val symptoms = observations.collect { case s: Observation.Symptom => s }
@@ -66,7 +67,7 @@ object Probable:
       !set.exists(f => f.instance.isDefined && set.contains(Fault(f.component, f.kind)))).map { set =>
       val r = Spread(system, set)
       // each chain against the clock weighs as a wrong observation (spec §11)
-      val late = Explain.againstClock(r, symptoms).size
+      val late = Explain.againstClock(r, symptoms, tolerance).size
       (set, set.map(f => math.log(q(f))).sum + logLikelihood(r, observations) + late * math.log(0.05), r)
     }
     if scored.isEmpty then return Result(Vector.empty, None, 0)
