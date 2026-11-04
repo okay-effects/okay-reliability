@@ -693,10 +693,34 @@ caller shows `slow` (what is left carries the load, late), not `errors`. Read an
 
 The fault tree (§9, the numbers) knows the three words as `Spread` does — through a dependency it withdraws on, the
 caller down; it congests on, slow; a slow callee it saturates on, in errors too — checked by the law that its cut sets
-are the enumeration's, now on a system with all three (found missing 2026-11-04, while adding §37).
+are the enumeration's, now on a system with all three (found missing 2026-11-04, while trying §37).
 
 Measured: Google 2019 not found (against a fact) → fourth, agreeing with every fact, a minimal explanation; the
 control plane first, as `slow` (0.40). The other 20 unchanged; the generator does not use the word: `bench` unchanged.
+
+## 37. Congestion shows both (BACKLOG 24, 2026-11-04)
+
+AWS 2021 (§34): one congested network, and its callers both slow and failing; a fault was one kind. A fifth kind of
+fault, `congested`: the component slow **and** in errors, at once (`Spread`: both effects, its own). Its prior is
+rarer than either alone (a service every 90 d for 30 min, a balancer 180 d / 20 min, a database 180 d / 30 min, an
+external 60 d / 30 min; none for a cache or a queue); a change raises it as it raises errors and slowness (×30).
+Parsimony of kind: an explanation with a congested fault is kept only when neither of its kinds alone (`errors`,
+`slow`, the rest the same) explains as well — so it never doubles the explanations of a plain error or slowness. The
+generator does not draw it (the bench's scenarios stay what they were); the fault tree has it in both errors and
+slowness; the remedies: shed load, add capacity, a breaker.
+
+## 37. Congestion shows both (BACKLOG 24, 2026-11-04) — tried, refuted, reverted
+
+AWS 2021 (§34): one congested network, its callers both slow and failing; a fault is one kind. Tried: a fifth kind,
+`congested` (slow and in errors at once; priors rarer than either alone; ×30 after a change; parsimony of kind — kept
+in an explanation only where neither kind alone explains; not drawn by the generator). Measured on the same scenarios
+(before → after): one fault, first 93% → 93%, top three 198 → 196; two faults, first 31% → 17%, top three 140 → 98;
+two faults with changes, first 46% → 35%. The postmortems: AWS 2021 agrees with every fact now, but the truth first in
+13 → 11, in the top three 18 → 16. One congested fault stands in for two faults of different components (a slow
+one and a failing one) and wins on the prior of one event against two. Reverted.
+
+What it says: a kind that is the union of two others is too cheap an explanation for the analyzer as it is; if it
+comes back, it needs evidence of its own (the same component seen both slow and failing), not just its callers.
 
 ## 15. Not yet
 
