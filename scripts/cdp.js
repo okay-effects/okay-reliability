@@ -27,6 +27,9 @@ module.exports = async (port = 9341, width = 1280, height = 900, mobile = false)
   return {
     go: async url => { await cdp("Page.navigate", { url }); await sleep(2500); },
     js,
+    // the viewport alone: what a person sees first
+    view: async f =>
+      fs.writeFileSync(f, Buffer.from((await cdp("Page.captureScreenshot", { format: "png" })).data, "base64")),
     shot: async f =>
       fs.writeFileSync(f, Buffer.from((await cdp("Page.captureScreenshot", { format: "png", captureBeyondViewport: true })).data, "base64")),
     // a button by its text, clicked
