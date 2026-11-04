@@ -53,3 +53,35 @@ the page's budget: ~1 MB int8 loads with the page.
 1. The data: the generator's paraphrase pass (Qwen3.5-4B / 3.6 through okay-mlx), the corpus, the incidents.
 2. The model and its training in mlx-scala; the forward in core (JVM + JS); the laws above as tests.
 3. `Micro` beside `Read` in the analyzer and on the page; the incidents' table with the new column.
+
+## 6. Measured (2026-11-04)
+
+`Micro` v0: bytes → 4 layers, d = 128, 4 heads, ffn 256; 592,768 parameters, 2.3 MB float32; trained on MLX in 1–3
+minutes (`micro/`), the law MLX forward == plain forward held (`MicroSuite`). Held-out: 60 generated scenarios
+(3,708 examples, seeds the training never saw); the corpus: `ReadCorpusSuite`'s 18 real lines (Spring, nginx,
+Postgres, Envoy, pino, zap), scored as agreement with `Read` on the whole set of facts a line states.
+
+| training data | held-out kind | alive | corpus (real lines) |
+|---|---|---|---|
+| the generator's lines (24.8k examples, "none" kept at 3× the rest) | 98.2–99.0% | 99.8% | 3 of 18 |
+| + Qwen3.5-4B's paraphrases (12 styles; 1,352 lines, 1,048 distinct; 11.6k examples) | 98.8% | 99.6% | 2 of 18 |
+| + the stacks' words (`Stacks`: each generated line's meaning rendered in Spring / nginx / Postgres / Envoy / pino / zap / Python / k8s; 23.6k examples) | 98.4% | 99.2% | **12 of 18** |
+
+- **A 4B's paraphrases did not reach the real lines**: it leaks the fact's own words into the line ("зафиксирован
+  симптом(N1, errors)"), mangles placeholders, repeats itself; 42% of its rewrites were dropped for not naming the
+  components. Worth keeping as variety, not as the bridge to real logs.
+- **The stacks' words did**: 2 → 12 of 18 — the same patterns `Read` knows (§21), written as data instead of regexes.
+  The caveat, stated: the corpus and these templates are of one nature; real generalization needs lines from
+  outside (the next test: lines collected from the web, labelled by hand).
+- **The six misses are mostly UNSURE** (0.46–0.84 where the hits are 0.9–1.0): a connection refused read as the
+  callee "errors" rather than "down" (Spring, pino's ENOTFOUND), an nginx refused as "web slow (0.46)", an access
+  log's 502 and Postgres's "shutting down" read as nothing, Envoy's 503 UF as "deploy (0.65)". So the rule of §2
+  works as designed: where `Read` and `Micro` differ, the fact is unsure and shown — and a confidence this low on
+  its own is the signal.
+- Not in the generator at all: `stale`, `backlog`, `config` (no cache or queue in the 5–10-service systems drawn;
+  no config lines written) — the reader has never seen them. The generator's systems need caches and queues, and
+  config changes, before `Micro` can read those kinds.
+
+Next: `Micro` beside `Read` in the analyzer and on the page (agree → the fact; differ → unsure, shown first);
+real lines from outside as the honest test; the generator extended (caches, queues, config changes); int8 weights
+for the page (0.6 MB).

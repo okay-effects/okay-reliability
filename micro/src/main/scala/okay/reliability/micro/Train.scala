@@ -146,8 +146,9 @@ object Train:
     val out = args.lift(1).getOrElse("../core/src/main/resources/okay/reliability/micro.bin")
     // "none" says nothing and is most lines: kept at three times the rest, so the batches see the kinds
     val para = Paraphrase.examples(java.nio.file.Path.of("data/paraphrases.tsv"), 11)
-    val all = data(1, 400) ++ para; val test = data(1001, 1061)
-    println(s"paraphrase examples: ${para.size}")
+    val stacks = Stacks.examples(1, 400); val stacksTest = Stacks.examples(1001, 1061, seed = 23)
+    val all = data(1, 400) ++ para ++ stacks; val test = data(1001, 1061)
+    println(s"paraphrase examples: ${para.size}; stack examples: ${stacks.size} (test ${stacksTest.size})")
     val said = all.filter(e => e.kind != 0 || e.alive)
     val quiet = new scala.util.Random(3).shuffle(all.filterNot(e => e.kind != 0 || e.alive)).take(said.size * 3)
     val train = new scala.util.Random(5).shuffle(said ++ quiet)
