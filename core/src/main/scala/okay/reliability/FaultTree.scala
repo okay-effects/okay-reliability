@@ -55,15 +55,30 @@ object FaultTree:
       system.fallbackOf(d.from, d.to).foldLeft(True)((acc, a) => and(acc, bad(a)))
 
     /** down as a whole: its own event, or every instance */
-    def down(c: String): Dnf = at("down", c) {
+    /** an instance down: its own event, or its zone's */
+    private def instance(c: String, i: Int): Dnf =
       val comp = system.component(c)
-      val replicas = comp.map(_.replicas).getOrElse(1)
-      // an instance down: its own event, or its zone's
-      def zone(i: Int) = comp.flatMap(_.zoneOf(i)).fold(False)(z => ev(Zone.fault(z)))
-      val all = if replicas > 1 then (1 to replicas).foldLeft(True)((acc, i) =>
-        and(acc, or(ev(Fault(c, FaultKind.Down, Some(i))), zone(i)))) else zone(1)
+      val zone = comp.flatMap(_.zoneOf(i)).fold(False)(z => ev(Zone.fault(z)))
+      if comp.exists(_.replicas > 1) then or(ev(Fault(c, FaultKind.Down, Some(i))), zone) else zone
+
+    def down(c: String): Dnf = at("down", c) {
+      val replicas = system.component(c).map(_.replicas).getOrElse(1)
+      val all = (1 to replicas).foldLeft(True)((acc, i) => and(acc, instance(c, i)))
       or(ev(Fault(c, FaultKind.Down)), all)
     }
+
+    /** too few instances left for the load: any n − k + 1 of its n down, when it needs k > 1 */
+    def overloaded(c: String): Dnf = at("overloaded", c) {
+      system.component(c).filter(_.wants > 1).fold(False) { comp =>
+        val m = comp.replicas - comp.wants + 1
+        or(Explain.combinations((1 to comp.replicas).toVector, m).map(is =>
+          is.foldLeft(True)((acc, i) => and(acc, instance(c, i))))*)
+      }
+    }
+
+    /** retried by a hard caller with no breaker: its errors are its slowness too */
+    private def stormed(c: String): Boolean =
+      deps.valuesIterator.flatten.exists(d => d.to == c && d.mode == Mode.Hard && d.retries && !d.breaker)
 
     /** a queue backing up: full, or what it sends to asynchronously down, slow, backing up */
     def backlog(c: String): Dnf = at("backlog", c) {
@@ -72,9 +87,9 @@ object FaultTree:
         .map(d => or(down(d.to), sl(d.to), backlog(d.to))))*)
     }
 
-    /** down or in errors */
-    def de(c: String): Dnf = at("de", c) {
-      val own = or(down(c), ev(Fault(c, FaultKind.Errors)),
+    /** in errors: its own, a full disk, or through a hard dependency */
+    def er(c: String): Dnf = at("er", c) {
+      val own = or(ev(Fault(c, FaultKind.Errors)),
         if kind(c).contains(Kind.Queue) then False else ev(Fault(c, FaultKind.Full)))
       or((own +: hard(c).map { d =>
         val through = and(de(d.to), altsBad(d))
@@ -82,8 +97,12 @@ object FaultTree:
       })*)
     }
 
+    /** down or in errors */
+    def de(c: String): Dnf = or(down(c), er(c))
+
     def sl(c: String): Dnf = at("sl", c) {
-      or((ev(Fault(c, FaultKind.Slow)) +: hard(c).filterNot(_.breaker).map(d =>
+      val storm = if stormed(c) then er(c) else False
+      or((ev(Fault(c, FaultKind.Slow)) +: overloaded(c) +: storm +: hard(c).filterNot(_.breaker).map(d =>
         or(and(sl(d.to), altsBad(d)), backlog(d.to))))*)
     }
 

@@ -396,6 +396,23 @@ far likelier than its rate alone says; rolling the change back is then the first
   in half): one fault — the gold first 92% with the changes read and 92% without (a lone fault is found anyway); two
   faults — 44% against 29%: the change makes the second fault, hidden behind the first, the likelier story.
 
+## 19. Capacity and load (BACKLOG 3, 2026-11-04)
+
+An instance lost is not only a retry: the ones left may not carry the load. And a caller that retries a failing
+callee multiplies the load on it.
+
+- **Capacity**: `checkout: service replicas 3 needs 2` — the load wants 2 instances up; fewer up (but some) → the
+  component is `slow` (overloaded); none → `down`. `needs 1` (the default): any one carries it, a lost instance is
+  `retries` as before.
+- **A retry storm**: `web -> api hard retries` — the caller retries; a callee showing `errors` (and up) is then also
+  `slow`, overloaded by the retries. A breaker on the dependency (`breaker`) stops the storm.
+- In the fault tree: `slow` of a component that needs k of n instances is every set of n − k + 1 of its instances
+  down (an instance its own event or its zone's); a stormed callee's errors are its slowness too.
+- Prevention: for a component whose overload fails an entry point, `needs` met with one more replica; for a stormed
+  dependency, a breaker — each priced as every change is.
+- Laws: the fault tree equals the enumeration with capacities and storms; `Life` agrees; one instance of three lost
+  with `needs 3` slows the component, with `needs 2` it does not.
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a

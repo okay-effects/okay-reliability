@@ -497,3 +497,47 @@ class ReliabilitySuite extends munit.FunSuite:
     }
     assertEquals(Words.facts("changed(checkout, deploy) [log:checkout:2] @2026-11-04T14:02:00Z").map(_.head),
       Right(Observation.Changed("checkout", "deploy", "log:checkout:2", Some(1793800920L))))
+
+  // ---- §19: CAPACITY AND LOAD
+
+  val loaded: System = ArchText.read("""
+    web: service entry replicas 2
+    api: service replicas 3 needs 2 zones a,b,c
+    db: database replicas 2 zones a,b
+    web -> api hard retries
+    api -> db hard
+  """).fold(e => fail(e), identity)
+
+  test("capacity: one instance of three lost with needs 2 is fine, two lost slow it, all three down; retries storm"):
+    val one = Spread(loaded, Vector(Fault("api", FaultKind.Down, Some(1))))
+    assertEquals(one.of("api"), Set(EffectKind.Retries))
+    val two = Spread(loaded, Vector(Fault("api", FaultKind.Down, Some(1)), Fault("api", FaultKind.Down, Some(2))))
+    assertEquals(two.of("api"), Set(EffectKind.Retries, EffectKind.Slow))
+    assert(two.of("web").contains(EffectKind.Slow))
+    assert(two.chain(Effect("api", EffectKind.Slow)).head.contains("too few instances left"))
+    val needs3 = loaded.withComponent(loaded.component("api").get.copy(needs = 3))
+    assert(Spread(needs3, Vector(Fault("api", FaultKind.Down, Some(1)))).of("api").contains(EffectKind.Slow))
+    val storm = Spread(loaded, Vector(Fault("api", FaultKind.Errors)))
+    assertEquals(storm.of("api"), Set(EffectKind.Errors, EffectKind.Slow))
+    assert(storm.chain(Effect("api", EffectKind.Slow)).exists(_.contains("retried by web")))
+    val calm = loaded.withDependency(loaded.dependencies.find(_.to == "api").get.copy(breaker = true))
+    assertEquals(Spread(calm, Vector(Fault("api", FaultKind.Errors))).of("api"), Set(EffectKind.Errors))
+    assertEquals(ArchText.read(ArchText.print(loaded)).map(ArchText.print), Right(ArchText.print(loaded)))
+
+  test("capacity in the numbers: the tree is the enumeration's; Life agrees; more replicas help"):
+    val events = Rates.events(loaded)
+    Reliability.Sli.values.foreach(sli => Spread.World.values.foreach { w =>
+      val tree = Reliability.cuts(loaded, "web", sli, w, events).map(_.events.toSet).toSet
+      val all = Reliability.cutsByEnumeration(loaded, "web", r => sli.failingIn(w, r, "web"), events)
+        .map(_.events.toSet).toSet
+      assertEquals(tree, all, s"$sli $w")
+    })
+    val rep = Reliability.analyze(loaded)
+    Life.run(loaded, 2000, 9).measured.foreach { m =>
+      val e = rep.entries.find(x => x.entry == m.entry && x.sli == m.sli).get
+      assert(math.abs(m.unavailability - e.unavailability) <= 4 * m.stdError + 0.05 * e.unavailability,
+        s"${m.sli}: measured ${m.unavailability} ± ${m.stdError}, computed ${e.unavailability}")
+    }
+    val changes = Remedies.prevention(loaded)
+    assert(changes.exists(c => c.what.contains("run api with 4 replicas") && c.minutes > 0), changes.mkString("\n"))
+    assert(changes.exists(c => c.what.contains("no retry storm")), changes.map(_.what).mkString("\n"))

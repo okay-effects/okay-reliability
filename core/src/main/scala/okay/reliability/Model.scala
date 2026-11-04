@@ -19,7 +19,9 @@ object Mode:
 /** a component: what it is, its instances, whether users reach it, the zones its instances run in (instance i in
  * zone i mod n) */
 final case class Component(name: String, kind: Kind = Kind.Service, replicas: Int = 1, entry: Boolean = false,
-  zones: Vector[String] = Vector.empty):
+  zones: Vector[String] = Vector.empty, needs: Int = 1):
+  /** the instances the load wants: never more than there are */
+  def wants: Int = needs.max(1).min(replicas)
   /** the zone of instance `i` (1-based), if it has zones */
   def zoneOf(i: Int): Option[String] = Option.when(zones.nonEmpty)(zones((i - 1) % zones.size))
 
@@ -37,7 +39,7 @@ enum Use:
 
 /** a call from `from` to `to`: its mode, what it carries, and whether a circuit breaker fails it fast */
 final case class Dependency(from: String, to: String, mode: Mode = Mode.Hard, use: Use = Use.Both,
-  breaker: Boolean = false)
+  breaker: Boolean = false, retries: Boolean = false)
 /** when `to` is bad, `from` uses `alternative` — unless that is bad too */
 final case class Fallback(from: String, to: String, alternative: String)
 
@@ -67,7 +69,9 @@ final case class System(components: Vector[Component], dependencies: Vector[Depe
     val unknown = (dependencies.flatMap(d => Vector(d.from, d.to)) ++
       fallbacks.flatMap(f => Vector(f.from, f.to, f.alternative))).distinct.filterNot(byName.contains)
       .map(n => s"$n is used but not declared")
-    twice.toVector.sorted ++ unknown
+    val overNeeds = components.filter(c => c.needs > c.replicas).map(c =>
+      s"${c.name} needs ${c.needs} instances and has ${c.replicas}: always overloaded")
+    twice.toVector.sorted ++ unknown ++ overNeeds
 
   def withComponent(c: Component): System =
     copy(components = components.filterNot(_.name == c.name) :+ c)
@@ -122,3 +126,7 @@ enum Cause:
   case Through(dependency: Dependency, effect: Effect)
   /** all of its instances down: each a fault */
   case AllInstances(faults: Vector[Fault])
+  /** too few instances left for the load: those down */
+  case Overloaded(faults: Vector[Fault])
+  /** retried while it fails: the load of a caller's retries */
+  case Storm(dependency: Dependency, errors: Effect)

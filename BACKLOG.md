@@ -13,7 +13,8 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
    `deployed(checkout) @14:02`, `changed(config, checkout)`: a fault that begins after a change
    of its component is far more probable (a prior by the change), and rolling it back is a remedy checked by the
    clock. The most frequent cause of incidents is missing from the model.
-3. **Capacity and load** — one replica of two lost: the other may not hold the load (`checkout capacity 60%`: the
+3. ~~**Capacity and load**~~ — DONE 2026-11-04 (spec §19).
+   one replica of two lost: the other may not hold the load (`checkout capacity 60%`: the
    share one replica carries) → slow, not retries; retries multiply the load on a callee (a retry storm).
 
 ## 2. Inputs from real sources

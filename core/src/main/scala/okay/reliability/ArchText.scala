@@ -23,11 +23,12 @@ object ArchText:
             val mode = words.flatMap(Mode.of).headOption.getOrElse(Mode.Hard)
             val use = if words.contains("reads") then Use.Reads else if words.contains("writes") then Use.Writes
               else Use.Both
-            system = system.withDependency(Dependency(from, to, mode, use, words.contains("breaker")))
+            system = system.withDependency(Dependency(from, to, mode, use, words.contains("breaker"),
+              words.contains("retries")))
             if fb >= 0 then alt match
               case Some(a) => system = system.withFallback(Fallback(from, to, a))
               case None => errors += s"line $n: fallback names no alternative"
-            val unknown = words.filterNot(w => Mode.of(w).isDefined || Set("reads", "writes", "breaker")(w))
+            val unknown = words.filterNot(w => Mode.of(w).isDefined || Set("reads", "writes", "breaker", "retries")(w))
             if unknown.nonEmpty then errors += s"line $n: what is ${unknown.mkString(" ")}?"
           case _ => errors += s"line $n: a dependency is `from -> to [mode] [fallback alt]`"
       else if words.headOption.contains("zone") && words.lift(2).contains("fails") then words match
@@ -63,6 +64,9 @@ object ArchText:
         while i < rest.size do
           rest(i) match
             case "entry" => c = c.copy(entry = true)
+            case "needs" => rest.lift(i + 1).flatMap(_.toIntOption).filter(_ > 0) match
+                case Some(k) => c = c.copy(needs = k); i += 1
+                case None => errors += s"line $n: needs wants a number (the instances the load wants)"
             case "zones" => rest.lift(i + 1).map(_.split(",").toVector.map(_.trim).filter(_.nonEmpty))
                 .filter(_.nonEmpty) match
                 case Some(zs) => c = c.copy(zones = zs); i += 1
@@ -88,11 +92,13 @@ object ArchText:
     val cs = s.components.map { c =>
       (Vector(s"${c.name}:", c.kind.word) ++ (if c.entry then Vector("entry") else Vector.empty) ++
         (if c.replicas > 1 then Vector("replicas", c.replicas.toString) else Vector.empty) ++
-        (if c.zones.nonEmpty then Vector("zones", c.zones.mkString(",")) else Vector.empty)).mkString(" ")
+        (if c.zones.nonEmpty then Vector("zones", c.zones.mkString(",")) else Vector.empty) ++
+        (if c.needs > 1 then Vector("needs", c.needs.toString) else Vector.empty)).mkString(" ")
     }
     val ds = s.dependencies.map { d =>
       (Vector(d.from, "->", d.to, d.mode.word) ++ (if d.use != Use.Both then Vector(d.use.word) else Vector.empty) ++
         (if d.breaker then Vector("breaker") else Vector.empty) ++
+        (if d.retries then Vector("retries") else Vector.empty) ++
         s.fallbackOf(d.from, d.to).flatMap(a => Vector("fallback", a))).mkString(" ")
     }
     val rs = s.rates.toVector.sortBy((k, _) => (k._1, k._2.ordinal)).map { case ((c, k), r) =>

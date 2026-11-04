@@ -35,6 +35,7 @@ object Spread:
         out += at.get
         at = from.get(at.get) match
           case Some(Cause.Through(_, by)) => Some(by)
+          case Some(Cause.Storm(_, by)) => Some(by)
           case _ => None
         guard += 1
       out.result().reverse
@@ -50,6 +51,10 @@ object Spread:
         from.get(here) match
           case Some(Cause.Own(f)) => out += s"$here: $f"; at = None
           case Some(Cause.AllInstances(fs)) => out += s"$here: all of its instances (${fs.mkString(", ")})"; at = None
+          case Some(Cause.Overloaded(fs)) => out += s"$here: too few instances left (${fs.mkString(", ")})"; at = None
+          case Some(Cause.Storm(d, e)) =>
+            out += s"$here: retried by ${d.from} while it shows ${e.kind.word}"
+            at = Some(e)
           case Some(Cause.Through(d, by)) =>
             out += s"$here: it calls ${d.to} (${d.mode.word}), which shows ${by.kind.word}"
             at = Some(by)
@@ -100,9 +105,13 @@ object Spread:
         case Fault(n, FaultKind.Down, Some(_)) =>
           val down = fs.filter(x => x.component == n && x.kind == FaultKind.Down && x.instance.isDefined).toVector
             .sortBy(_.instance)
-          if down.map(_.instance).distinct.size >= c.fold(1)(_.replicas) then
-            add(Effect(n, EffectKind.Down), Cause.AllInstances(down))
+          val lost = down.map(_.instance).distinct.size
+          val replicas = c.fold(1)(_.replicas)
+          val wants = c.fold(1)(_.wants)
+          if lost >= replicas then add(Effect(n, EffectKind.Down), Cause.AllInstances(down))
           else add(Effect(n, EffectKind.Retries), own(f))
+          // too few left for the load (and so too when none is left: monotone)
+          if wants > 1 && replicas - lost < wants then add(Effect(n, EffectKind.Slow), Cause.Overloaded(down))
         case Fault(n, FaultKind.Down, None) => add(Effect(n, EffectKind.Down), own(f))
         case Fault(n, FaultKind.Slow, _) => add(Effect(n, EffectKind.Slow), Cause.Own(f))
         case Fault(n, FaultKind.Errors, _) => add(Effect(n, EffectKind.Errors), Cause.Own(f))
@@ -127,6 +136,11 @@ object Spread:
             if add(Effect(d.from, shown), Cause.Through(d, e)) then changed = true
           }
         }
+      }
+      // A RETRY STORM: a callee in errors, retried by a hard caller with no breaker, is slow too
+      deps.filter(d => d.mode == Mode.Hard && d.retries && !d.breaker).foreach { d =>
+        val errors = Effect(d.to, EffectKind.Errors)
+        if causes.contains(errors) && add(Effect(d.to, EffectKind.Slow), Cause.Storm(d, errors)) then changed = true
       }
     causes.toMap
 

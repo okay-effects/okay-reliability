@@ -164,5 +164,17 @@ object Remedies:
           (if c.replicas < 2 then " (2 replicas)" else ""), s"zone:$here", loss,
           Spread(s2, Vector(Zone.fault(here))).failedEntries))
     }
-    (replicas ++ guards ++ zoned).distinctBy(_._2.what).map((after, c) => priced(system, after, c))
+    // CAPACITY (spec §19): one more instance than the load wants; a breaker where retries make a storm
+    val roomy = system.components.filter(c => c.wants > 1).map { c =>
+      val s2 = system.withComponent(c.copy(replicas = c.replicas + 1))
+      s2 -> Change(s"run ${c.name} with ${c.replicas + 1} replicas (it needs ${c.wants})", c.name,
+        lossOfOne(system, c.name),
+        lossOfOne(s2, c.name))
+    }
+    val calmed = system.dependencies.filter(d => d.retries && !d.breaker && d.mode == Mode.Hard).map { d =>
+      val s2 = system.withDependency(d.copy(breaker = true))
+      s2 -> Change(s"a circuit breaker on ${d.from} -> ${d.to} (no retry storm)", d.to, lossOfOne(system, d.to),
+        lossOfOne(s2, d.to))
+    }
+    (replicas ++ guards ++ zoned ++ roomy ++ calmed).distinctBy(_._2.what).map((after, c) => priced(system, after, c))
       .filter(_.minutes > 0.01).sortBy(-_.minutes)
