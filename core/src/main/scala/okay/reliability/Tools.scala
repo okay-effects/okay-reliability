@@ -1,5 +1,7 @@
 package okay.reliability
 
+import okay.effects.time.Instant
+
 import okay.effects.json.Json
 import okay.mcp.ToolSpec
 import okay.scala3.*
@@ -306,7 +308,7 @@ object Tools:
             val (files, said) = str(a, "timeline").flatMap(Rates.hours) match
               case Some(span) =>
                 val life = Life.run(system, span / Rates.hoursAYear, seed, record = true)
-                val origin = Iso.parse("2026-01-01T00:00:00Z").get
+                val origin = Instant.parse("2026-01-01T00:00:00Z").toOption.get.seconds
                 (Vector("arch.txt" -> ArchText.print(system), "incidents.csv" -> Life.csv(life.incidents, origin),
                   "sli.csv" -> Life.sliCsv(life.hourly, origin)),
                   s"${life.incidents.size} incidents over ${Rates.show(span)}; " + life.measured.map(m =>

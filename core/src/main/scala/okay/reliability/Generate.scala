@@ -1,5 +1,7 @@
 package okay.reliability
 
+import okay.effects.time.Instant
+
 /**
  * PRODUCT 2 — THE FAILURE GENERATOR (spec §4): systems (read, or made at random from a seed), faults
  * chosen in them, spread, and rendered as what people and programs see — logs in several formats with noise, a chat —
@@ -225,9 +227,9 @@ object Generate:
       case (Down, _) | (Stale, _) => Vector.empty
 
   /** the scenarios' clock: 2026-11-04T14:00:00Z, and `t` seconds after */
-  val origin: Long = Iso.parse("2026-11-04T14:00:00Z").get
+  val origin: Long = Instant.parse("2026-11-04T14:00:00Z").toOption.get.seconds
   private def clock(t: Int): String =
-    Iso.format(origin + t).stripSuffix("Z") + f".${(t * 37) % 1000}%03dZ"
+    Instant(origin + t).toString.stripSuffix("Z") + f".${(t * 37) % 1000}%03dZ"
 
   /** a component's lines in a format: JSON lines, logfmt, plain with stack traces, or an access log */
   def render(c: String, ls: Vector[Line], format: String): Vector[String] =

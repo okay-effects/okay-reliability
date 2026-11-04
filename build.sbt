@@ -31,6 +31,7 @@ lazy val core = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).
       "io.github.okay-effects" %%% "okay-scala" % "0.1.1",
       "io.github.okay-effects" %%% "okay-effects-json-value" % "0.1.1",
       "io.github.okay-effects" %%% "okay-effects-yaml-value" % "0.1.1",
+      "io.github.okay-effects" %%% "okay-effects-time-value" % "0.1.1",
       "io.github.okay-effects" %%% "okay-mcp" % "0.1.0",
       "io.github.okay-effects" %%% "okay-effects-cek" % "0.1.1",
       munit.value))

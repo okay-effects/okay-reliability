@@ -1,5 +1,7 @@
 package okay.reliability
 
+import okay.effects.time.Instant
+
 /**
  * RATES FROM YOUR HISTORY (spec §9.5): incidents in a CSV — `start,end,component,kind[,instance]`,
  * ISO times — and each event's MTBF and MTTR re-estimated: a Gamma prior on its rate (the written or the kind's
@@ -32,7 +34,7 @@ object Estimate:
     val body = if lines.headOption.exists(_.toLowerCase.startsWith("start")) then lines.tail else lines
     val read = body.zipWithIndex.map { (l, i) =>
       val cols = l.split(",", -1).map(_.trim).toVector
-      def time(s: String) = Iso.parse(s).map(_ / 3600.0)
+      def time(s: String) = Instant.parse(s).toOption.map(_.seconds).map(_ / 3600.0)
       (cols.lift(0).flatMap(time), cols.lift(1).flatMap(time), cols.lift(2), cols.lift(3).flatMap(FaultKind.of)) match
         case (Some(a), Some(b), Some(c), Some(k)) if b >= a =>
           Right(Row(a, b, c, k, cols.lift(4).flatMap(_.toIntOption)))

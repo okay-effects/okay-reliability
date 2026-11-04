@@ -1,5 +1,7 @@
 package okay.reliability
 
+import okay.effects.time.Instant
+
 /** WHAT WAS SEEN: a component's effect, or that it is fine — each from somewhere (`log:checkout:17`, `chat:5`) */
 enum Observation:
   /** `at`: when it was seen, epoch seconds — a log line's time */
@@ -11,7 +13,7 @@ enum Observation:
   def source: String
   override def toString: String = this match
     case Symptom(c, k, s, t) => s"symptom($c, ${k.word})" + (if s.nonEmpty then s" [$s]" else "") +
-      t.fold("")(x => s" @${Iso.format(x)}")
+      t.fold("")(x => s" @${Instant(x).toString}")
     case Healthy(c, s) => s"healthy($c)" + (if s.nonEmpty then s" [$s]" else "")
     case Alive(c, s) => s"alive($c)" + (if s.nonEmpty then s" [$s]" else "")
 
@@ -139,7 +141,7 @@ object Explain:
           s"${early.kind.word} at ${clock(early.at.get)}, which it would come through" }
     }
 
-  def clock(t: Long): String = Iso.format(t)
+  def clock(t: Long): String = Instant(t).toString
 
   /**
    * THE SETS OF EXACTLY `k` CANDIDATES THAT TOGETHER COVER EVERY SYMPTOM (spec §14): branch on the uncovered symptom

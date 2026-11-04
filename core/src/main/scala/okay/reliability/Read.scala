@@ -1,5 +1,7 @@
 package okay.reliability
 
+import okay.effects.time.Instant
+
 /**
  * A DETERMINISTIC READER OF LOGS AND CHAT (spec §5): the facts in the common lines — a call refused, a
  * status 5xx, a timeout, stale data served, a fallback used, a feature degraded, a disk full, a backlog, a slow query,
@@ -41,7 +43,7 @@ object Read:
               case Some(a) => Some((if a.group(1).startsWith("5") then "ERROR" else "INFO") -> s"status ${a.group(1)}")
               case None => Some("INFO" -> l)
 
-  def time(line: String): Option[Long] = Iso.find(line)
+  def time(line: String): Option[Long] = Instant.find(line).map(_.seconds)
 
   private def S(c: String, k: EffectKind) = Observation.Symptom(c, k)
 

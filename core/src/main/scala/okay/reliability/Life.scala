@@ -1,5 +1,7 @@
 package okay.reliability
 
+import okay.effects.time.Instant
+
 /**
  * A SYSTEM'S LIFE OVER TIME (spec §9.2, §9.6): every fault event up and down — its time to fail and to
  * repair exponential, by its rate — and at each change the entry points' state by `Spread`. Measures what §9.2
@@ -100,10 +102,10 @@ object Life:
 
   /** the incidents as CSV: start,end,component,kind,instance — times ISO, from `origin` */
   def csv(incidents: Vector[Incident], origin: Long): String =
-    def at(h: Double) = Iso.format(origin + math.round(h * 3600))
+    def at(h: Double) = Instant(origin + math.round(h * 3600)).toString
     ("start,end,component,kind,instance" +: incidents.map(i => s"${at(i.start)},${at(i.end)},${i.fault.component}," +
       s"${i.fault.kind.word},${i.fault.instance.fold("")(_.toString)}")).mkString("", "\n", "\n")
 
   def sliCsv(rows: Vector[(Int, String, Double, Double)], origin: Long): String =
     ("hour,entry,unavailable_minutes,slow_minutes" +: rows.map((h, e, a, s) =>
-      f"${Iso.format(origin + h * 3600L)},$e,$a%.2f,$s%.2f")).mkString("", "\n", "\n")
+      f"${Instant(origin + h * 3600L).toString},$e,$a%.2f,$s%.2f")).mkString("", "\n", "\n")

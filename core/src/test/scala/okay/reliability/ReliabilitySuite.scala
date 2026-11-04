@@ -1,5 +1,7 @@
 package okay.reliability
 
+import okay.effects.time.Instant
+
 /** THE LAWS (spec §8), over a written system and over generated ones */
 class ReliabilitySuite extends munit.FunSuite:
   val shop: System = ArchText.read("""
@@ -218,7 +220,7 @@ class ReliabilitySuite extends munit.FunSuite:
 
   test("the rates read back from a long generated history"):
     val life = Life.run(rated, 200, 3, record = true)
-    val origin = Iso.parse("2026-01-01T00:00:00Z").get
+    val origin = Instant.parse("2026-01-01T00:00:00Z").toOption.get.seconds
     val est = Estimate(rated, Life.csv(life.incidents, origin), Some(200 * Rates.hoursAYear))
     assert(est.problems.isEmpty, est.problems.mkString)
     def close(c: String, k: FaultKind) =
