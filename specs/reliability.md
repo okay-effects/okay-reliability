@@ -691,6 +691,10 @@ it did not fail. A third reaction word on a hard dependency (§32): `congests` �
 caller shows `slow` (what is left carries the load, late), not `errors`. Read and printed by `ArchText`, simulated by
 `Spread`. Google 2019's system gets it, as the postmortem says (written after its answer was seen, like §32's).
 
+The fault tree (§9, the numbers) knows the three words as `Spread` does — through a dependency it withdraws on, the
+caller down; it congests on, slow; a slow callee it saturates on, in errors too — checked by the law that its cut sets
+are the enumeration's, now on a system with all three (found missing 2026-11-04, while adding §37).
+
 Measured: Google 2019 not found (against a fact) → fourth, agreeing with every fact, a minimal explanation; the
 control plane first, as `slow` (0.40). The other 20 unchanged; the generator does not use the word: `bench` unchanged.
 

@@ -64,8 +64,24 @@ object FaultTree:
     def down(c: String): Dnf = at("down", c) {
       val replicas = system.component(c).map(_.replicas).getOrElse(1)
       val all = (1 to replicas).foldLeft(True)((acc, i) => and(acc, instance(c, i)))
-      or(ev(Fault(c, FaultKind.Down)), all)
+      // or through a dependency it withdraws on (spec §32)
+      or((ev(Fault(c, FaultKind.Down)) +: all +: hard(c).filter(_.withdraws).map(failing))*)
     }
+
+    /** WHAT A HARD DEPENDENCY BRINGS (spec §32, §36), as `Spread` shows it: what would fail the caller (the callee
+     * down or in errors, its alternatives bad; through a breaker, slow or backing up too), what would slow it */
+    private def failing(d: Dependency): Dnf =
+      val through = and(de(d.to), altsBad(d))
+      if d.breaker then or(through, and(sl(d.to), altsBad(d)), backlog(d.to)) else through
+    private def slowing(d: Dependency): Dnf =
+      if d.breaker then False else or(and(sl(d.to), altsBad(d)), backlog(d.to))
+    /** the caller in errors through it: failing, unless it withdraws (down) or congests (slow); saturated by its
+     * slowness */
+    private def errs(d: Dependency): Dnf =
+      or(if d.withdraws || d.congests then False else failing(d), if d.saturates then slows(d) else False)
+    /** the caller slow through it: slowing, and what would fail it when it congests */
+    private def slows(d: Dependency): Dnf =
+      or(slowing(d), if d.congests && !d.withdraws then failing(d) else False)
 
     /** too few instances left for the load: any n − k + 1 of its n down, when it needs k > 1 */
     def overloaded(c: String): Dnf = at("overloaded", c) {
@@ -91,10 +107,7 @@ object FaultTree:
     def er(c: String): Dnf = at("er", c) {
       val own = or(ev(Fault(c, FaultKind.Errors)),
         if kind(c).contains(Kind.Queue) then False else ev(Fault(c, FaultKind.Full)))
-      or((own +: hard(c).map { d =>
-        val through = and(de(d.to), altsBad(d))
-        if d.breaker then or(through, and(sl(d.to), altsBad(d)), backlog(d.to)) else through
-      })*)
+      or((own +: hard(c).map(errs))*)
     }
 
     /** down or in errors */
@@ -102,8 +115,7 @@ object FaultTree:
 
     def sl(c: String): Dnf = at("sl", c) {
       val storm = if stormed(c) then er(c) else False
-      or((ev(Fault(c, FaultKind.Slow)) +: overloaded(c) +: storm +: hard(c).filterNot(_.breaker).map(d =>
-        or(and(sl(d.to), altsBad(d)), backlog(d.to))))*)
+      or((ev(Fault(c, FaultKind.Slow)) +: overloaded(c) +: storm +: hard(c).map(slows))*)
     }
 
     def bad(c: String): Dnf = or(de(c), sl(c))

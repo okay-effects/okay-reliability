@@ -375,6 +375,11 @@ class ReliabilitySuite extends munit.FunSuite:
   test("the fault tree's cut sets are the enumeration's, every world and SLI"):
     val systems = Vector(shop, rated, shop.degradeReads("checkout", "db"),
       ArchText.read("web: service entry\npay: external\nq: queue\nweb -> pay hard breaker\nweb -> q hard")
+        .fold(e => fail(e), identity),
+      // the reactions (spec §32, §36): the tree knows them as the simulator does
+      ArchText.read("web: service entry\napi: service entry\ndns: service\nnet: service\ngw: balancer\n" +
+        "cp: service\nlink: service\nweb -> dns hard\ndns -> net hard withdraws\nweb -> gw hard saturates\n" +
+        "api -> link hard congests\nlink -> cp hard\napi -> gw hard breaker saturates\nnet -> cp hard")
         .fold(e => fail(e), identity)) ++ (1L to 6L).map(Generate.system(_, 4)) ++ (1L to 4L).map(Generate.large(_, 12))
     systems.foreach { s =>
       val events = Rates.events(s)
