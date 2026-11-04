@@ -23,7 +23,8 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
    spans (OTLP JSON, Jaeger's JSON) to components and calls,
    their modes guessed (errors on a call, a cache's name, a messaging span) and said; merged with a compose or
    Kubernetes reading.
-5. **Logs of the usual stacks** — the reader's patterns for Spring Boot, nginx, Postgres, Envoy/Istio, Node, Go, with a
+5. ~~**Logs of the usual stacks**~~ — DONE 2026-11-04 (spec §21; 19 lines in ReadCorpusSuite).
+   the reader's patterns for Spring Boot, nginx, Postgres, Envoy/Istio, Node, Go, with a
    corpus of real lines and a test each; what it does not read, said.
 
 ## 3. The page

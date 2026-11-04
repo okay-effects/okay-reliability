@@ -432,6 +432,30 @@ What calls what is in the traces already: every span knows its service and its p
 - The law: a system's traces as `Traces.render` writes them (OTLP, errors sampled) read back to the same components,
   calls and modes — hard, soft, cached, async; Jaeger's form too.
 
+## 21. Logs of the usual stacks (BACKLOG 5, 2026-11-04)
+
+The reader knew its own generator's lines; real logs say the same things in other words. Added, each with lines of
+its kind in a corpus test (`ReadCorpusSuite`) and the facts expected from each:
+
+- **Java / Spring Boot**: `Connection refused` (`ConnectException`, `ResourceAccessException … for "http://payments…"`),
+  `Read timed out` / `SocketTimeoutException`, HikariCP's `Connection is not available, request timed out` (the
+  database slow), `Started X in N seconds` (a deploy).
+- **nginx**: the error log's `connect() failed (111: Connection refused) while connecting to upstream` and
+  `upstream timed out (110 …)`, the callee from `upstream: "http://checkout:8080/…"`; the access log's 502/503/504.
+- **Postgres**: `too many clients already` (errors), `the database system is shutting down` / `is starting up`
+  (errors: it refuses connections, and writes that it does — so it is not down), `duration: N ms statement:` over a
+  second (slow), `No space left on device` (errors).
+- **Envoy / Istio** access logs: the response flags — `UF`, `UH` (the upstream down), `UT` (slow), `UO`, `URX`
+  (errors) — the callee from the upstream cluster (`outbound|8080||payments.default.svc.cluster.local` → payments).
+- **Node**: `connect ECONNREFUSED`, `getaddrinfo ENOTFOUND payments`, `ETIMEDOUT`; pino's numeric levels (50 error,
+  40 warn).
+- **Go**: zap / logrus JSON with an `error` field; `dial tcp …: connect: connection refused`, `no such host`,
+  `context deadline exceeded`.
+
+A callee is named only when its name is a component's (a host's first label: `payments.default.svc` → payments); an
+address alone (`10.0.0.5:5432`) gives the caller's symptom only. What the reader does not recognise stays for a
+model (`assert`).
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a

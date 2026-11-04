@@ -10,6 +10,8 @@ import okay.effects.time.Instant
  */
 object Read:
   private val field = """"?(?:msg|message)"?\s*[:=]\s*"((?:[^"\\]|\\.)*)"""".r
+  private val pinoLevel = """"level"\s*:\s*(\d{2})""".r
+  private val errorField = """"(?:error|err)"\s*:\s*"((?:[^"\\]|\\.)*)"""".r
   private val levelField = """"?(?:level|severity)"?\s*[:=]\s*"?([A-Za-z]+)""".r
   private val plain = """^\S+\s+(TRACE|DEBUG|INFO|WARN|WARNING|ERROR|FATAL)\s+(?:\[[^\]]*\]\s+)?(.*)$""".r
   private val access = """"[A-Z]+ [^"]*" (\d{3}) """.r
@@ -37,9 +39,14 @@ object Read:
       field.findFirstMatchIn(l) match
         case Some(m) =>
           val msg = m.group(1).replace("\\\"", "\"").replace("\\\\", "\\")
-          val level = levelField.findFirstMatchIn(l).map(_.group(1).toUpperCase).orElse(access.findFirstMatchIn(l)
+          val level = levelField.findFirstMatchIn(l).map(_.group(1).toUpperCase).orElse(pinoLevel.findFirstMatchIn(l)
+            .map(m => m.group(1).toInt match
+              case n if n >= 50 => "ERROR"
+              case n if n >= 40 => "WARN"
+              case _ => "INFO")).orElse(access.findFirstMatchIn(l)
             .map(a => if a.group(1).startsWith("5") then "ERROR" else "INFO")).getOrElse("INFO")
-          Some(level -> msg)
+          val error = errorField.findFirstMatchIn(l).map(e => ": " + e.group(1)).getOrElse("")
+          Some(level -> (msg + error))
         case None => l match
           case plain(level, msg) => Some(level.toUpperCase.replace("WARNING", "WARN") -> msg)
           case _ => access.findFirstMatchIn(l) match
@@ -48,17 +55,75 @@ object Read:
 
   def time(line: String): Option[Long] = Instant.find(line).map(_.seconds)
 
+  // ---- THE USUAL STACKS (spec §21)
+
+  private val urlHost = """(?i)https?://([A-Za-z0-9_.-]+)""".r
+  private val envoyCluster = """outbound\|\d*\|[^|]*\|([A-Za-z0-9_-]+)""".r
+  private val envoyLine = """"[A-Z]+ [^"]*" (\d{3}) ([A-Z,]+|-) """.r
+  private val envoyUpstream = """"([A-Za-z][A-Za-z0-9_.-]*):\d+"""".r
+  private val notFound = """(?i)(?:getaddrinfo ENOTFOUND|lookup) ([A-Za-z0-9_.-]+)""".r
+  private val dialHost = """(?i)dial tcp ([A-Za-z][A-Za-z0-9_.-]*):\d+""".r
+  private val redisTo = """(?i)redis connection to ([A-Za-z][A-Za-z0-9_.-]*):\d+""".r
+  private val pgDuration = """(?i)duration: ([0-9.]+) ms\s+(?:statement|execute)""".r
+
+  /** a host's component: its first label, if the system has it */
+  private def named(system: System, host: String): Option[String] =
+    Option(host.split('.').head).filter(system.names.contains)
+
+  /** the callee a line names: a URL's host, an Envoy cluster or upstream, a lookup, a dial */
+  def calleeIn(system: System, line: String): Option[String] =
+    (envoyCluster.findFirstMatchIn(line) ++ urlHost.findAllMatchIn(line) ++ notFound.findFirstMatchIn(line) ++
+      dialHost.findFirstMatchIn(line) ++ redisTo.findFirstMatchIn(line) ++ envoyUpstream.findAllMatchIn(line))
+      .flatMap(m => named(system, m.group(1))).headOption
+
+  /** the only database `c` calls, if it calls one: what a pool's timeout is about */
+  private def itsDatabase(system: System, c: String): Option[String] =
+    system.callees(c).map(_.to).filter(n => system.component(n).exists(_.kind == Kind.Database)) match
+      case Vector(one) => Some(one)
+      case _ => None
+
+  /** THE FACTS OF A LINE OF THE USUAL STACKS, before the message's own: whole lines (an access log, nginx's error
+   * log, Postgres) and the phrases of Java, Node and Go clients */
+  def stackFacts(system: System, c: String, line: String): Option[Vector[Observation]] =
+    import EffectKind.*
+    val callee = calleeIn(system, line)
+    def calleeAs(k: EffectKind) = callee.filter(_ != c).toVector.map(S(_, k))
+    val l = line.toLowerCase
+    envoyLine.findFirstMatchIn(line).filter(m => m.group(2) != "-") match
+      case Some(m) =>
+        val flags = m.group(2).split(",").toSet
+        if flags("UF") || flags("UH") then Some(S(c, Errors) +: calleeAs(Down))
+        else if flags("UT") then Some(S(c, Slow) +: calleeAs(Slow))
+        else if flags("UO") || flags("URX") then Some(Vector(S(c, Errors)))
+        else None
+      case None =>
+        if l.contains("while connecting to upstream") && l.contains("connection refused") then
+          Some(S(c, Errors) +: calleeAs(Down))
+        else if l.contains("upstream timed out") then Some(S(c, Slow) +: calleeAs(Slow))
+        else if l.contains("too many clients already") then Some(Vector(S(c, Errors)))
+        else if l.contains("database system is shutting down") || l.contains("database system is starting up") ||
+          l.contains("in recovery mode") then Some(Vector(S(c, Errors)))
+        else if pgDuration.findFirstMatchIn(line).exists(_.group(1).toDouble >= 1000) then Some(Vector(S(c, Slow)))
+        else if l.contains("connection is not available, request timed out") then
+          Some(S(c, Slow) +: itsDatabase(system, c).toVector.map(S(_, Slow)))
+        else if l.contains("enotfound") || l.contains("no such host") then Some(S(c, Errors) +: calleeAs(Down))
+        else if l.contains("connection refused") || l.contains("econnrefused") then
+          Some(S(c, Errors) +: calleeAs(Down))
+        else if l.contains("read timed out") || l.contains("sockettimeoutexception") || l.contains("etimedout") ||
+          l.contains("context deadline exceeded") || l.contains("i/o timeout") then Some(S(c, Slow) +: calleeAs(Slow))
+        else None
+
   private def S(c: String, k: EffectKind) = Observation.Symptom(c, k)
 
   /** the facts of one message of `c`, the names checked against the system */
-  def facts(system: System, c: String, level: String, msg: String): Vector[Observation] =
+  def facts(system: System, c: String, level: String, msg: String, raw: String = ""): Vector[Observation] =
     import EffectKind.*
     val known = system.names.toSet
     def callee(n: String, k: EffectKind) = if known(n) then Vector(S(n, k)) else Vector.empty
     def alive(n: String) = if known(n) then Vector(Observation.Alive(n)) else Vector.empty
     msg match
       case refused(x) => S(c, Errors) +: callee(x, Down)
-      case refused2(a, b) => S(c, Errors) +: callee(Option(a).getOrElse(b), Down)
+      case refused2(a, b) if known(Option(a).getOrElse(b)) => S(c, Errors) +: callee(Option(a).getOrElse(b), Down)
       // a status returned: the callee answered — alive, not down
       case status5(x, code) => (S(c, if code == "504" then Slow else Errors) +: callee(x, if code == "504" then Slow
         else Errors)) ++ alive(x)
@@ -77,6 +142,9 @@ object Read:
       case m if m.toLowerCase.startsWith("slow query") || m.matches("""(?i)request took \d+ms.*""") =>
         Vector(S(c, Slow))
       case m if m.toLowerCase.contains("not responding to health checks") => Vector(S(c, Retries))
+      // the usual stacks' lines, whole: before a status alone and a level alone, which say less
+      case _ if stackFacts(system, c, if raw.nonEmpty then raw else msg).nonEmpty =>
+        stackFacts(system, c, if raw.nonEmpty then raw else msg).get
       case m if m.matches("""status 50[234]""") => Vector(S(c, if m.endsWith("504") then Slow else Errors))
       case _ if level == "ERROR" || level == "FATAL" => Vector(S(c, Errors))
       case _ => Vector.empty
@@ -84,7 +152,7 @@ object Read:
   /** a component's log: its facts, each with its line; healthy when it says nothing wrong */
   def log(system: System, c: String, lines: Vector[String]): Vector[Observation] =
     val found = lines.zipWithIndex.flatMap((l, i) => parse(l).toVector.flatMap((level, msg) =>
-      facts(system, c, level, msg).map {
+      facts(system, c, level, msg, l).map {
         case Observation.Symptom(x, k, _, _) => Observation.Symptom(x, k, s"log:$c:${i + 1}", time(l))
         case Observation.Alive(x, _) => Observation.Alive(x, s"log:$c:${i + 1}")
         case Observation.Changed(x, w, _, _) => Observation.Changed(x, w, s"log:$c:${i + 1}", time(l))
