@@ -195,7 +195,7 @@ object Generate:
         Vector(Line(c, t, "ERROR", s"call to ${d.to} failed: connection refused", Vector(S(c, Errors), S(d.to, Down))))
       case (Errors, Cause.Through(d, _)) =>
         Vector(Line(c, t, "ERROR", s"call to ${d.to} failed: status 503 returned",
-          Vector(S(c, Errors), S(d.to, Errors))))
+          Vector(S(c, Errors), S(d.to, Errors), Observation.Alive(d.to))))
       case (Errors, Cause.Own(f)) if f.kind == FaultKind.Full =>
         Vector(Line(c, t, "ERROR", "write failed: No space left on device", Vector(S(c, Errors))))
       case (Errors, _) =>

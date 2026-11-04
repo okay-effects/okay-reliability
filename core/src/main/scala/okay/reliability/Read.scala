@@ -52,13 +52,15 @@ object Read:
     import EffectKind.*
     val known = system.names.toSet
     def callee(n: String, k: EffectKind) = if known(n) then Vector(S(n, k)) else Vector.empty
+    def alive(n: String) = if known(n) then Vector(Observation.Alive(n)) else Vector.empty
     msg match
       case refused(x) => S(c, Errors) +: callee(x, Down)
       case refused2(a, b) => S(c, Errors) +: callee(Option(a).getOrElse(b), Down)
-      case status5(x, code) => S(c, if code == "504" then Slow else Errors) +: callee(x, if code == "504" then Slow
-        else Errors)
-      case status5b(x, code) => S(c, if code == "504" then Slow else Errors) +: callee(x, if code == "504" then Slow
-        else Errors)
+      // a status returned: the callee answered — alive, not down
+      case status5(x, code) => (S(c, if code == "504" then Slow else Errors) +: callee(x, if code == "504" then Slow
+        else Errors)) ++ alive(x)
+      case status5b(x, code) => (S(c, if code == "504" then Slow else Errors) +: callee(x, if code == "504" then Slow
+        else Errors)) ++ alive(x)
       case timeout(x) => S(c, Slow) +: callee(x, Slow)
       case timeout2(x) => S(c, Slow) +: callee(x, Slow)
       case stale(_) => Vector(S(c, Stale))
@@ -79,6 +81,7 @@ object Read:
     val found = lines.zipWithIndex.flatMap((l, i) => parse(l).toVector.flatMap((level, msg) =>
       facts(system, c, level, msg).map {
         case Observation.Symptom(x, k, _, _) => Observation.Symptom(x, k, s"log:$c:${i + 1}", time(l))
+        case Observation.Alive(x, _) => Observation.Alive(x, s"log:$c:${i + 1}")
         case h => h
       }))
     if !lines.exists(_.trim.nonEmpty) then found

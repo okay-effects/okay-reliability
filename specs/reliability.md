@@ -275,6 +275,9 @@ such pair weighs ε = 0.05. Each explanation's onset: its earliest explained sym
 | in the top 3 | 99% | 100% | 65% | 80% |
 | ms a scenario | 90 | 100 | 212 | 131 |
 
+After a returned status states its callee alive (§13's miss, the same day): one fault 73% / 86% the only explanation,
+first by probability 93% / 98%; two faults 35% / 49%, first 29% / 38%.
+
 ## 13. A model's extraction, measured (A / T / E)
 
 On generated scenarios (the logs, the chat; the system's arch.txt), a local model (Qwen3.6-35B through okay-mlx) in
@@ -300,7 +303,10 @@ its rate), 80% of the components with logs, metrics not given; scored on the las
 
 Alone the model names the right component most of the time but the wrong kind (down for slow), or adds a second
 cause, or none (seed 108: no answer line). With the tools it named the exact cause in 7 of 8; the one miss (seed 102,
-`pricing-db errors` answered `down`) is a fact it asserted against the logs. The tools cost a turn or two: 316 s against
+`pricing-db errors` answered `down`) was the analyzer's: it left down, errors and full tied, a symptom `errors` being
+shown by a component down too — though the line said `status 503 returned`, and a component that answers is alive.
+Fixed the same day: a status returned now states the callee `alive` (the reader and the generator's gold alike), and
+down is out. The tools cost a turn or two: 316 s against
 215 s. Eight runs: a direction, not a rate.
 
 ## 14. Large systems (2026-11-04)
