@@ -22,7 +22,7 @@ class IncidentsSuite extends munit.FunSuite:
       "cloudflare-2025-11-18" -> (Some(1), true, true),
       "facebook-2021-10-04" -> (Some(2), false, false), // DNS withdrew itself: a reaction the model has no word for
       "gcp-2025-06-12" -> (Some(1), true, true),
-      "github-2018-10-21" -> (Some(3), true, true), // a change outweighs a check that found the link healthy
+      "github-2018-10-21" -> (Some(2), true, true), // web or MySQL: the slowness seen only at web
       "slack-2021-01-04" -> (Some(1), false, false)) // a slow gateway: the model says slow, the web tier failed
     expected.foreach { case (name, (rank, minimal, consistent)) =>
       val a = answer(name)

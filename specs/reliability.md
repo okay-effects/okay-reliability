@@ -574,6 +574,20 @@ where the cause is (S3: placement or the index; Facebook: the backbone; GitHub: 
 `Explain`, `Probable`, `Remedies`, `Incidents` — or the tools as effects (`Tools.call` over `Desk`, `Files`, `Http`,
 `Clock`); `cli` brings the real world's handlers and the MCP server. Scala 3.9 (what the build is on).
 
+## 30. A look outweighs a change (BACKLOG 17, 2026-11-04)
+
+GitHub 2018 (§28): the link changed, then was seen healthy, and its slowness still ranked first — a change multiplies
+a fault's prior by 30, a healthy fact it contradicts weighed ε = 0.05 (×1/20). But a look at the component itself that
+finds it fine is the strongest evidence there is against a fault **of that component**; a healthy fact contradicted
+only through the spread (a callee's fault predicted to show at a caller seen fine) is weaker, as before. So: a healthy
+(or alive) fact contradicted by a fault of its own component weighs ε/5 (a log 0.004, a person 0.02, other 0.01);
+through the spread, ε as before. A change (×30) no longer lifts a fault past a direct look at it (×1/100).
+
+Measured (`bench`, 200 scenarios each, deterministic; before → after): one fault, first 93% → 93%; two faults,
+first 29% → 31%, top three 130 → 140; two faults with changes, first 44% → 46%, top three 156 → 155. GitHub 2018:
+third → second (`web slow` 0.50, `mysql slow` 0.35 — the slowness was seen only at web; the check next is mysql); the
+link no longer in the top three. The other incidents unchanged.
+
 ## 15. Not yet
 
 Workers where a server is needed (an alert's webhook diagnosed and told; shared incidents; MCP with sessions for a

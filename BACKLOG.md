@@ -61,7 +61,8 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 
 ## 6. What the real incidents taught (spec §28)
 
-17. **A look outweighs a change**: a person's direct check that a component is healthy should weigh more than the
+17. ~~**A look outweighs a change**~~ — DONE 2026-11-04 (spec §30; GitHub third → second).
+    a person's direct check that a component is healthy should weigh more than the
     ×30 a change gives its faults (GitHub 2018: the link changed, then was seen healthy, and still ranks first).
 18. **Facts of a world**: `symptom(s3, errors, reads)` — what failed for reads, for writes (S3 2017: the write path
     explains as well as the index when "GET failed too" cannot be said).

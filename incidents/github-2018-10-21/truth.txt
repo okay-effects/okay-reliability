@@ -6,5 +6,5 @@ source: https://github.blog/news-insights/company-news/oct21-post-incident-analy
 # for, and the link that started it was healthy again within a minute (a change that is not the cause now).
 # Not in the facts: the stale data (replicas behind: the model has no replication lag); webhooks and Pages paused by
 # the operators (their action, not a symptom).
-# The analyzer (spec §28): third, behind `east-link slow` — the change on the link (×30) outweighs the check that found
-# it healthy (ε = 0.05); it asks about mysql next. BACKLOG 17.
+# The analyzer (spec §28): third, behind `east-link slow` — the change on the link (×30) outweighed the check that found
+# it healthy (ε = 0.05); since §30 (a look at a component weighs more) second, behind `web slow`; mysql checked next.

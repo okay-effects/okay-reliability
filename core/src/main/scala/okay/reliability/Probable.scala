@@ -29,7 +29,9 @@ object Probable:
   /** how well a spread agrees with what was seen, as a log-likelihood */
   def logLikelihood(r: Spread.Result, observations: Vector[Observation]): Double =
     observations.map { o =>
-      val e = epsilon(o.source)
+      // a look at the component itself, against a fault of its own, weighs five times more (spec §30)
+      val direct = !o.isInstanceOf[Observation.Symptom] && r.faults.exists(_.component == o.component)
+      val e = epsilon(o.source) / (if direct then 5 else 1)
       val agrees = o match
         case s: Observation.Symptom => Explain.matching(r, s).isDefined
         case h: Observation.Healthy => !Explain.contradicts(r, h)
