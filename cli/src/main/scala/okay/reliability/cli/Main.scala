@@ -2,10 +2,8 @@ package okay.reliability.cli
 
 import okay.reliability.*
 
-import okay.effects.Void
 import okay.effects.cek.OnCek
 import okay.effects.json.Json
-import okay.mcp.{Link, Servers, ToolCall, ToolResult}
 import okay.scala3.*
 import okay.scala3.std.Clock
 
@@ -17,7 +15,7 @@ import java.nio.file.Path
  * through okay-simple's adapter, as symdex's).
  */
 object Main:
-  val version = "0.1.0"
+  val version = Mcp.version
   type Asked[X] = Tools.Asked[X]
 
   final class Live:
@@ -28,16 +26,9 @@ object Main:
       catch case e: Exception => Left(Option(e.getMessage).getOrElse(e.toString))
 
   object Serve:
-    val servers: Servers[OnCek.type] = new Servers[OnCek.type]()(using OnCek)
-    type Linked[X] = okay.effects.Sum[Void, Link, X]
-    def server(live: Live): servers.Server[Linked] =
-      servers.Server[Linked]("okay-reliability", version, new servers.Tools[Linked]:
-        def list = OnCek.pure(Tools.all.map(_.spec).toList)
-        def call(c: ToolCall) = OnCek.delay(OnCek.pure(live.call(c.name, c.arguments)
-          .fold(ToolResult.error, ToolResult.text))))
-    def scripted(live: Live, lines: List[String]): List[String] =
-      OnCek.run(servers.links.scripted(lines)(servers.serve(server(live))))._1
-    def stdio(live: Live): Unit = OnCek.run(servers.links.stdio(servers.serve(server(live))))
+    def scripted(live: Live, lines: List[String]): List[String] = Mcp.scripted(live.call, lines)
+    def stdio(live: Live): Unit =
+      OnCek.run(Mcp.servers.links.stdio(Mcp.servers.serve(Mcp.server(live.call))))
 
   private val usage =
     """okay-reliability — architecture, failures, diagnosis and remedies on one model of a system

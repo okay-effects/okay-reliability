@@ -320,6 +320,27 @@ faults a scenario, medians of 3 systems:
 The enumeration of cut sets at 500 components would be C(1782, 3) ≈ 9·10⁸ spreads for each predicate. The probable
 causes are now the slowest part: they still enumerate sets of the 40 likeliest events (9 880 spreads).
 
+## 16. The front (2026-11-04)
+
+An okay-ui program (`ui`, JVM and JS) over the core: six places — the system (paste or load arch.txt, a compose file,
+Kubernetes manifests; examples; a random system), its architecture (a picture: components in columns by their
+distance from the entry points, single points of failure red, unguarded dependencies amber, bands by mode; the
+components' blast radius, the changes that help priced in minutes a month), its numbers (availability and latency per
+entry point, SLOs and budgets, where the downtime comes from; simulated 1000 years on a press), what if (faults chosen,
+spread on the picture, their chains, the remedies), an incident (logs, a chat, metrics, facts read; the causes, their
+probabilities, the check to make as buttons — "inventory is fine" — the remedies) and training (an incident made, read
+in, the answer revealed). Tested on the JVM by okay-ui's `Play` (`AppSuite`).
+
+- **The page** (`web`): the program on okay-ui's DOM face — everything computed in the browser, nothing sent.
+- **The Worker** (`worker`, okay-serverless): the page, and the tools for programs and agents with nothing kept —
+  `GET /api` the tools, `POST /api/<tool>` (JSON arguments; `system` the system's text, `facts` the facts),
+  `POST /mcp` (MCP's JSON-RPC; a call not begun by `initialize` is begun for it). `sbt workerDist`, then
+  `npx wrangler deploy` in `worker/`. The same page is a static site anywhere (`sbt pageDist` → target/site).
+- `scripts/page.e2e.js`: headless Chrome through the places against `wrangler dev` — all five checks pass.
+
 ## 15. Not yet
+
+MCP sessions in a Durable Object (a model's facts kept between its calls); the front on a phone (okay-faces' mobile
+face, as okay-remote's); 
 
 okay-inlay's handler (the exact part as transformer weights).

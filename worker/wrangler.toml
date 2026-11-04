@@ -1,0 +1,6 @@
+# okay-reliability on Cloudflare: `sbt workerDist`, then `npx wrangler deploy` here
+name = "okay-reliability"
+main = "entry.js"
+compatibility_date = "2026-10-01"
+
+rules = [{ type = "Text", globs = ["**/*.txt"], fallthrough = true }]

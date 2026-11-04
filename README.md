@@ -17,6 +17,9 @@ The reliability of a system, on one model of it and one simulator of how a failu
 5. **The remedies** — for an incident, actions each checked by simulating the faults left after it (what it restores,
    how long it takes, its risk); for the architecture, changes priced in the downtime a month they save.
 
+A front: the same program as screens (okay-ui) — in a browser, everything computed in the page (`sbt pageDist`), or
+on Cloudflare, the page plus the tools as `/api/<tool>` and MCP over HTTP (`sbt workerDist`, `npx wrangler deploy`).
+
 The model does what it is good at — reading text, stating facts, leading an investigation; okay-reliability does what
 a model gets wrong — propagation through a graph, abduction, counting, probabilities, checking that a fix fixes. All of
 it through an MCP server any agent can use (Claude Code, okay-agent, opencode).

@@ -1,0 +1,30 @@
+// THE PAGE, END TO END: the Worker (wrangler dev, :8798) gives it; headless Chrome loads it, presses through the
+// places, takes a picture of each (/tmp/okr-*.png). `sbt workerDist`, `npx wrangler dev --port 8798` in worker/ first.
+const cdpOf = require("./cdp.js");
+(async () => {
+  const c = await cdpOf(9361, Number(process.env.WIDTH || 1280), 900, process.env.WIDTH === "390");
+  let failed = 0;
+  const ok = (what, cond) => { console.log(`${cond ? "✓" : "✗"} ${what}`); if (!cond) failed++; };
+  await c.js(`(()=>{})()`);
+  await c.go("http://127.0.0.1:8798/");
+  ok("the page", (await c.text()).includes("okay-reliability"));
+  await c.click("Example: a shop"); await c.sleep(1500);
+  ok("the architecture", (await c.text()).toLowerCase().includes("single points of failure"));
+  await c.shot("/tmp/okr-architecture.png");
+  await c.click("Reliability"); await c.sleep(1500);
+  ok("the numbers", (await c.text()).includes("MISSED"));
+  await c.shot("/tmp/okr-reliability.png");
+  await c.click("What if"); await c.sleep(800);
+  await c.js(`(()=>{const s=document.querySelector("select"); s.value=[...s.options].find(o=>o.text==="db down").value;
+    s.dispatchEvent(new Event("change",{bubbles:true})); return true})()`);
+  await c.click("Add the fault"); await c.sleep(1500);
+  ok("what if db is down", (await c.text()).includes("restart db"));
+  await c.shot("/tmp/okr-whatif.png");
+  await c.click("Training"); await c.sleep(800);
+  await c.click("Make an incident"); await c.sleep(1500);
+  await c.click("Read it into the incident"); await c.sleep(2500);
+  ok("an incident diagnosed", (await c.text()).toLowerCase().includes("the causes"));
+  await c.shot("/tmp/okr-incident.png");
+  c.close();
+  process.exit(failed ? 1 : 0);
+})();
