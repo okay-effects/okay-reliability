@@ -31,8 +31,9 @@ object App:
     case ReadTraining
     case Reveal
 
-  val places: List[(String, String)] = List("system" -> "System", "architecture" -> "Architecture",
-    "reliability" -> "Reliability", "whatif" -> "What if", "incident" -> "Incident", "training" -> "Training")
+  val places: List[(String, String)] = List("system" -> "System", "examples" -> "Examples",
+    "architecture" -> "Architecture", "reliability" -> "Reliability", "whatif" -> "What if", "incident" -> "Incident",
+    "training" -> "Training")
 
   def main[R[_]](using In[Ui, R]): Unit ! R = loop[R](State())
 
@@ -111,6 +112,7 @@ object App:
     val head = List(Part.block("top")(Part.block("brand")(Part.text("okay-reliability"))),
       Part.block("places")(Part.slot("places"))) ++ s.problem.toList.map(Part.problem) ++ s.note.toList.map(Part.info)
     val (parts, buttons) = (s.place, s.system) match
+      case ("examples", _) => examples
       case ("system", _) | (_, None) => systemScreen(s)
       case ("architecture", Some(sys)) => architecture(sys)
       case ("reliability", Some(sys)) => reliability(s, sys)
@@ -124,21 +126,39 @@ object App:
   private def mins(x: Double) = f"$x%.1f"
 
   def systemScreen(s: State): (List[Part], List[Button[Msg]]) =
-    val form = Form.one(Field.longText("The system: arch.txt, docker-compose.yml or Kubernetes manifests")
-      .initially(if s.source.nonEmpty then s.source else Examples.shop))
+    // empty until something is loaded: typed, pasted, or a file chosen or dropped (a file field: its text into it)
+    val field = Field.file("The system: arch.txt, docker-compose.yml or Kubernetes manifests", ".txt,.yml,.yaml,.json")
+    val form = Form.one(if s.source.nonEmpty then field.initially(s.source) else field)
     val intro = Part.text("The reliability of a system, on one model of it: what each component's loss does, how " +
       "available every entry point is, what a failure would do, what an incident's cause is, and what fixes it. " +
-      "Everything is computed in this page; nothing leaves it.")
+      "Everything is computed in this page; nothing leaves it. Paste a system, choose or drop its file — or start " +
+      "from one of the Examples.")
     val format = Part.block("small")(Part.text("arch.txt: `name: kind [entry] [replicas N]` (kinds: service, " +
       "database, cache, queue, balancer, external), `from -> to [hard|soft|cached|async] [reads|writes] [breaker] " +
       "[fallback alt]`, `x fails down every 90d for 30m`, `web slo 99.9%`, `web writes 20%`."))
     (List(intro, form, format) ++ s.system.toList.map(sys => Scheme.picture(sys, Scheme.kindMark(sys),
       "the system loaded")),
-      List(Button.submit("Load", form)(Msg.Load(_): Msg), Button("Example: a shop")(Msg.Load(Examples.shop): Msg),
-        Button("Example: docker compose")(Msg.Load(Examples.compose): Msg),
-        Button("Example: Kubernetes")(Msg.Load(Examples.kubernetes): Msg),
-        Button("A random system")(Msg.Random(8, java.lang.System.currentTimeMillis() % 1000): Msg),
-        Button("A large one (60)")(Msg.Random(60, java.lang.System.currentTimeMillis() % 1000): Msg)))
+      List(Button.submit("Analyze", form)(Msg.Load(_): Msg)))
+
+  /** THE EXAMPLES, a page of their own: each said what it shows, its text, a button that loads it */
+  def examples: (List[Part], List[Button[Msg]]) =
+    def one(slot: String, title: String, what: String, text: String) =
+      Part.section(title)(Part.text(what), Part.code(title, text.linesIterator.toList, Set.empty), Part.slot(slot))
+    (List(Part.text("Systems to start from. Each loads into the analysis; then edit it on System."),
+      one("shop", "A shop (arch.txt)", "Seven components: an entry point of two replicas, a checkout with a payments " +
+        "provider and its fallback, a read cache, one database — a single point of failure; a rate and SLOs written.",
+        Examples.shop),
+      one("compose", "A docker compose file", "Six services: a front, an API of three replicas, a worker, Postgres, " +
+        "Redis, RabbitMQ — the dependencies read from depends_on and the URLs in the environment.", Examples.compose),
+      one("kubernetes", "Kubernetes manifests", "A Deployment, a StatefulSet of Postgres, a cache, a LoadBalancer " +
+        "Service — the dependencies from the containers' environment.", Examples.kubernetes),
+      Part.section("Made at random")(Part.text("A layered system of services, databases, caches, a queue and " +
+        "externals; a large one to see the searches at scale."), Part.slot("random"))),
+      List(Button("Load the shop", Style.Primary)(Msg.Load(Examples.shop): Msg).at("shop"),
+        Button("Load the compose file", Style.Primary)(Msg.Load(Examples.compose): Msg).at("compose"),
+        Button("Load the manifests", Style.Primary)(Msg.Load(Examples.kubernetes): Msg).at("kubernetes"),
+        Button("A random system")(Msg.Random(8, java.lang.System.currentTimeMillis() % 1000): Msg).at("random"),
+        Button("A large one (60)")(Msg.Random(60, java.lang.System.currentTimeMillis() % 1000): Msg).at("random")))
 
   def architecture(sys: System): (List[Part], List[Button[Msg]]) =
     val r = Arch.analyze(sys)
@@ -205,9 +225,9 @@ object App:
       List(Button.submit("Add the fault", form)(Msg.AddFault(_): Msg), Button("Clear")(Msg.ClearFaults: Msg)))
 
   def incident(s: State, sys: System): (List[Part], List[Button[Msg]]) =
-    val log = Form((Field.choice("Whose log", sys.names.map(n => n -> n)*), Field.longText("The log")))
-    val chat = Form.one(Field.longText("A chat, notes"))
-    val metrics = Form.one(Field.longText("Prometheus metrics (the text format)"))
+    val log = Form((Field.choice("Whose log", sys.names.map(n => n -> n)*), Field.file("The log", ".log,.txt,.json")))
+    val chat = Form.one(Field.file("A chat, notes", ".txt,.md"))
+    val metrics = Form.one(Field.file("Prometheus metrics (the text format)", ".prom,.txt"))
     val facts = Form.one(Field.longText("Facts").hinted("symptom(c, errors) [source] @time, healthy(c), alive(c)"))
     val seen = Table(s.seen.toList)(Column.text("fact")(o => o.toString.takeWhile(_ != '[').trim),
       Column.text("source")(_.source))
