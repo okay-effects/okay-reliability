@@ -23,7 +23,8 @@ object MicroReal:
   def right(found: Set[String], label: String) = if label == "none" then found.isEmpty else found.contains(label)
 
   /** (right Read, right both, sure-wrong, said, covered) on `rs` */
-  def score(rs: Vector[Row], w: Micro.Weights, read: (Row, Micro.Weights) => Readers.Reading): (Int, Int, Int, Int, Int) =
+  def score(rs: Vector[Row], w: Micro.Weights, read: (Row, Micro.Weights) => Readers.Reading)
+    : (Int, Int, Int, Int, Int) =
     val sys = system(rs)
     var r, b, wrong, said, covered = 0
     rs.foreach { row =>

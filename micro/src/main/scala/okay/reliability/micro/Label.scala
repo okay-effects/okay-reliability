@@ -40,7 +40,8 @@ object Label:
     val body = Json.Obj(Vector("model" -> Json.Str(model), "temperature" -> Json.num(0), "max_tokens" -> Json.num(600),
       "messages" -> Json.Arr(Vector(
         Json.Obj(Vector("role" -> Json.Str("system"), "content" -> Json.Str(rule))),
-        Json.Obj(Vector("role" -> Json.Str("user"), "content" -> Json.Str(s"/no_think\n${lines.size} lines:\n$numbered")))))))
+        Json.Obj(Vector("role" -> Json.Str("user"),
+          "content" -> Json.Str(s"/no_think\n${lines.size} lines:\n$numbered")))))))
     val req = HttpRequest.newBuilder(URI.create(s"$url/chat/completions")).header("Content-Type", "application/json")
       .POST(HttpRequest.BodyPublishers.ofString(body.render)).build()
     val res = client.send(req, HttpResponse.BodyHandlers.ofString())
@@ -56,7 +57,8 @@ object Label:
     val in = Path.of(args(0)); val out = Path.of(args(1))
     val url = args.lift(2).getOrElse("http://127.0.0.1:8090/v1")
     val model = args.lift(3).getOrElse("mlx-community/Qwen3.6-35B-A3B-4bit")
-    val rows = Files.readAllLines(in).asScala.toVector.map(_.split("\t", 2)).filter(_.length == 2).map(a => (a(0), a(1)))
+    val rows = Files.readAllLines(in).asScala.toVector.map(_.split("\t", 2)).filter(_.length == 2)
+      .map(a => (a(0), a(1)))
     val done = if Files.exists(out) then Files.readAllLines(out).asScala.map(_.split("\t", -1)).filter(_.length == 3)
       .map(a => (a(0), a(1))).toSet else Set.empty[(String, String)]
     val todo = rows.filterNot(done)
