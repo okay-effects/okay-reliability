@@ -16,7 +16,8 @@ object Train:
   def rawLines(from: Int, until: Int): Vector[(String, String, Vector[okay.reliability.Observation], Vector[String])] =
     (from until until).toVector.flatMap { seed =>
       val system = Generate.system(seed.toLong, 5 + seed % 6)
-      val sc = Generate.scenario(system, seed.toLong, faults = 1 + seed % 2, observed = 0.8, changes = true)
+      val sc = Generate.scenario(system, seed.toLong, faults = 1 + seed % 2, observed = 0.8, changes = true,
+        quiet = true, configs = true)
       sc.labelled.map((text, self, facts) => (text, self, facts, system.names))
     }
 
@@ -171,4 +172,7 @@ object Train:
     java.nio.file.Files.createDirectories(java.nio.file.Path.of(out).getParent)
     java.nio.file.Files.write(java.nio.file.Path.of(out), bytes)
     println(s"written $out: ${w.size} parameters, ${bytes.length / 1024} KB")
+    if out.endsWith("core/src/main/resources/okay/reliability/micro.bin") then
+      val n = Int8.write(java.nio.file.Path.of(out), java.nio.file.Path.of("../site/micro.int8"))
+      println(s"written ../site/micro.int8: ${n / 1024} KB")
     model.close()

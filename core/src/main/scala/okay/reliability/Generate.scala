@@ -136,9 +136,15 @@ object Generate:
    * another component with probability `observed`; a chat about one or two healthy components and the users' view
    */
   def scenario(system: System, seed: Long, faults: Int = 1, observed: Double = 1.0, byRates: Boolean = false,
-    changes: Boolean = false): Scenario =
+    changes: Boolean = false, quiet: Boolean = false, configs: Boolean = false): Scenario =
     val rnd = scala.util.Random(seed)
-    val useful = Spread.candidates(system).filter(f => Spread(system, Vector(f)).failedEntries.nonEmpty)
+    // quiet (for a reader's training, specs/reader.md §7): also the faults that fail no entry point but show — a cache
+    // gone (stale data), a queue backing up
+    val useful = Spread.candidates(system).filter { f =>
+      val r = Spread(system, Vector(f))
+      r.failedEntries.nonEmpty || (quiet && r.effects.exists(e => e.kind == EffectKind.Stale ||
+        e.kind == EffectKind.Backlog))
+    }
     // by rates: as incidents come, the frequent events more often (each drawn by its rate, no component twice)
     val rate = Rates.events(system).toMap
     val order =
@@ -159,8 +165,12 @@ object Generate:
     val lines0 = writing.map(c => c -> linesOf(system, r, c, depth, rnd)).toMap
     // CHANGES (spec §18): a deploy just before the errors or the slowness it caused; a deploy elsewhere that broke
     // nothing, as a decoy
-    def deploy(c: String, at: Int) = Line(c, at, "INFO", s"deployed version 1.${rnd.nextInt(9)}.${rnd.nextInt(30)}",
-      Vector(Observation.Changed(c, "deploy")))
+    // configs (a reader's training): a third of the changes a configuration reloaded
+    def deploy(c: String, at: Int) =
+      if configs && rnd.nextInt(3) == 0 then
+        Line(c, at, "INFO", "configuration reloaded", Vector(Observation.Changed(c, "config")))
+      else Line(c, at, "INFO", s"deployed version 1.${rnd.nextInt(9)}.${rnd.nextInt(30)}",
+        Vector(Observation.Changed(c, "deploy")))
     val caused = if !changes then Set.empty[String] else chosen.filter(f => (f.kind == FaultKind.Errors ||
       f.kind == FaultKind.Slow) && writing.contains(f.component) && rnd.nextDouble() < 0.6).map(_.component).toSet
     val calm = writing.filterNot(c => chosen.exists(_.component == c))

@@ -59,9 +59,17 @@ object Folder:
     Sorted(system, good.map(_._1).toVector, logs.result(), chats.result(), metrics.result(), facts.result(), skipped)
 
   /** the facts in the files sorted, for their system */
-  def observations(system: System, s: Sorted): Either[String, Vector[Observation]] =
+  def observations(system: System, s: Sorted): Either[String, Vector[Observation]] = reading(system, s).map(_._1)
+
+  /** the same, the logs read by both readers when Micro's weights are given (specs/reader.md §7): its unsure readings
+   * beside */
+  def reading(system: System, s: Sorted, micro: Option[Micro.Weights] = None)
+    : Either[String, (Vector[Observation], Vector[Readers.Unsure])] =
+    val logs = s.logs.map((c, _, t) => micro.fold((Read.log(system, c, t.linesIterator.toVector),
+      Vector.empty[Readers.Unsure]))(w => { val r = Readers.log(system, c, t.linesIterator.toVector, w);
+        (r.facts, r.unsure) }))
     val written = s.facts.foldLeft[Either[String, Vector[Observation]]](Right(Vector.empty))((acc, f) =>
       acc.flatMap(os => Words.facts(f._2).left.map(e => s"${f._1}: $e").map(os ++ _)))
-    written.map(w => (s.logs.flatMap((c, _, t) => Read.log(system, c, t.linesIterator.toVector)) ++
+    written.map(w => ((logs.flatMap(_._1) ++
       s.chats.flatMap(c => Read.chat(system, c._2.linesIterator.toVector)) ++
-      s.metrics.flatMap(m => Metrics.facts(system, Metrics.exposition(m._2))) ++ w).distinct)
+      s.metrics.flatMap(m => Metrics.facts(system, Metrics.exposition(m._2))) ++ w).distinct, logs.flatMap(_._2)))

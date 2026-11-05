@@ -1,0 +1,43 @@
+# REAL LINES FROM OUTSIDE (specs/reader.md §7): messages real software writes — not the generator's, not Stacks' —
+# each labelled by hand: the writer, the line, the component it states something about, the kind (none when nothing).
+# Components: web, api, checkout, payments, db, redis, kafka, search, auth, worker.
+checkout	2026-11-05T10:00:01Z ERROR HikariPool-1 - Connection is not available, request timed out after 30000ms.	db	slow
+checkout	2026-11-05T10:00:02Z ERROR org.postgresql.util.PSQLException: Connection to db:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.	db	down
+checkout	2026-11-05T10:00:03Z ERROR org.postgresql.util.PSQLException: FATAL: the database system is in recovery mode	db	errors
+checkout	2026-11-05T10:00:04Z ERROR org.postgresql.util.PSQLException: FATAL: sorry, too many clients already	db	errors
+db	2026-11-05 10:00:05.123 UTC [4242] FATAL:  could not write to file "pg_wal/xlogtemp.4242": No space left on device	db	errors
+db	2026-11-05 10:00:06.001 UTC [1] LOG:  database system is ready to accept connections	db	none
+web	2026/11/05 10:00:07 [error] 29#29: *1203 upstream prematurely closed connection while reading response header from upstream, client: 10.1.2.3, server: _, request: "GET /api/cart HTTP/1.1", upstream: "http://10.0.0.7:8080/api/cart", host: "shop"	web	errors
+web	2026/11/05 10:00:08 [error] 29#29: *1204 connect() failed (113: No route to host) while connecting to upstream, client: 10.1.2.3, server: _, upstream: "http://api:8080/", host: "shop"	api	down
+web	10.1.2.3 - - [05/Nov/2026:10:00:09 +0000] "POST /checkout HTTP/1.1" 504 167 "-" "Mozilla/5.0"	web	slow
+api	2026-11-05T10:00:10Z level=error msg="dial tcp 10.0.0.5:6379: connect: connection refused" component=redis	redis	down
+api	2026-11-05T10:00:11Z level=error msg="redis: connection pool timeout" target=redis	redis	slow
+api	2026-11-05T10:00:12Z ERROR rpc error: code = DeadlineExceeded desc = context deadline exceeded calling search	search	slow
+api	2026-11-05T10:00:13Z ERROR rpc error: code = Unavailable desc = connection error: desc = "transport: Error while dialing dial tcp: lookup auth on 10.96.0.10:53: no such host"	auth	down
+worker	2026-11-05T10:00:14Z ERROR kafka: client has run out of available brokers to talk to (Is your cluster reachable?)	kafka	down
+worker	2026-11-05T10:00:15Z WARN consumer group orders lag is 182344 messages on kafka topic orders	kafka	backlog
+checkout	2026-11-05T10:00:16Z ERROR redis.exceptions.ConnectionError: Error 111 connecting to redis:6379. Connection refused.	redis	down
+checkout	2026-11-05T10:00:17Z ERROR requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='payments', port=443): Read timed out. (read timeout=10)	payments	slow
+checkout	2026-11-05T10:00:18Z ERROR stripe error from payments: 500 Internal Server Error	payments	errors
+checkout	2026-11-05T10:00:19Z WARN payments unavailable, using fallback provider	payments	errors
+checkout	2026-11-05T10:00:20Z ERROR java.net.SocketTimeoutException: Read timed out calling http://search:9200/_search	search	slow
+search	[2026-11-05T10:00:21,000][WARN ][o.e.c.r.a.DiskThresholdMonitor] high disk watermark [90%] exceeded on [search-node-1], shards will be relocated away from this node	search	errors
+search	[2026-11-05T10:00:22,000][INFO ][o.e.c.r.a.AllocationService] Cluster health status changed from [RED] to [GREEN]	search	none
+auth	2026-11-05T10:00:23Z ERROR x509: certificate has expired or is not yet valid: current time 2026-11-05T10:00:23Z is after 2026-11-04T23:59:59Z	auth	errors
+api	2026-11-05T10:00:24Z ERROR Get "https://auth/oauth/token": x509: certificate has expired or is not yet valid	auth	errors
+worker	2026-11-05T10:00:25Z Back-off restarting failed container worker in pod worker-7d9f-abcde	worker	down
+worker	2026-11-05T10:00:26Z Container worker was OOMKilled (exit code 137)	worker	down
+api	2026-11-05T10:00:27Z Liveness probe failed: Get "http://10.0.0.9:8080/healthz": context deadline exceeded	api	slow
+api	2026-11-05T10:00:28Z Readiness probe failed: HTTP probe failed with statuscode: 503	api	errors
+checkout	2026-11-05T10:00:29Z INFO Successfully pulled image "registry/checkout:2.4.1"; started container checkout	checkout	deploy
+checkout	2026-11-05T10:00:30Z INFO configmap checkout-config updated, reloading	checkout	config
+web	2026-11-05T10:00:31Z WARN circuit breaker 'checkout' is OPEN, failing fast	checkout	errors
+web	2026-11-05T10:00:32Z WARN serving stale cart for user 42: checkout timed out	checkout	slow
+api	2026-11-05T10:00:33Z ERROR Error: connect ECONNREFUSED 10.0.0.12:5432 (db)	db	down
+api	2026-11-05T10:00:34Z ERROR MongoNetworkError: failed to connect to server [db:27017] on first connect	db	down
+api	2026-11-05T10:00:35Z ERROR SequelizeConnectionAcquireTimeoutError: Operation timeout acquiring a connection to db	db	slow
+worker	2026-11-05T10:00:36Z ERROR ERROR 1040 (HY000): Too many connections to db	db	errors
+redis	1:M 05 Nov 2026 10:00:37.000 # Can't save in background: fork: Cannot allocate memory	redis	errors
+redis	1:M 05 Nov 2026 10:00:38.000 * Ready to accept connections tcp	redis	none
+kafka	[2026-11-05 10:00:39,000] ERROR [ReplicaFetcher replicaId=1, leaderId=2, fetcherId=0] Error for partition orders-0 at offset 100 (kafka.server.ReplicaFetcherThread)	kafka	errors
+web	2026-11-05T10:00:40Z INFO GET /health 200 2ms	web	none

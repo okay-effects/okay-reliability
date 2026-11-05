@@ -85,3 +85,39 @@ Postgres, Envoy, pino, zap), scored as agreement with `Read` on the whole set of
 Next: `Micro` beside `Read` in the analyzer and on the page (agree → the fact; differ → unsure, shown first);
 real lines from outside as the honest test; the generator extended (caches, queues, config changes); int8 weights
 for the page (0.6 MB).
+
+## 7. Two readers, measured (2026-11-05)
+
+`Readers.log`: a log read by both. `Read`'s facts are kept as they are — Micro still misses lines `Read` reads (the
+corpus: 10–12 of 18), so a disagreement does not demote a pattern's fact, it is listed; Micro adds what `Read` says
+nothing of (a component on a line `Read` gives no fact of): a fact when sure (p ≥ 0.9, its source `micro:<c>:<line>`),
+an unsure reading otherwise, shown for a person to confirm (`you (Micro)`), not used until then.
+
+**The honest test**: 40 real messages of real software (Postgres, nginx, HikariCP, Redis, Kafka, Kubernetes, Go, Node,
+Java, Elasticsearch), none from the generator or `Stacks`, labelled by hand (`micro/data/outside.tsv`,
+`MicroOutsideSuite`):
+
+| weights | Read right | Micro right | both right | wrong facts Micro added | unsure | corpus (= Read) |
+|---|---|---|---|---|---|---|
+| v1 (§6) | 11 | 15 | 17 | 2 | 19 | 12 of 18 |
+| v2: + caches, queues, config changes (step c) | 11 | 17 | 17 | 2 | 20 | 10 of 18 |
+
+Both readers: 17 of 40 against `Read`'s 11 — Micro adds 6, and misleads with 2 (sure and wrong: "too many clients"
+as `slow`, a Kafka replica error as `retries`). v2 reads `deploy` and `config` (v1 did not) and has seen `stale` and
+`backlog` (119–161 examples each: still few); the corpus' agreement fell by 2 (Read's facts are kept there anyway).
+v2 kept. On the generated scenarios (`bench --micro true`, Read's home): Micro adds 2–3 facts in 200 scenarios,
+"the only explanation" 73% → 72% (one fault), 35% → 34% (two), the first cause unchanged (93%, 31%); a scenario takes
+~1 s more (the plain forward on every line and named component).
+
+What it says: on real lines the pair is better than the patterns alone, at a cost of two sure mistakes in forty; 17 of
+40 is still far from the 99% of held-out generated lines — the gap is the real world's words. Next: more real lines
+(labelled), and training on them by kind of line, with the test kept apart.
+
+## 8. On the page (2026-11-05)
+
+The weights in int8 (`Micro.writeInt8`: one scale a tensor; 579 KB against 2,315 KB float32; the same kind on all 40
+lines from outside), `site/micro.int8` beside page.js (written by `Int8` after every training; a test keeps it equal to
+core's `micro.bin`). The page fetches it at start (without it, `Read` alone) and gives it to the program
+(`App.reading(micro)`); a log or a folder's logs are read by both; the Incident lists the unsure readings ("Unsure —
+Micro's readings, not used until confirmed") with a press to confirm each. Checked: `MicroPageSuite` (JVM) and the
+page's e2e (a Stripe line only Micro reads, its fact `micro:checkout:1` used, in the browser).

@@ -15,7 +15,8 @@ object App:
     problem: Option[String] = None, note: Option[String] = None, seen: Vector[Observation] = Vector.empty,
     whatIf: Vector[Fault] = Vector.empty, simulated: Option[Vector[Life.Measured]] = None,
     training: Option[Generate.Scenario] = None, revealed: Boolean = false, focus: Option[String] = None,
-    lang: Lang = Lang.En, foot: Boolean = false)
+    lang: Lang = Lang.En, foot: Boolean = false, micro: Option[Micro.Weights] = None,
+    unsure: Vector[Readers.Unsure] = Vector.empty)
 
   enum Msg:
     case Go(place: String)
@@ -34,6 +35,8 @@ object App:
     case AddFacts(text: String)
     case Checked(component: String, outcome: String)
     case ClearFacts
+    /** an unsure reading of Micro's (specs/reader.md §7), confirmed by a person: its fact used */
+    case Confirm(index: Int)
     case Train(seed: Long, faults: Int)
     case ReadTraining
     case Reveal
@@ -50,9 +53,14 @@ object App:
    * browser's, then a screen at a time */
   def main[R[_]](using In[Ui, R], In[Settings, R], In[Clipboard, R], In[Here, R]): Unit ! R = run[R](foot = false)
 
+  /** the same, the logs read by Micro beside `Read` (specs/reader.md §7) when its weights are given */
+  def reading[R[_]](micro: Option[Micro.Weights])(using In[Ui, R], In[Settings, R], In[Clipboard, R], In[Here, R])
+    : Unit ! R = run[R](foot = false, micro)
+
   /** the program; `foot`: its own foot, "built on okay-effects" and "Need more?" — where no page around it says so
    * (a phone's app) */
-  def run[R[_]](foot: Boolean)(using In[Ui, R], In[Settings, R], In[Clipboard, R], In[Here, R]): Unit ! R =
+  def run[R[_]](foot: Boolean, micro: Option[Micro.Weights] = None)(using In[Ui, R], In[Settings, R], In[Clipboard, R],
+    In[Here, R]): Unit ! R =
     for
       fragment <- Here.fragment[R]
       keptSystem <- setting[R]("system")
@@ -61,7 +69,7 @@ object App:
       begun = fragment.flatMap(Links.read) match
         case Some((sys, facts)) => resume(sys, facts, lang)
         case None => keptSystem.filter(_.nonEmpty).fold(State(lang = lang))(resume(_, keptFacts, lang))
-      _ <- loop[R](begun.copy(foot = foot))
+      _ <- loop[R](begun.copy(foot = foot, micro = micro))
     yield ()
 
   /** a system and its facts taken up: loaded, the facts read, the place where they matter */
@@ -93,7 +101,7 @@ object App:
           copy[R](Report.markdown(sys, next.seen)).map(ok => next.copy(note = Some(if ok then
             t("Copied: the report, as Markdown.") else t("The clipboard is not reachable from this page.")))))
       case Msg.ForgetHere => keep[R]("system", "").flatMap(_ => keep[R]("facts", "")).map(_ =>
-          State(lang = next.lang, foot = next.foot, note = Some(t("Forgotten in this browser."))))
+          State(lang = next.lang, foot = next.foot, micro = next.micro, note = Some(t("Forgotten in this browser."))))
       case _ =>
         val system: Unit ! R = if next.system.nonEmpty && next.source != s.source then keep[R]("system", next.source)
           else pure(())
@@ -127,8 +135,16 @@ object App:
       case Msg.AddFault(f) => clean.copy(whatIf = (s.whatIf :+ f).distinct)
       case Msg.ClearFaults => clean.copy(whatIf = Vector.empty)
       case Msg.AddLog(c, text) => s.system.fold(clean) { sys =>
-          val found = Read.log(sys, c, text.linesIterator.toVector)
-          clean.copy(seen = (s.seen ++ found).distinct, note = Some(t("{0} facts from {1}'s log.", found.size, c)))
+          s.micro match
+            case None =>
+              val found = Read.log(sys, c, text.linesIterator.toVector)
+              clean.copy(seen = (s.seen ++ found).distinct, note = Some(t("{0} facts from {1}'s log.", found.size, c)))
+            case Some(w) =>
+              // both readers (specs/reader.md §7): Micro's sure readings used, the unsure ones shown to confirm
+              val r = Readers.log(sys, c, text.linesIterator.toVector, w)
+              clean.copy(seen = (s.seen ++ r.facts).distinct, unsure = (s.unsure ++ r.unsure).distinct,
+                note = Some(t("{0} facts from {1}'s log ({2} by Micro); {3} unsure, below.", r.facts.size, c, r.added,
+                  r.unsure.size)))
         }
       case Msg.AddChat(text) => s.system.fold(clean) { sys =>
           val found = Read.chat(sys, text.linesIterator.toVector)
@@ -145,11 +161,11 @@ object App:
             "compose file, manifests or traces.")))
           case Some(sys) =>
             val loaded = if sorted.systemFrom.nonEmpty then step(s, Msg.Load(ArchText.print(sys))) else clean
-            loaded.system.fold(loaded)(now => Folder.observations(now, sorted) match
+            loaded.system.fold(loaded)(now => Folder.reading(now, sorted, s.micro) match
               case Left(e) => loaded.copy(problem = Some(e))
-              case Right(os) =>
+              case Right((os, unsure)) =>
                 val seen = (loaded.seen ++ os).distinct
-                loaded.copy(seen = seen, note = Some(sorted.said),
+                loaded.copy(seen = seen, unsure = (loaded.unsure ++ unsure).distinct, note = Some(sorted.said),
                   place = if os.nonEmpty then "incident" else "architecture"))
       case Msg.LoadIncident(system, facts) =>
         val loaded = step(s, Msg.Load(system))
@@ -165,7 +181,13 @@ object App:
           case "fine" => Observation.Healthy(c, "you")
           case k => Observation.Symptom(c, EffectKind.of(k).getOrElse(EffectKind.Errors), "you")
         clean.copy(seen = (s.seen :+ fact).distinct, note = Some(t("Noted: {0}", fact)))
-      case Msg.ClearFacts => clean.copy(seen = Vector.empty)
+      case Msg.ClearFacts => clean.copy(seen = Vector.empty, unsure = Vector.empty)
+      case Msg.Confirm(i) => s.unsure.lift(i).fold(clean) { u =>
+          val fact = u.micro match
+            case "deploy" | "config" => Some(Observation.Changed(u.component, u.micro, "you (Micro)"))
+            case k => EffectKind.of(k).map(Observation.Symptom(u.component, _, "you (Micro)"))
+          clean.copy(seen = (s.seen ++ fact).distinct, unsure = s.unsure.patch(i, Nil, 1))
+        }
       case Msg.Train(seed, faults) =>
         val sys = s.system.getOrElse(Generate.system(seed))
         val sc = Generate.scenario(sys, seed, faults, 0.8, byRates = true, changes = true)
@@ -415,6 +437,15 @@ object App:
     buttons += Button.submit(t("Add the facts"), facts)(Msg.AddFacts(_): Msg)
     if s.seen.nonEmpty then
       parts += Part.section(t("Seen ({0})", s.seen.size))(seen)
+      // MICRO'S UNSURE READINGS (specs/reader.md §7): not used until a person confirms one
+      if s.unsure.nonEmpty then
+        parts += Part.section(t("Unsure ({0}) — Micro's readings, not used until confirmed", s.unsure.size))(
+          Table(s.unsure.toList.zipWithIndex)(Column.text(t("component"))(_._1.component),
+            Column.text(t("Micro says"))(u => f"${u._1.micro} (${u._1.p}%.2f)"),
+            Column.text(t("Read says"))(_._1.read), Column.text(t("line"))(u => u._1.text.take(120))),
+          Part.slot("unsure"))
+        s.unsure.zipWithIndex.take(10).foreach((u, i) => buttons += Button(
+          t("Confirm: {0} {1}", u.component, u.micro))(Msg.Confirm(i): Msg).at("unsure"))
       buttons += Button(t("Copy a link to this incident"))(Msg.CopyLink(true): Msg)
       buttons += Button(t("Copy the report (Markdown)"))(Msg.CopyReport: Msg)
       buttons += Button(t("Forget the facts"), Style.Danger)(Msg.ClearFacts: Msg)

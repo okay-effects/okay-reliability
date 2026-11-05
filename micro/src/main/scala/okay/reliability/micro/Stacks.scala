@@ -22,7 +22,7 @@ object Stacks:
     case Stale(callee: String)
     case Fallback(callee: String)
     case Degraded(callee: String)
-    case OwnSlow, OwnErrors, Full, Backlog, Deploy, HealthCheck, Routine
+    case OwnSlow, OwnErrors, Full, Backlog, Deploy, Config, HealthCheck, Routine
 
   def shape(message: String, facts: Vector[Observation], self: String): Shape =
     val callee = facts.collectFirst { case Observation.Symptom(c, _, _, _, _) if c != self => c }
@@ -38,6 +38,7 @@ object Stacks:
     else if m.contains("feature degraded") then Shape.Degraded(callee.getOrElse("x"))
     else if m.contains("backlog growing") || m.contains("piling up") then Shape.Backlog
     else if m.startsWith("deployed version") then Shape.Deploy
+    else if m.contains("configuration reloaded") then Shape.Config
     else if m.contains("health checks") then Shape.HealthCheck
     else Shape.Routine
 
@@ -57,6 +58,8 @@ object Stacks:
         case Shape.Stale(c) => Some(s"$t  WARN 1 --- [$th] c.e.Cache : $c unavailable, serving cached data (age ${100 + rnd.nextInt(900)}s)")
         case Shape.Fallback(c) => Some(s"$t  WARN 1 --- [$th] c.e.Resilience : $c failing, using fallback")
         case Shape.Degraded(c) => Some(s"$t  WARN 1 --- [$th] c.e.Features : $c unavailable, feature degraded")
+        case Shape.Config => Some(s"$t  INFO 1 --- [           main] o.s.c.e.event.RefreshEventListener : Refresh keys changed: [feature.flags, client.timeout]")
+        case Shape.Backlog => Some(s"$t  WARN 1 --- [$th] c.e.Outbox : ${1000 + rnd.nextInt(90000)} messages waiting to be sent, queue depth rising")
         case Shape.Deploy => Some(s"$t  INFO 1 --- [           main] c.e.Application : Started Application in ${3 + rnd.nextInt(20)}.${rnd.nextInt(10)} seconds (process running for ${4 + rnd.nextInt(20)}.1)")
         case Shape.Routine => Some(s"$t  INFO 1 --- [$th] c.e.Handler : handled GET $path in ${rnd.nextInt(80)} ms")
         case _ => None
@@ -92,6 +95,9 @@ object Stacks:
         case Shape.Refused(c) => Some(s"""{"level":"error","ts":"${iso(rnd)}","msg":"query failed","error":"dial tcp $c:$port: connect: connection refused"}""")
         case Shape.Timeout(c) => Some(s"""{"level":"error","ts":"${iso(rnd)}","msg":"charge failed","error":"Post \\"http://$c:$port$path\\": context deadline exceeded"}""")
         case Shape.Status(c, code) => Some(s"""{"level":"error","ts":"${iso(rnd)}","msg":"upstream error","error":"$c returned $code"}""")
+        case Shape.Config => Some(s"""{"level":"info","ts":"${iso(rnd)}","msg":"config file changed, reloaded","file":"/etc/$self/app.yaml"}""")
+        case Shape.Backlog => Some(s"""{"level":"warn","ts":"${iso(rnd)}","msg":"work queue saturated","pending":${1000 + rnd.nextInt(90000)}}""")
+        case Shape.Stale(c) => Some(s"""{"level":"warn","ts":"${iso(rnd)}","msg":"$c unreachable; answering from cache","age_s":${60 + rnd.nextInt(900)}}""")
         case Shape.OwnErrors => Some(s"""{"level":"error","ts":"${iso(rnd)}","msg":"panic recovered","error":"runtime error: index out of range"}""")
         case Shape.Routine => Some(s"""{"level":"info","ts":"${iso(rnd)}","msg":"served","path":"$path","ms":${rnd.nextInt(80)}}""")
         case _ => None
@@ -104,6 +110,7 @@ object Stacks:
         case _ => None
       case "k8s" => sh match
         case Shape.HealthCheck => Some(s"Warning  Unhealthy  pod/$self-${rnd.nextInt(99)}  Readiness probe failed: Get \"http://10.0.0.${rnd.nextInt(99)}:$port/health\": dial tcp: connection refused")
+        case Shape.Config => Some(s"Normal   Updated  configmap/$self-settings  data changed; pods reload their configuration")
         case Shape.Deploy => Some(s"Normal   ScalingReplicaSet  deployment/$self  Scaled up replica set $self-${rnd.nextInt(99999)} to ${1 + rnd.nextInt(4)}")
         case Shape.Full => Some(s"Warning  Evicted  pod/$self-${rnd.nextInt(99)}  The node was low on resource: ephemeral-storage.")
         case Shape.Routine => Some(s"Normal   Pulled  pod/$self-${rnd.nextInt(99)}  Container image already present on machine")

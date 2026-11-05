@@ -7,13 +7,22 @@ package okay.reliability
  */
 object Bench:
   def run(seeds: Int, faults: Int, observed: Double, byRates: Boolean = true, metrics: Boolean = false,
-    changes: Boolean = false): String =
-    var unique, among, missed, sizes, total, consistent, first, top3, blind = 0
+    changes: Boolean = false, micro: Option[Micro.Weights] = None): String =
+    var unique, among, missed, sizes, total, consistent, first, top3, blind, addedFacts = 0
     val t0 = java.lang.System.nanoTime()
     (1 to seeds).foreach { i =>
       val s = Generate.system(i.toLong, 6 + i % 6)
       val sc = Generate.scenario(s, i.toLong, faults, observed, byRates, changes)
-      val seen = Read.all(s, sc.logs, sc.chat) ++
+      // with Micro beside Read (spec §39): its facts where Read says nothing
+      val base = Read.all(s, sc.logs, sc.chat)
+      val read = micro.fold(base) { w =>
+        val extra = sc.logs.toVector.sortBy(_._1).flatMap((c, ls) =>
+          Readers.log(s, c, ls, w).facts.filter(_.source.startsWith("micro:"))).distinct
+        val failing = extra.collect { case o: Observation.Symptom => o.component }.toSet
+        base.filterNot { case h: Observation.Healthy => failing(h.component); case _ => false } ++ extra
+      }
+      if micro.nonEmpty then addedFacts += read.count(_.source.startsWith("micro:"))
+      val seen = read ++
         (if metrics then Metrics.facts(s, Metrics.exposition(Metrics.snapshot(sc.spread))) else Vector.empty)
       val r = Explain(s, seen)
       if Explain.whyNot(s, seen, sc.faults).contains("consistent with everything") then consistent += 1
@@ -38,6 +47,7 @@ object Bench:
     val also = (if metrics then ", and a scrape of metrics" else "") +
       (if changes then "; deploys before 60% of the errors and slowness, and decoys" else "")
     val pct = f"${observed * 100}%.0f%%"
+    val microLine = if micro.nonEmpty then s"  facts Micro added:               $addedFacts\n" else ""
     f"""$seeds scenarios, $faults fault(s) $how, $pct of the components with logs, read by `Read`$also:
        |  the gold the only explanation:   $unique (${100.0 * unique / total}%.0f%%)
        |  the gold among several:          $among (${100.0 * among / total}%.0f%%)
@@ -46,7 +56,7 @@ object Bench:
        |  the gold consistent with facts:  $consistent (${100.0 * consistent / total}%.0f%%)
        |  explanations on average:         ${sizes.toDouble / total}%.1f
        |  probable causes: the gold first  $first (${100.0 * first / total}%.0f%%); in the top 3: $top3
-       |${blindLine}  time: $ms ms (${ms.toDouble / total}%.1f ms a scenario)
+       |${blindLine}${microLine}  time: $ms ms (${ms.toDouble / total}%.1f ms a scenario)
        |""".stripMargin
 
 /** THE SEARCHES ON LARGE SYSTEMS (spec §14): for each size, the time of the diagnosis (hitting sets; the enumeration

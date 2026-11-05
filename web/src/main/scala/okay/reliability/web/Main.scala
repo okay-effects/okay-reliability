@@ -4,6 +4,7 @@ import okay.business.dom.Dom
 import okay.business.faces.Skin
 import okay.business.scala3.*
 import okay.business.web.InThePage
+import okay.reliability.Micro
 import okay.reliability.ui.{App, Here}
 import okay.scala3.{Handler, Split, handle, pure}
 import okay.scala3.std.Async
@@ -15,9 +16,14 @@ object Main:
   def main(args: Array[String]): Unit =
     val root = Option(dom.document.getElementById("app")).getOrElse(dom.document.body)
     type Row[X] = (Async + Ui + Settings + Clipboard + Here)[X]
-    // the browser's world: its local storage, its clipboard, its address and fragment
-    val _ = Async.start(Dom.run(root, Look.skin, follow = true)(InThePage.kept("okay-reliability.")(
-      InThePage.clipboard(here(App.main[Row])))))
+    // Micro's weights beside page.js (specs/reader.md §8), then the browser's world: its local storage, its clipboard,
+    // its address and fragment; without the weights, `Read` alone
+    def start(micro: Option[Micro.Weights]): Unit =
+      val _ = Async.start(Dom.run(root, Look.skin, follow = true)(InThePage.kept("okay-reliability.")(
+        InThePage.clipboard(here(App.reading[Row](micro))))))
+    dom.fetch("micro.int8").toFuture.flatMap(r => if r.ok then r.arrayBuffer().toFuture.map(Some(_))
+      else scala.concurrent.Future.successful(None)).map(_.flatMap(b => scala.util.Try(Micro.readBytes(
+        new scala.scalajs.js.typedarray.Int8Array(b).toArray)).toOption)).recover(_ => None).foreach(start)
 
   /** `Here` by the page's location */
   def here[R[_], Rest[_], A](p: A ! R)(using Split[Here, R, Rest]): A ! Rest =

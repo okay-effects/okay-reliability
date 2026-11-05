@@ -124,6 +124,19 @@ object Micro:
       t.foreach(b.putFloat); out.write(b.array())
     out.toByteArray
 
+  /** THE WEIGHTS IN INT8 (specs/reader.md §8): a header "micro8 d layers heads ffn n", per tensor "name length
+   * scale" and its values as signed bytes, x ≈ byte × scale (one scale a tensor, its largest magnitude / 127) — a
+   * quarter of the size, for the page */
+  def writeInt8(w: Weights): Array[Byte] =
+    val out = new java.io.ByteArrayOutputStream
+    def line(s: String): Unit = out.write((s + "\n").getBytes("UTF-8"))
+    line(s"micro8 ${w.config.d} ${w.config.layers} ${w.config.heads} ${w.config.ffn} ${w.tensors.size}")
+    for (n, t) <- w.tensors.toVector.sortBy(_._1) do
+      val scale = math.max(t.map(math.abs).max, 1e-12f) / 127f
+      line(s"$n ${t.length} $scale")
+      out.write(t.map(x => math.round(x / scale).max(-127).min(127).toByte))
+    out.toByteArray
+
   def readBytes(bytes: Array[Byte]): Weights =
     var at = 0
     def line(): String =
@@ -132,12 +145,19 @@ object Micro:
       at += 1
       new String(bytes, start, at - 1 - start, "UTF-8")
     val h = line().split(" ")
-    require(h(0) == "micro", "not a micro model")
+    require(h(0) == "micro" || h(0) == "micro8", "not a micro model")
     val config = Config(h(1).toInt, h(2).toInt, h(3).toInt, h(4).toInt)
     val tensors = (1 to h(5).toInt).map { _ =>
-      val Array(n, len) = line().split(" ")
-      val b = java.nio.ByteBuffer.wrap(bytes, at, len.toInt * 4).order(java.nio.ByteOrder.LITTLE_ENDIAN)
-      at += len.toInt * 4
-      n -> Array.fill(len.toInt)(b.getFloat)
+      val parts = line().split(" ")
+      val (n, len) = (parts(0), parts(1))
+      if h(0) == "micro8" then
+        val scale = parts(2).toFloat
+        val vs = Array.tabulate(len.toInt)(i => bytes(at + i) * scale)
+        at += len.toInt
+        n -> vs
+      else
+        val b = java.nio.ByteBuffer.wrap(bytes, at, len.toInt * 4).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        at += len.toInt * 4
+        n -> Array.fill(len.toInt)(b.getFloat)
     }.toMap
     Weights(config, tensors)
