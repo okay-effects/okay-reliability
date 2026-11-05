@@ -24,7 +24,10 @@ object Probable:
         b.toString
 
   def epsilon(source: String): Double =
-    if source.startsWith("log:") then 0.02 else if source.startsWith("chat:") then 0.1 else 0.05
+    if source.startsWith("log:") then 0.02 else if source.startsWith("chat:") then 0.1
+    // Micro's readings: the measured share of its sure facts that were wrong (specs/reader.md §9)
+    else if source.startsWith("micro:") then 0.25
+    else 0.05
 
   /** how well a spread agrees with what was seen, as a log-likelihood */
   def logLikelihood(r: Spread.Result, observations: Vector[Observation]): Double =

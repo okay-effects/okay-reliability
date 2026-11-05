@@ -25,12 +25,11 @@ class MicroPageSuite extends munit.FunSuite:
     val p = play(Act.press("Examples"), Act.press("Load the shop"), Act.press("Incident"),
       Act.press("Read the log", "Whose log" -> "checkout", "The log" -> log))
     val state = p.at.toList.flatMap(_.buttons.map(_.label))
-    val shown = p.at.fold("")(_.toString)
-    assert(shown.contains("micro:checkout:1"), shown.take(2000))
     assert(state.exists(_.startsWith("Confirm: ")), state.toString)
     // the step itself: an unsure reading confirmed becomes a fact, said to be the person's
     val loaded = App.step(App.State(micro = w), App.Msg.Load(Examples.shop))
     val read = App.step(loaded, App.Msg.AddLog("checkout", log))
+    assert(read.seen.exists(_.source == "micro:checkout:1"), read.seen.toString)
     assert(read.unsure.nonEmpty, read.unsure.toString)
     val u = read.unsure.head
     val after = App.step(read, App.Msg.Confirm(0))

@@ -119,7 +119,7 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
     **Making it reliable** (the owner, 2026-11-05: "how do we make it reliable?" — the plan agreed; Qwen allowed as
     a teacher at build time only). The bar: sure-and-wrong ≤ 1 in 100 lines; coverage (lines read sure) rising; the
     analyzer's answer with Micro's facts no worse than without. In order:
-    e. **Micro's facts weigh less** in `Probable` (their own ε): a sure mistake cannot outweigh other facts.
+    e. ~~**Micro's facts weigh less**~~ — DONE 2026-11-05 (reader.md §9: ε 0.25, not constraints of Explain). in `Probable` (their own ε): a sure mistake cannot outweigh other facts.
     f. **A real test set**, 300+ lines from 15–20 programs (LogHub, error texts of the docs, Kubernetes events),
        labelled by hand; split dev / test, the test touched only at the end of each version.
     g. **Calibration and a second opinion**: temperature fitted on dev; two models of different seeds — they differ

@@ -121,3 +121,16 @@ core's `micro.bin`). The page fetches it at start (without it, `Read` alone) and
 (`App.reading(micro)`); a log or a folder's logs are read by both; the Incident lists the unsure readings ("Unsure —
 Micro's readings, not used until confirmed") with a press to confirm each. Checked: `MicroPageSuite` (JVM) and the
 page's e2e (a Stripe line only Micro reads, its fact `micro:checkout:1` used, in the browser).
+
+## 9. Micro's facts weigh less (BACKLOG 27e, 2026-11-05)
+
+A fact Micro adds is evidence, not a constraint. In the probabilities (`Probable.epsilon`) its source `micro:` has its
+own ε — the measured share of its sure facts that were wrong (2 of 8 on the lines from outside, §7: ε = 0.25; a log
+line's pattern 0.02, a chat 0.1, a person 0.05) — so one sure mistake cannot outweigh the facts beside it. The exact
+explanations (`Explain`) must cover every other symptom, not Micro's: a wrong reading cannot force a fault into every
+minimal set; Micro's symptoms still order the probable causes. ε is measured again with each version (§10).
+
+Measured (v2 weights, `bench --micro true`, 200 scenarios): the exact search is Micro-proof again — "the only
+explanation" 73% / 35%, as with `Read` alone (72% / 34% before §9); the probable causes: one fault first 92% (93%
+alone), two faults first 30% (31%), top three 135 (140). v2 adds 24 / 42 facts on the generator's lines where v1 added
+2 / 3: its "sure" is not sure enough — the next step (§10, calibration) is what fixes that, not ε.

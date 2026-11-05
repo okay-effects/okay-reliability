@@ -49,8 +49,12 @@ object Explain:
     def onset: Option[Long] = observations.collect { case s: Observation.Symptom => s }.flatMap(_.at).minOption
     def text: String =
       val b = StringBuilder()
-      val symptoms = observations.collect { case s: Observation.Symptom => s }
-      if symptoms.isEmpty then return "no symptoms: nothing to explain\n"
+      // the symptoms explained: not Micro's readings (specs/reader.md §9), said apart
+      val symptoms = observations.collect { case s: Observation.Symptom if !s.source.startsWith("micro:") => s }
+      val readings = observations.count {
+        case s: Observation.Symptom => s.source.startsWith("micro:"); case _ => false }
+      if readings > 0 then b ++= s"($readings of Micro's readings weigh in the probable causes, not here)\n"
+      if symptoms.isEmpty then return b.toString + "no symptoms: nothing to explain\n"
       if explanations.isEmpty then
         b ++= s"no set of at most $size faults explains every symptom without touching a healthy component\n"
         if unexplained.nonEmpty then
@@ -114,7 +118,8 @@ object Explain:
 
   def apply(system: System, observations: Vector[Observation], maxSize: Int = 3, limit: Int = 50,
     tolerance: Long = 10, enumerate: Boolean = false): Result =
-    val symptoms = observations.collect { case s: Observation.Symptom => s }.distinct
+    // Micro's readings are evidence, not constraints (specs/reader.md §9): the explanations cover the rest
+    val symptoms = observations.collect { case s: Observation.Symptom if !s.source.startsWith("micro:") => s }.distinct
     val healthy = observations.collect { case h: Observation.Healthy => h }.distinct
     val alive = observations.collect { case a: Observation.Alive => a }.distinct
     val candidates = Spread.candidates(system).flatMap { f =>
