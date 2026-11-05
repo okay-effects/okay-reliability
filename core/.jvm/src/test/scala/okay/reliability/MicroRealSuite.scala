@@ -39,6 +39,7 @@ object MicroReal:
     (r, b, wrong, said, covered)
 
 class MicroRealSuite extends munit.FunSuite:
+  override val munitTimeout = scala.concurrent.duration.Duration(10, "min")
   test("the real test set: dev and test, Read and both"):
     val in = getClass.getResourceAsStream("/okay/reliability/micro.bin")
     assume(in != null, "no micro.bin")
@@ -66,4 +67,18 @@ class MicroRealSuite extends munit.FunSuite:
     Vector(0.9, 0.95, 0.98, 0.99, 0.995, 0.999).foreach { t =>
       val over = ps.filter(_._1 >= t)
       println(f"dev threshold $t: ${over.count(_._2)} right, ${over.count(!_._2)} wrong (of ${dev.size} lines)")
+    }
+
+  test("dev: a second opinion (another seed), by threshold"):
+    val in = getClass.getResourceAsStream("/okay/reliability/micro.bin")
+    val in2 = getClass.getResourceAsStream("/okay/reliability/micro2.bin")
+    assume(in != null && in2 != null, "no micro.bin or no micro2.bin")
+    val w = Micro.readBytes(in.readAllBytes()); val w2 = Micro.readBytes(in2.readAllBytes())
+    val rs = MicroReal.rows
+    val sys = MicroReal.system(rs)
+    val dev = rs.zipWithIndex.filter(_._2 % 2 == 0).map(_._1)
+    Vector(0.5f, 0.7f, 0.9f, 0.95f).foreach { t =>
+      val (r, b, wrong, said, covered) = MicroReal.score(dev, w, (row, w) =>
+        Readers.log(sys, row.writer, Vector(row.line), w, t, Some(w2)))
+      println(f"dev two models, sure at $t: Read right $r, both right $b; sure-wrong $wrong; covered $covered of $said")
     }

@@ -154,3 +154,33 @@ says nothing on real lines, so calibration (step g) cannot help until the model 
 100 lines, both readers no worse than `Read` — and then on test. It stays in the CLI (`bench --micro true`) and the
 tests. Next: step h — real lines in training, routine ones above all, labelled by Qwen (a sample checked by hand), from
 programs apart from the test's.
+
+## 11. Real lines for training, labelled by a teacher (BACKLOG 27h, 2026-11-05)
+
+`Label` (micro): Qwen3.6-35B, local through okay-mlx's gateway, labels real lines by the rule of the test set (its
+prompt has no line of it), 20 a request, at build time only. The lines: LogHub's samples of nine programs apart from
+the test's — BGL, Linux, HealthApp, Proxifier, Thunderbird, Android, HPC, Mac, Windows — up to two lines a template:
+1,661 (`micro/data/real-train-lines.tsv`); labelled 1,221 in 90 minutes (22 batches never answered cleanly; the run
+resumes): 978 none, 182 errors, 42 down, 10 deploy, 4 slow, 3 retries, 1 config, 1 healthy (`real-train.tsv`).
+Checked by hand, 60 at random (30 none, 30 not): 57 agree — the three not, two routine process starts called a deploy
+and a BGL "re-synch state" INFO line called errors. Training (v3): the generated, the paraphrased, the stacks' and the
+real lines (all of them, twice). Real dev: sure-and-wrong 43 → 14.5 per 100 lines, both readers right 102 → 128 (Read
+alone 142); outside: Micro alone 17 → 19, both 17 → 15.
+
+## 12. A second opinion (BACKLOG 27g, 2026-11-05)
+
+Two models of different seeds (`micro.bin`, `micro2.bin`; `Readers.log(…, second)`): a reading is as sure as the less
+sure of the two, and where they name different kinds it is unsure (0.5). Dev, by the threshold of sure:
+
+| | both right (Read alone 142) | sure-and-wrong | of 28 stating something, read |
+|---|---|---|---|
+| one model, 0.9 | 128 | 24 (14.5 per 100) | 6 |
+| two, 0.7 | 128 | 29 | 8 |
+| two, 0.9 | 137 | 7 (4.2 per 100) | 5 |
+| two, 0.95 | 138 | 5 (3.0 per 100) | 5 |
+
+The second opinion cuts the sure mistakes by three; the bar (≤ 1 in 100, no worse than `Read`) is not met: Micro
+stays off the page. What is left is the data: real lines that state a failure are few (the teacher found 243 in
+1,221), so Micro learns "none" well and failures badly. Next: more real failure lines (the 440 unlabelled; LogHub's
+full logs, chosen by level and by the teacher; the failures of postmortems' quoted logs), and the test (not dev)
+touched only when dev meets the bar.

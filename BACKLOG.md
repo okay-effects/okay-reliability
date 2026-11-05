@@ -124,7 +124,11 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
        OFF the page until it meets the bar).
       , 300+ lines from 15–20 programs (LogHub, error texts of the docs, Kubernetes events),
        labelled by hand; split dev / test, the test touched only at the end of each version.
-    g. **Calibration and a second opinion**: temperature fitted on dev; two models of different seeds — they differ
+    g. **Calibration and a second opinion** — second opinion DONE 2026-11-05 (reader.md §12: 14.5 → 3.0 sure-wrong per
+       100 on dev; the bar not yet met, Micro stays off the page).
+      : temperature fitted on dev; two models of different seeds — they differ
        → unsure; thresholds by kind so that dev has no sure mistakes.
-    h. **Real lines for training**, labelled by Qwen3.6-35B locally (a sample checked by hand), none from the test.
+    h. **Real lines for training** — first pass DONE 2026-11-05 (reader.md §11: 1,221 lines by Qwen, 57 of 60 agree
+       with a hand check). Next: more real failure lines.
+      , labelled by Qwen3.6-35B locally (a sample checked by hand), none from the test.
     i. **The answer, measured**: the incidents' table and scenarios with real lines, with Micro's facts and without.

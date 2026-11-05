@@ -141,10 +141,19 @@ object Train:
     val both = preds.zip(xs).count((p, e) => p._1 == e.kind && p._2 == e.alive).toDouble / xs.size
     (kind, alive, both)
 
+  /** REAL LINES, labelled by the teacher (specs/reader.md §11): each about its writer, which wrote it (alive) */
+  def real(path: java.nio.file.Path): Vector[Example] =
+    if !java.nio.file.Files.exists(path) then Vector.empty
+    else scala.io.Source.fromFile(path.toFile, "UTF-8").getLines().map(_.split("\t", -1)).filter(_.length == 3)
+      .map(a => Example(a(1), a(0).toLowerCase, a(0).toLowerCase, math.max(Micro.kinds.indexOf(a(2)), 0), alive = true))
+      .toVector
+
   def main(args: Array[String]): Unit =
     Mlx.init()
     val steps = args.headOption.map(_.toInt).getOrElse(1500)
     val out = args.lift(1).getOrElse("../core/src/main/resources/okay/reliability/micro.bin")
+    val seed = args.lift(2).map(_.toLong).getOrElse(1L)
+    val realLines = real(java.nio.file.Path.of("data/real-train.tsv"))
     // "none" says nothing and is most lines: kept at three times the rest, so the batches see the kinds
     val para = Paraphrase.examples(java.nio.file.Path.of("data/paraphrases.tsv"), 11)
     val stacks = Stacks.examples(1, 400); val stacksTest = Stacks.examples(1001, 1061, seed = 23)
@@ -152,12 +161,14 @@ object Train:
     println(s"paraphrase examples: ${para.size}; stack examples: ${stacks.size} (test ${stacksTest.size})")
     val said = all.filter(e => e.kind != 0 || e.alive)
     val quiet = new scala.util.Random(3).shuffle(all.filterNot(e => e.kind != 0 || e.alive)).take(said.size * 3)
-    val train = new scala.util.Random(5).shuffle(said ++ quiet)
+    // the real lines all kept, twice: their routine ones are what the generated lines never taught
+    val train = new scala.util.Random(5 + seed).shuffle(said ++ quiet ++ realLines ++ realLines)
+    println(s"real lines: ${realLines.size} (${realLines.count(_.kind == 0)} none)")
     println(s"train ${train.size} examples (${train.map(_.line).distinct.size} lines), test ${test.size}; kinds: " +
       Micro.kinds.indices.map(k => s"${Micro.kinds(k)} ${train.count(_.kind == k)}").mkString(", ") +
       s"; alive ${train.count(_.alive)}")
-    val model = Model(Config(d = 128, layers = 4, heads = 4, ffn = 256))
-    val rnd = new scala.util.Random(7)
+    val model = Model(Config(d = 128, layers = 4, heads = 4, ffn = 256), seed = seed)
+    val rnd = new scala.util.Random(7 + seed)
     val t0 = System.nanoTime()
     for step <- 1 to steps do
       val xs = Vector.fill(64)(train(rnd.nextInt(train.size)))

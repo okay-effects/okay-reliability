@@ -28,7 +28,8 @@ object Readers:
       case k => EffectKind.of(k).map(Observation.Symptom(n, _, src, at))
 
   /** `c`'s log read by both: `Read.log`'s facts, and Micro's where `Read` says nothing of a component on a line */
-  def log(system: System, c: String, lines: Vector[String], w: Micro.Weights, sure: Float = 0.9f): Reading =
+  def log(system: System, c: String, lines: Vector[String], w: Micro.Weights, sure: Float = 0.9f,
+    second: Option[Micro.Weights] = None): Reading =
     val read = Read.log(system, c, lines)
     val bySource = read.groupBy(_.source)
     val unsure = Vector.newBuilder[Unsure]
@@ -39,7 +40,13 @@ object Readers:
         val readHere = bySource.getOrElse(s"log:$c:$n", Vector.empty).flatMap(said)
         val subjects = (c +: system.names.filter(x => x != c && Read.mentions(l, x))).distinct
         subjects.flatMap { s =>
-          val (kind, p, _, _) = Micro.read(w, s, c, l)
+          val (kind0, p0, _, _) = Micro.read(w, s, c, l)
+          // A SECOND OPINION (specs/reader.md §12): a model of another seed; where the two name different kinds,
+          // nothing is sure — the reading is at most unsure, at the lower of the two confidences
+          val (kind, p) = second.fold((kind0, p0)) { w2 =>
+            val (k2, p2, _, _) = Micro.read(w2, s, c, l)
+            if k2 == kind0 then (kind0, math.min(p0, p2)) else (kind0, math.min(p0, 0.5f))
+          }
           val readOfS = readHere.filter(_._1 == s).map(_._2)
           if kind == "none" || kind == "healthy" then Vector.empty
           else if readOfS.nonEmpty then
