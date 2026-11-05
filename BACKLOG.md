@@ -103,7 +103,8 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 
 27. **Micro** (numbered 21 at first) — specs/reader.md: a byte-level reader (~1 MB) trained on the generator's
     logs, Qwen's paraphrases and the corpus; `Micro` ⊇ `Read`; 99% on unseen phrasings; on the page without a
-    server; the incidents' table with `Micro`'s facts. No large model needed for extraction — it stays for conversation in okay-agent only.
+    server; the incidents' table with `Micro`'s facts.
+    No large model needed for extraction — it stays for conversation in okay-agent only.
     Done 2026-11-04: v0 trained (`micro/`), 12 of 18 real lines (specs/reader.md §6). Next, in order:
     a. ~~**Beside `Read`**~~ — DONE 2026-11-05 (reader.md §7: outside 11 → 17 of 40, 2 wrong added).
        (reader.md §2): a line both read and agree → the fact; they differ, or Micro alone and unsure

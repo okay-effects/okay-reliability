@@ -2,13 +2,13 @@
 
 ## The page (GitHub Pages)
 
-The page is a static site: `index.html`, `icon.svg` and `page.js` (the front's program, linked by Scala.js), served
+The page is a static site: `index.html`, `icon.svg`, `page.js` and `micro.int8` (Micro's weights, specs/reader.md §8) (the front's program, linked by Scala.js), served
 from the `gh-pages` branch at https://okay-effects.github.io/okay-reliability/.
 
 ```sh
 sbt test pageDist                       # target/site
 git worktree add /tmp/okr-pages gh-pages
-rm -f /tmp/okr-pages/*.js /tmp/okr-pages/*.html /tmp/okr-pages/*.svg
+find /tmp/okr-pages -maxdepth 1 \( -name "*.js" -o -name "*.html" -o -name "*.svg" -o -name "*.int8" \) -delete
 cp target/site/* /tmp/okr-pages/
 git -C /tmp/okr-pages add -A
 git -C /tmp/okr-pages commit -m "the page: <what changed>"
