@@ -2,8 +2,8 @@
 
 ## The page (GitHub Pages)
 
-The page is a static site: `index.html`, `icon.svg`, `page.js` and `micro.int8` (Micro's weights, specs/reader.md §8) (the front's program, linked by Scala.js), served
-from the `gh-pages` branch at https://okay-effects.github.io/okay-reliability/.
+The page is a static site: `index.html`, `icon.svg`, `page.js` (the front's program, linked by Scala.js) and
+`micro.int8` (Micro's weights, specs/reader.md §8), served from the `gh-pages` branch at https://okay-effects.github.io/okay-reliability/.
 
 ```sh
 sbt test pageDist                       # target/site
