@@ -99,8 +99,15 @@ the code, its laws as tests, `bench` when the numbers can move, the page republi
 - A Worker again (its code: commit 30767db): an alert's webhook (Alertmanager) diagnosed with no page open and told in
   Telegram or Slack; shared incidents in Durable Objects; MCP with sessions for a remote agent.
 
-## 5. A reader in a few megabytes (operator, 2026-11-04)
+## 9. A reader in a few megabytes (operator, 2026-11-04)
 
-21. **Micro** — specs/reader.md: a byte-level reader (~1 MB) trained on the generator's logs, Qwen's paraphrases
+27. **Micro** (numbered 21 at first) — specs/reader.md: a byte-level reader (~1 MB) trained on the generator's logs, Qwen's paraphrases
     and the corpus; `Micro` ⊇ `Read`; 99% on unseen phrasings; on the page without a server; the incidents' table
     with `Micro`'s facts. No large model needed for extraction — it stays for conversation in okay-agent only.
+    Done 2026-11-04: v0 trained (`micro/`), 12 of 18 real lines (specs/reader.md §6). Next, in order:
+    a. **Beside `Read`** (reader.md §2): a line both read and agree → the fact; they differ, or Micro alone and unsure
+       → shown to confirm, not used; Micro alone and sure → the fact, its source `micro:`. Measured on the corpus.
+    b. **On the page**: int8 weights (~0.6 MB) loaded beside page.js through an effect (`Weights`), the logs read
+       by both; the unsure facts listed with a press to confirm.
+    c. **The generator's caches, queues, config changes**, so Micro sees `stale`, `backlog`, `config`; retrained.
+    d. **Real lines from outside**, labelled by hand, as the honest test.
