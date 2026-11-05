@@ -13,6 +13,8 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /** THE PAGE, in one line: the front's program in this browser — all of it computed here, nothing sent anywhere */
 object Main:
+  /** Micro on the page (specs/reader.md §10): off until it is no worse than `Read` on the real test set */
+  val microOn = false
   def main(args: Array[String]): Unit =
     val root = Option(dom.document.getElementById("app")).getOrElse(dom.document.body)
     type Row[X] = (Async + Ui + Settings + Clipboard + Here)[X]
@@ -21,7 +23,8 @@ object Main:
     def start(micro: Option[Micro.Weights]): Unit =
       val _ = Async.start(Dom.run(root, Look.skin, follow = true)(InThePage.kept("okay-reliability.")(
         InThePage.clipboard(here(App.reading[Row](micro))))))
-    dom.fetch("micro.int8").toFuture.flatMap(r => if r.ok then r.arrayBuffer().toFuture.map(Some(_))
+    // Micro is off the page until it meets its bar on real lines (specs/reader.md §10): its weights not fetched
+    if !Main.microOn then start(None) else dom.fetch("micro.int8").toFuture.flatMap(r => if r.ok then r.arrayBuffer().toFuture.map(Some(_))
       else scala.concurrent.Future.successful(None)).map(_.flatMap(b => scala.util.Try(Micro.readBytes(
         new scala.scalajs.js.typedarray.Int8Array(b).toArray)).toOption)).recover(_ => None).foreach(start)
 

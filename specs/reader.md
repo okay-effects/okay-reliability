@@ -134,3 +134,23 @@ Measured (v2 weights, `bench --micro true`, 200 scenarios): the exact search is 
 explanation" 73% / 35%, as with `Read` alone (72% / 34% before §9); the probable causes: one fault first 92% (93%
 alone), two faults first 30% (31%), top three 135 (140). v2 adds 24 / 42 facts on the generator's lines where v1 added
 2 / 3: its "sure" is not sure enough — the next step (§10, calibration) is what fixes that, not ε.
+
+## 10. The real test set, and Micro off the page (2026-11-05)
+
+`micro/data/real-test.tsv`: 330 lines — LogHub's samples (one line per template) of seven programs Micro is never to
+be trained on (Zookeeper, OpenStack, Spark, Hadoop, Apache, OpenSSH, HDFS; 290 lines) and the 40 of `outside.tsv` —
+labelled by hand (what a line states about its writer; 278 none, 52 stating something), rows alternating dev / test
+(`MicroRealSuite`). Measured, v2 weights:
+
+| half | Read right | both right | Micro's sure-and-wrong facts | of the lines stating something, both read |
+|---|---|---|---|---|
+| dev (165) | 142 | 102 | 71 (43 per 100 lines) | 7 of 28 |
+| test (165) | 143 | 97 | 81 (49 per 100 lines) | 7 of 24 |
+
+On real routine lines — most of a real log — Micro invents failures: the 40 lines of §7 were nearly all failures and
+hid it. No threshold saves it (dev: at p ≥ 0.9, 4 right and 44 wrong; at 0.99, 0 right and 8 wrong): its confidence
+says nothing on real lines, so calibration (step g) cannot help until the model has seen them. **Micro is off the page**
+(the page does not fetch its weights; `Read` alone, as before §8) until it meets the bar on dev — sure-and-wrong ≤ 1 in
+100 lines, both readers no worse than `Read` — and then on test. It stays in the CLI (`bench --micro true`) and the
+tests. Next: step h — real lines in training, routine ones above all, labelled by Qwen (a sample checked by hand), from
+programs apart from the test's.

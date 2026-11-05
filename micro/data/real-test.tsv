@@ -1,0 +1,333 @@
+# THE REAL TEST SET (specs/reader.md §10): LogHub's samples (github.com/logpai/loghub, one line per template) of seven
+# programs Micro is never trained on — Zookeeper, OpenStack, Spark, Hadoop, Apache, OpenSSH, HDFS — and the 40 lines of
+# outside.tsv; labelled by hand: what the line states about its writer (none: nothing wrong). Rows alternate dev / test.
+zookeeper	2015-07-29 17:41:44,747 - INFO  [QuorumPeer[myid=1]/0:0:0:0:0:0:0:0:2181:FastLeaderElection@774] - Notification time out: 3200	zookeeper	none
+zookeeper	2015-07-29 19:04:12,394 - INFO  [/10.10.34.11:3888:QuorumCnxManager$Listener@493] - Received connection request /10.10.34.11:45307	zookeeper	none
+zookeeper	2015-07-29 19:04:29,071 - WARN  [SendWorker:188978561024:QuorumCnxManager$SendWorker@688] - Send worker leaving thread	zookeeper	none
+zookeeper	2015-07-29 19:04:29,079 - WARN  [SendWorker:188978561024:QuorumCnxManager$SendWorker@679] - Interrupted while waiting for message on queue	zookeeper	none
+zookeeper	2015-07-29 19:13:24,282 - WARN  [RecvWorker:188978561024:QuorumCnxManager$RecvWorker@762] - Connection broken for id 188978561024, my id = 1, error = 	zookeeper	retries
+zookeeper	2015-07-29 19:14:07,559 - WARN  [RecvWorker:188978561024:QuorumCnxManager$RecvWorker@765] - Interrupting SendWorker	zookeeper	none
+zookeeper	2015-07-29 19:52:04,792 - INFO  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:NIOServerCnxn@1001] - Closed socket connection for client /10.10.34.18:42772 which had sessionid 0x14ed93111f20005	zookeeper	none
+zookeeper	2015-07-29 19:52:05,118 - WARN  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:NIOServerCnxn@349] - caught end of stream exception	zookeeper	none
+zookeeper	2015-07-29 19:54:13,615 - INFO  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:ZooKeeperServer@832] - Client attempting to renew session 0x24ed93119420016 at /10.10.34.13:37115	zookeeper	none
+zookeeper	2015-07-29 21:01:41,504 - INFO  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:ZooKeeperServer@839] - Client attempting to establish new session at /10.10.34.19:33425	zookeeper	none
+zookeeper	2015-07-29 21:34:45,452 - INFO  [CommitProcessor:1:ZooKeeperServer@595] - Established session 0x14ed93111f20027 with negotiated timeout 10000 for client /10.10.34.13:37177	zookeeper	none
+zookeeper	2015-07-29 21:39:24,986 - INFO  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:NIOServerCnxnFactory@197] - Accepted socket connection from /10.10.34.13:37196	zookeeper	none
+zookeeper	2015-07-29 23:44:28,903 - ERROR [CommitProcessor:1:NIOServerCnxn@180] - Unexpected Exception: 	zookeeper	errors
+zookeeper	2015-07-30 16:12:01,554 - WARN  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:ZooKeeperServer@793] - Connection request from old client /10.10.34.19:33442; will be dropped if server is in r-o mode	zookeeper	none
+zookeeper	2015-07-30 17:43:58,186 - INFO  [QuorumPeer[myid=1]/0:0:0:0:0:0:0:0:2181:Environment@100] - Server environment:user.dir=/	zookeeper	none
+zookeeper	2015-07-30 17:55:26,200 - WARN  [WorkerSender[myid=1]:QuorumCnxManager@368] - Cannot open channel to 2 at election address /10.10.34.12:3888	zookeeper	retries
+zookeeper	2015-07-30 18:18:02,003 - INFO  [ProcessThread(sid:1 cport:-1)::PrepRequestProcessor@476] - Processed session termination for sessionid: 0x14ede63a5a70002	zookeeper	none
+zookeeper	2015-07-30 20:06:34,001 - INFO  [SessionTracker:ZooKeeperServer@325] - Expiring session 0x24ede63a01b003b, timeout of 10000ms exceeded	zookeeper	none
+zookeeper	2015-07-30 23:43:22,414 - WARN  [LearnerHandler-/10.10.34.12:35276:LearnerHandler@575] - ******* GOODBYE /10.10.34.12:35276 ********	zookeeper	none
+zookeeper	2015-07-30 23:43:23,613 - INFO  [QuorumPeer[myid=1]/0:0:0:0:0:0:0:0:2181:QuorumPeer@670] - LOOKING	zookeeper	none
+zookeeper	2015-07-31 15:31:40,971 - INFO  [Thread-1:QuorumCnxManager$Listener@486] - My election bind port: 0.0.0.0/0.0.0.0:3888	zookeeper	none
+zookeeper	2015-07-31 15:31:40,999 - INFO  [WorkerSender[myid=1]:QuorumCnxManager@190] - Have smaller server identifier, so dropping the connection: (2, 1)	zookeeper	none
+zookeeper	2015-07-31 15:31:42,213 - INFO  [QuorumPeer[myid=1]/0:0:0:0:0:0:0:0:2181:QuorumPeer@738] - FOLLOWING	zookeeper	none
+zookeeper	2015-07-31 19:30:07,403 - INFO  [QuorumPeer[myid=1]/0:0:0:0:0:0:0:0:2181:FastLeaderElection@740] - New election. My id =  1, proposed zxid=0x700000000	zookeeper	none
+zookeeper	2015-07-31 19:30:07,452 - INFO  [QuorumPeer[myid=1]/0:0:0:0:0:0:0:0:2181:Follower@63] - FOLLOWING - LEADER ELECTION TOOK - 49	zookeeper	none
+zookeeper	2015-08-07 07:27:47,425 - INFO  [WorkerReceiver[myid=1]:FastLeaderElection@542] - Notification: 3 (n.leader), 0x700000197 (n.zxid), 0x1 (n.round), LEADING (n.state), 3 (n.sid), 0x7 (n.peerEPoch), LOOKING (my state)	zookeeper	none
+zookeeper	2015-08-10 18:23:49,901 - INFO  [main:DatadirCleanupManager@78] - autopurge.snapRetainCount set to 3	zookeeper	none
+zookeeper	2015-08-10 18:23:52,646 - INFO  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:Learner@107] - Revalidating client: 0x14f05578bd80018	zookeeper	none
+zookeeper	2015-08-20 17:12:29,467 - INFO  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:NIOServerCnxn@1001] - Closed socket connection for client /10.10.34.11:56471 (no session established for client)	zookeeper	none
+zookeeper	2015-08-20 17:14:11,414 - WARN  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:NIOServerCnxn@354] - Exception causing close of session 0x0 due to java.io.IOException: ZooKeeperServer not running	zookeeper	none
+zookeeper	2015-08-20 17:14:12,326 - INFO  [WorkerReceiver[myid=1]:FastLeaderElection@542] - Notification: 2 (n.leader), 0xb00000084 (n.zxid), 0x2 (n.round), LOOKING (n.state), 1 (n.sid), 0xb (n.peerEPoch), LOOKING (my state)	zookeeper	none
+zookeeper	2015-08-20 17:14:23,824 - INFO  [WorkerReceiver[myid=1]:FastLeaderElection@542] - Notification: 3 (n.leader), 0xb0000007b (n.zxid), 0x2 (n.round), LOOKING (n.state), 3 (n.sid), 0xb (n.peerEPoch), FOLLOWING (my state)	zookeeper	none
+zookeeper	2015-08-24 15:26:54,494 - INFO  [main:QuorumPeer@913] - tickTime set to 2000	zookeeper	none
+zookeeper	2015-07-29 19:03:35,413 - ERROR [LearnerHandler-/10.10.34.11:52225:LearnerHandler@562] - Unexpected exception causing shutdown while sock still open	zookeeper	errors
+zookeeper	2015-07-29 19:37:27,222 - INFO  [ProcessThread(sid:2 cport:-1)::PrepRequestProcessor@627] - Got user-level KeeperException when processing sessionid:0x34ed93485090001 type:create cxid:0x55b8bb0f zxid:0x100000010 txntype:-1 reqpath:n/a Error Path:/home/curi/.zookeeper Error:KeeperErrorCode = NodeExists for /home/curi/.zookeeper	zookeeper	none
+zookeeper	2015-07-29 19:56:54,754 - INFO  [WorkerReceiver[myid=2]:FastLeaderElection@542] - Notification: 3 (n.leader), 0x10000006b (n.zxid), 0x2 (n.round), LOOKING (n.state), 3 (n.sid), 0x1 (n.peerEPoch), LEADING (my state)	zookeeper	none
+zookeeper	2015-07-30 23:46:27,304 - INFO  [main:QuorumPeerMain@127] - Starting quorum peer	zookeeper	none
+zookeeper	2015-07-30 23:46:31,590 - INFO  [QuorumPeer[myid=2]/0:0:0:0:0:0:0:0:2181:FileTxnSnapLog@240] - Snapshotting: 0x300000dcd to /var/lib/zookeeper/version-2/snapshot.300000dcd	zookeeper	none
+zookeeper	2015-07-31 15:31:15,575 - INFO  [main:DatadirCleanupManager@79] - autopurge.purgeInterval set to 0	zookeeper	none
+zookeeper	2015-07-31 15:36:24,570 - INFO  [LearnerHandler-/10.10.34.13:59348:LearnerHandler@263] - Follower sid: 3 : info : org.apache.zookeeper.server.quorum.QuorumPeer$QuorumServer@33557fe4	zookeeper	none
+zookeeper	2015-08-10 18:25:25,239 - INFO  [main:QuorumPeer@944] - maxSessionTimeout set to -1	zookeeper	none
+zookeeper	2015-08-18 16:09:18,900 - INFO  [LearnerHandler-/10.10.34.11:49928:Leader@598] - Have quorum of supporters; starting up and setting last processed zxid: 0xb00000000	zookeeper	none
+zookeeper	2015-08-18 16:09:22,982 - INFO  [WorkerReceiver[myid=2]:FastLeaderElection@542] - Notification: 2 (n.leader), 0xa0000009a (n.zxid), 0x1 (n.round), FOLLOWING (n.state), 1 (n.sid), 0xa (n.peerEPoch), LEADING (my state)	zookeeper	none
+zookeeper	2015-08-20 17:12:29,085 - INFO  [QuorumPeer[myid=2]/0:0:0:0:0:0:0:0:2181:FinalRequestProcessor@415] - shutdown of request processor complete	zookeeper	none
+zookeeper	2015-08-20 17:14:13,880 - WARN  [LearnerHandler-/10.10.34.13:42241:Leader@576] - First is 0x0	zookeeper	none
+zookeeper	2015-08-25 11:14:51,662 - INFO  [main:FileSnap@83] - Reading snapshot /var/lib/zookeeper/version-2/snapshot.b00000084	zookeeper	none
+zookeeper	2015-08-25 11:14:53,074 - INFO  [LearnerHandler-/10.10.34.11:32976:LearnerHandler@395] - Sending DIFF	zookeeper	none
+zookeeper	2015-08-25 11:26:28,145 - INFO  [QuorumPeer[myid=2]/0:0:0:0:0:0:0:0:2181:Learner@325] - Getting a snapshot from leader	zookeeper	none
+zookeeper	2015-07-30 17:57:38,440 - INFO  [WorkerReceiver[myid=3]:FastLeaderElection@542] - Notification: 3 (n.leader), 0x100001564 (n.zxid), 0x3 (n.round), FOLLOWING (n.state), 3 (n.sid), 0x2 (n.peerEPoch), FOLLOWING (my state)	zookeeper	none
+zookeeper	2015-07-30 23:52:53,800 - INFO  [main:QuorumPeer@933] - minSessionTimeout set to -1	zookeeper	none
+openstack	nova-api.log.1.2017-05-16_13:53:08 2017-05-16 00:00:00.008 25746 INFO nova.osapi_compute.wsgi.server [req-38101a0b-2096-447d-96ea-a692162415ae 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] 10.11.10.1 "GET /v2/54fadb412c4e40cdbaed9335e4c35a9e/servers/detail HTTP/1.1" status: 200 len: 1893 time: 0.2477829	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:04.500 2931 INFO nova.compute.manager [req-3ea4052c-895d-4b64-9e2d-04d64c4d94ab - - - - -] [instance: b9000564-fe1a-409b-b8cc-1e88b294cd1d] VM Started (Lifecycle Event)	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:04.562 2931 INFO nova.compute.manager [req-3ea4052c-895d-4b64-9e2d-04d64c4d94ab - - - - -] [instance: b9000564-fe1a-409b-b8cc-1e88b294cd1d] VM Paused (Lifecycle Event)	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:04.693 2931 INFO nova.compute.manager [req-3ea4052c-895d-4b64-9e2d-04d64c4d94ab - - - - -] [instance: b9000564-fe1a-409b-b8cc-1e88b294cd1d] During sync_power_state the instance has a pending task (spawning). Skip.	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:05.185 2931 INFO nova.virt.libvirt.imagecache [req-addc1839-2ed5-4778-b57e-5854eb7b8b09 - - - - -] image 0673dd71-34c5-4fbb-86c4-40623fbe45b4 at (/var/lib/nova/instances/_base/a489c868f0c37da93b76227c91bb03908ac0e742): checking	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:05.186 2931 INFO nova.virt.libvirt.imagecache [req-addc1839-2ed5-4778-b57e-5854eb7b8b09 - - - - -] image 0673dd71-34c5-4fbb-86c4-40623fbe45b4 at (/var/lib/nova/instances/_base/a489c868f0c37da93b76227c91bb03908ac0e742): in use: on this node 1 local, 0 on other nodes sharing this instance storage	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:05.367 2931 INFO nova.virt.libvirt.imagecache [req-addc1839-2ed5-4778-b57e-5854eb7b8b09 - - - - -] Active base files: /var/lib/nova/instances/_base/a489c868f0c37da93b76227c91bb03908ac0e742	openstack	none
+openstack	nova-api.log.1.2017-05-16_13:53:08 2017-05-16 00:00:10.279 25743 INFO nova.api.openstack.compute.server_external_events [req-ab451068-9756-4ad9-9d18-5ceaa6424627 f7b8d1f1d4d44643b07fa10ca7d021fb e9746973ac574c6b8a9e8857f56a7608 - - -] Creating event network-vif-plugged:e3871ffd-5cd5-4287-bddd-3529f7b59515 for instance b9000564-fe1a-409b-b8cc-1e88b294cd1d	openstack	none
+openstack	nova-api.log.1.2017-05-16_13:53:08 2017-05-16 00:00:10.285 25743 INFO nova.osapi_compute.wsgi.server [req-ab451068-9756-4ad9-9d18-5ceaa6424627 f7b8d1f1d4d44643b07fa10ca7d021fb e9746973ac574c6b8a9e8857f56a7608 - - -] 10.11.10.1 "POST /v2/e9746973ac574c6b8a9e8857f56a7608/os-server-external-events HTTP/1.1" status: 200 len: 380 time: 0.0913219	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:10.296 2931 INFO nova.compute.manager [req-3ea4052c-895d-4b64-9e2d-04d64c4d94ab - - - - -] [instance: b9000564-fe1a-409b-b8cc-1e88b294cd1d] VM Resumed (Lifecycle Event)	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:10.302 2931 INFO nova.virt.libvirt.driver [-] [instance: b9000564-fe1a-409b-b8cc-1e88b294cd1d] Instance spawned successfully.	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:10.303 2931 INFO nova.compute.manager [req-8e64797b-fb99-4c8a-87e5-9a8de673412f 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] [instance: b9000564-fe1a-409b-b8cc-1e88b294cd1d] Took 19.05 seconds to spawn the instance on the hypervisor.	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:10.470 2931 INFO nova.compute.manager [req-8e64797b-fb99-4c8a-87e5-9a8de673412f 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] [instance: b9000564-fe1a-409b-b8cc-1e88b294cd1d] Took 19.84 seconds to build instance.	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:13.658 2931 INFO nova.compute.resource_tracker [req-addc1839-2ed5-4778-b57e-5854eb7b8b09 - - - - -] Auditing locally available compute resources for node cp-1.slowvm1.tcloud-pg0.utah.cloudlab.us	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:14.265 2931 INFO nova.compute.resource_tracker [req-addc1839-2ed5-4778-b57e-5854eb7b8b09 - - - - -] Total usable vcpus: 16, total allocated vcpus: 1	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:14.266 2931 INFO nova.compute.resource_tracker [req-addc1839-2ed5-4778-b57e-5854eb7b8b09 - - - - -] Final resource view: name=cp-1.slowvm1.tcloud-pg0.utah.cloudlab.us phys_ram=64172MB used_ram=2560MB phys_disk=15GB used_disk=20GB total_vcpus=16 used_vcpus=1 pci_stats=[]	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:14.329 2931 INFO nova.compute.resource_tracker [req-addc1839-2ed5-4778-b57e-5854eb7b8b09 - - - - -] Compute_service record updated for cp-1.slowvm1.tcloud-pg0.utah.cloudlab.us:cp-1.slowvm1.tcloud-pg0.utah.cloudlab.us	openstack	none
+openstack	nova-api.log.1.2017-05-16_13:53:08 2017-05-16 00:00:17.504 25746 INFO nova.osapi_compute.wsgi.server [req-c53a921a-16c7-422e-8c9d-c922a720d047 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] 10.11.10.1 "DELETE /v2/54fadb412c4e40cdbaed9335e4c35a9e/servers/b9000564-fe1a-409b-b8cc-1e88b294cd1d HTTP/1.1" status: 204 len: 203 time: 0.2534380	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:17.541 2931 INFO nova.compute.manager [req-c53a921a-16c7-422e-8c9d-c922a720d047 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] [instance: b9000564-fe1a-409b-b8cc-1e88b294cd1d] Terminating instance	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:17.754 2931 INFO nova.virt.libvirt.driver [-] [instance: b9000564-fe1a-409b-b8cc-1e88b294cd1d] Instance destroyed successfully.	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:18.450 2931 INFO nova.virt.libvirt.driver [req-c53a921a-16c7-422e-8c9d-c922a720d047 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] [instance: b9000564-fe1a-409b-b8cc-1e88b294cd1d] Deleting instance files /var/lib/nova/instances/b9000564-fe1a-409b-b8cc-1e88b294cd1d_del	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:18.451 2931 INFO nova.virt.libvirt.driver [req-c53a921a-16c7-422e-8c9d-c922a720d047 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] [instance: b9000564-fe1a-409b-b8cc-1e88b294cd1d] Deletion of /var/lib/nova/instances/b9000564-fe1a-409b-b8cc-1e88b294cd1d_del complete	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:18.571 2931 INFO nova.compute.manager [req-c53a921a-16c7-422e-8c9d-c922a720d047 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] [instance: b9000564-fe1a-409b-b8cc-1e88b294cd1d] Took 1.03 seconds to destroy the instance on the hypervisor.	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:19.050 2931 INFO nova.compute.manager [req-c53a921a-16c7-422e-8c9d-c922a720d047 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] [instance: b9000564-fe1a-409b-b8cc-1e88b294cd1d] Took 0.48 seconds to deallocate network for instance.	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:20.345 2931 WARNING nova.virt.libvirt.imagecache [req-addc1839-2ed5-4778-b57e-5854eb7b8b09 - - - - -] Unknown base file: /var/lib/nova/instances/_base/a489c868f0c37da93b76227c91bb03908ac0e742	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:20.346 2931 INFO nova.virt.libvirt.imagecache [req-addc1839-2ed5-4778-b57e-5854eb7b8b09 - - - - -] Removable base files: /var/lib/nova/instances/_base/a489c868f0c37da93b76227c91bb03908ac0e742	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:20.349 2931 INFO nova.virt.libvirt.imagecache [req-addc1839-2ed5-4778-b57e-5854eb7b8b09 - - - - -] Removing base or swap file: /var/lib/nova/instances/_base/a489c868f0c37da93b76227c91bb03908ac0e742	openstack	none
+openstack	nova-api.log.1.2017-05-16_13:53:08 2017-05-16 00:00:21.067 25746 INFO nova.api.openstack.wsgi [req-0b851395-2895-44b9-8265-a27d0bb52910 f7b8d1f1d4d44643b07fa10ca7d021fb e9746973ac574c6b8a9e8857f56a7608 - - -] HTTP exception thrown: No instances found for any event	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:31.092 2931 INFO nova.compute.claims [req-6a763803-4838-49c7-814e-eaefbaddee9d 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] [instance: 96abccce-8d1f-4e07-b6d1-4b2ab87e23b4] Attempting claim: memory 2048 MB, disk 20 GB, vcpus 1 CPU	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:31.093 2931 INFO nova.compute.claims [req-6a763803-4838-49c7-814e-eaefbaddee9d 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] [instance: 96abccce-8d1f-4e07-b6d1-4b2ab87e23b4] Total memory: 64172 MB, used: 512.00 MB	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:31.093 2931 INFO nova.compute.claims [req-6a763803-4838-49c7-814e-eaefbaddee9d 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] [instance: 96abccce-8d1f-4e07-b6d1-4b2ab87e23b4] memory limit: 96258.00 MB, free: 95746.00 MB	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:31.094 2931 INFO nova.compute.claims [req-6a763803-4838-49c7-814e-eaefbaddee9d 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] [instance: 96abccce-8d1f-4e07-b6d1-4b2ab87e23b4] Total disk: 15 GB, used: 0.00 GB	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:31.094 2931 INFO nova.compute.claims [req-6a763803-4838-49c7-814e-eaefbaddee9d 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] [instance: 96abccce-8d1f-4e07-b6d1-4b2ab87e23b4] disk limit not specified, defaulting to unlimited	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:31.095 2931 INFO nova.compute.claims [req-6a763803-4838-49c7-814e-eaefbaddee9d 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] [instance: 96abccce-8d1f-4e07-b6d1-4b2ab87e23b4] Total vcpu: 16 VCPU, used: 0.00 VCPU	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:31.095 2931 INFO nova.compute.claims [req-6a763803-4838-49c7-814e-eaefbaddee9d 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] [instance: 96abccce-8d1f-4e07-b6d1-4b2ab87e23b4] vcpu limit not specified, defaulting to unlimited	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:31.127 2931 INFO nova.compute.claims [req-6a763803-4838-49c7-814e-eaefbaddee9d 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] [instance: 96abccce-8d1f-4e07-b6d1-4b2ab87e23b4] Claim successful	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:31.699 2931 INFO nova.virt.libvirt.driver [req-6a763803-4838-49c7-814e-eaefbaddee9d 113d3a99c3da401fbd62cc2caa5b96d2 54fadb412c4e40cdbaed9335e4c35a9e - - -] [instance: 96abccce-8d1f-4e07-b6d1-4b2ab87e23b4] Creating image	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:32.974 2931 INFO nova.compute.manager [-] [instance: b9000564-fe1a-409b-b8cc-1e88b294cd1d] VM Stopped (Lifecycle Event)	openstack	none
+openstack	nova-scheduler.log.1.2017-05-16_13:53:08 2017-05-16 00:00:57.129 25998 INFO nova.scheduler.host_manager [req-d724a3bd-e314-4f81-a41c-460aa91f24ae - - - - -] Successfully synced instances from host 'cp-1.slowvm1.tcloud-pg0.utah.cloudlab.us'.	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:00:59.733 2931 INFO nova.compute.manager [req-addc1839-2ed5-4778-b57e-5854eb7b8b09 - - - - -] Running instance usage audit for host cp-1.slowvm1.tcloud-pg0.utah.cloudlab.us from 2017-05-16 05:00:00 to 2017-05-16 06:00:00. 87 instances.	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:01:45.119 2931 INFO nova.virt.libvirt.imagecache [req-addc1839-2ed5-4778-b57e-5854eb7b8b09 - - - - -] Base or swap file too young to remove: /var/lib/nova/instances/_base/a489c868f0c37da93b76227c91bb03908ac0e742	openstack	none
+openstack	nova-scheduler.log.1.2017-05-16_13:53:08 2017-05-16 00:04:59.397 25998 INFO nova.scheduler.host_manager [req-8ac8250d-9ea8-45a4-b1d5-c19ea4219fed - - - - -] The instance sync for host 'cp-1.slowvm1.tcloud-pg0.utah.cloudlab.us' did not match. Re-created its InstanceList.	openstack	none
+openstack	nova-compute.log.1.2017-05-16_13:55:31 2017-05-16 00:09:41.850 2931 WARNING nova.compute.manager [req-addc1839-2ed5-4778-b57e-5854eb7b8b09 - - - - -] While synchronizing instance power states, found 1 instances in the database and 0 instances on the hypervisor.	openstack	none
+spark	17/06/09 20:10:40 INFO executor.CoarseGrainedExecutorBackend: Registered signal handlers for [TERM, HUP, INT]	spark	none
+spark	17/06/09 20:10:40 INFO spark.SecurityManager: Changing view acls to: yarn,curi	spark	none
+spark	17/06/09 20:10:40 INFO spark.SecurityManager: Changing modify acls to: yarn,curi	spark	none
+spark	17/06/09 20:10:40 INFO spark.SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users with view permissions: Set(yarn, curi); users with modify permissions: Set(yarn, curi)	spark	none
+spark	17/06/09 20:10:41 INFO slf4j.Slf4jLogger: Slf4jLogger started	spark	none
+spark	17/06/09 20:10:41 INFO Remoting: Starting remoting	spark	none
+spark	17/06/09 20:10:41 INFO Remoting: Remoting started; listening on addresses :[akka.tcp://sparkExecutorActorSystem@mesos-slave-07:55904]	spark	none
+spark	17/06/09 20:10:41 INFO util.Utils: Successfully started service 'sparkExecutorActorSystem' on port 55904.	spark	none
+spark	17/06/09 20:10:41 INFO storage.DiskBlockManager: Created local directory at /opt/hdfs/nodemanager/usercache/curi/appcache/application_1485248649253_0147/blockmgr-70293f72-844a-4b39-9ad6-fb0ad7e364e4	spark	none
+spark	17/06/09 20:10:41 INFO storage.MemoryStore: MemoryStore started with capacity 17.7 GB	spark	none
+spark	17/06/09 20:10:42 INFO executor.CoarseGrainedExecutorBackend: Connecting to driver: spark://CoarseGrainedScheduler@10.10.34.11:48069	spark	none
+spark	17/06/09 20:10:42 INFO executor.CoarseGrainedExecutorBackend: Successfully registered with driver	spark	none
+spark	17/06/09 20:10:42 INFO executor.Executor: Starting executor ID 5 on host mesos-slave-07	spark	none
+spark	17/06/09 20:10:42 INFO util.Utils: Successfully started service 'org.apache.spark.network.netty.NettyBlockTransferService' on port 40984.	spark	none
+spark	17/06/09 20:10:42 INFO netty.NettyBlockTransferService: Server created on 40984	spark	none
+spark	17/06/09 20:10:42 INFO storage.BlockManagerMaster: Trying to register BlockManager	spark	none
+spark	17/06/09 20:10:42 INFO storage.BlockManagerMaster: Registered BlockManager	spark	none
+spark	17/06/09 20:10:45 INFO executor.CoarseGrainedExecutorBackend: Got assigned task 0	spark	none
+spark	17/06/09 20:10:45 INFO executor.Executor: Running task 0.0 in stage 0.0 (TID 0)	spark	none
+spark	17/06/09 20:10:45 INFO broadcast.TorrentBroadcast: Started reading broadcast variable 9	spark	none
+spark	17/06/09 20:10:45 INFO storage.MemoryStore: Block broadcast_9_piece0 stored as bytes in memory (estimated size 5.2 KB, free 5.2 KB)	spark	none
+spark	17/06/09 20:10:45 INFO broadcast.TorrentBroadcast: Reading broadcast variable 9 took 160 ms	spark	none
+spark	17/06/09 20:10:46 INFO storage.MemoryStore: Block broadcast_9 stored as values in memory (estimated size 8.8 KB, free 14.0 KB)	spark	none
+spark	17/06/09 20:10:46 INFO spark.CacheManager: Partition rdd_2_1 not found, computing it	spark	none
+spark	17/06/09 20:10:46 INFO rdd.HadoopRDD: Input split: hdfs://10.10.34.11:9000/pjhe/logs/2kSOSP.log:21876+7292	spark	none
+spark	17/06/09 20:10:47 INFO Configuration.deprecation: mapred.tip.id is deprecated. Instead, use mapreduce.task.id	spark	none
+spark	17/06/09 20:10:47 INFO Configuration.deprecation: mapred.task.id is deprecated. Instead, use mapreduce.task.attempt.id	spark	none
+spark	17/06/09 20:10:47 INFO Configuration.deprecation: mapred.task.is.map is deprecated. Instead, use mapreduce.task.ismap	spark	none
+spark	17/06/09 20:10:47 INFO Configuration.deprecation: mapred.job.id is deprecated. Instead, use mapreduce.job.id	spark	none
+spark	17/06/09 20:10:47 INFO Configuration.deprecation: mapred.task.partition is deprecated. Instead, use mapreduce.task.partition	spark	none
+spark	17/06/09 20:10:48 INFO python.PythonRunner: Times: total = 1072, boot = 856, init = 210, finish = 6	spark	none
+spark	17/06/09 20:10:48 INFO executor.Executor: Finished task 3.0 in stage 0.0 (TID 3). 2703 bytes result sent to driver	spark	none
+spark	17/06/09 20:10:52 INFO storage.BlockManager: Found block rdd_2_0 locally	spark	none
+spark	17/06/09 20:10:57 INFO output.FileOutputCommitter: File Output Committer Algorithm version is 1	spark	none
+spark	17/06/09 20:10:57 INFO output.FileOutputCommitter: Saved output of task 'attempt_201706092018_0024_m_000003_1012' to hdfs://10.10.34.11:9000/pjhe/test/1/_temporary/0/task_201706092018_0024_m_000003	spark	none
+spark	17/06/09 20:10:57 INFO mapred.SparkHadoopMapRedUtil: attempt_201706092018_0024_m_000004_1026: Committed	spark	none
+hadoop	2015-10-18 18:01:47,978 INFO [main] org.apache.hadoop.mapreduce.v2.app.MRAppMaster: Created MRAppMaster for application appattempt_1445144423722_0020_000001	hadoop	none
+hadoop	2015-10-18 18:01:48,963 INFO [main] org.apache.hadoop.mapreduce.v2.app.MRAppMaster: Executing with tokens:	hadoop	none
+hadoop	2015-10-18 18:01:48,963 INFO [main] org.apache.hadoop.mapreduce.v2.app.MRAppMaster: Kind: YARN_AM_RM_TOKEN, Service: , Ident: (appAttemptId { application_id { id: 20 cluster_timestamp: 1445144423722 } attemptId: 1 } keyId: -127633188)	hadoop	none
+hadoop	2015-10-18 18:01:49,228 INFO [main] org.apache.hadoop.mapreduce.v2.app.MRAppMaster: Using mapred newApiCommitter.	hadoop	none
+hadoop	2015-10-18 18:01:50,353 INFO [main] org.apache.hadoop.mapreduce.v2.app.MRAppMaster: OutputCommitter set in config null	hadoop	none
+hadoop	2015-10-18 18:01:50,509 INFO [main] org.apache.hadoop.mapreduce.v2.app.MRAppMaster: OutputCommitter is org.apache.hadoop.mapreduce.lib.output.FileOutputCommitter	hadoop	none
+hadoop	2015-10-18 18:01:50,556 INFO [main] org.apache.hadoop.yarn.event.AsyncDispatcher: Registering class org.apache.hadoop.mapreduce.jobhistory.EventType for class org.apache.hadoop.mapreduce.jobhistory.JobHistoryEventHandler	hadoop	none
+hadoop	2015-10-18 18:01:50,634 INFO [main] org.apache.hadoop.mapreduce.v2.jobhistory.JobHistoryUtils: Default file system [hdfs://msra-sa-41:9000]	hadoop	none
+hadoop	2015-10-18 18:01:50,728 INFO [main] org.apache.hadoop.mapreduce.jobhistory.JobHistoryEventHandler: Emitting job history data to the timeline server is not enabled	hadoop	none
+hadoop	2015-10-18 18:01:51,197 INFO [main] org.apache.hadoop.metrics2.impl.MetricsConfig: loaded properties from hadoop-metrics2.properties	hadoop	none
+hadoop	2015-10-18 18:01:51,306 INFO [main] org.apache.hadoop.metrics2.impl.MetricsSystemImpl: Scheduled snapshot period at 10 second(s).	hadoop	none
+hadoop	2015-10-18 18:01:51,306 INFO [main] org.apache.hadoop.metrics2.impl.MetricsSystemImpl: MRAppMaster metrics system started	hadoop	none
+hadoop	2015-10-18 18:01:51,322 INFO [main] org.apache.hadoop.mapreduce.v2.app.job.impl.JobImpl: Adding job token for job_1445144423722_0020 to jobTokenSecretManager	hadoop	none
+hadoop	2015-10-18 18:01:51,619 INFO [main] org.apache.hadoop.mapreduce.v2.app.job.impl.JobImpl: Not uberizing job_1445144423722_0020 because: not enabled; too many maps; too much input;	hadoop	none
+hadoop	2015-10-18 18:01:51,650 INFO [main] org.apache.hadoop.mapreduce.v2.app.job.impl.JobImpl: Input size for job job_1445144423722_0020 = 1256521728. Number of splits = 10	hadoop	none
+hadoop	2015-10-18 18:01:51,650 INFO [main] org.apache.hadoop.mapreduce.v2.app.job.impl.JobImpl: Number of reduces for job job_1445144423722_0020 = 1	hadoop	none
+hadoop	2015-10-18 18:01:51,650 INFO [main] org.apache.hadoop.mapreduce.v2.app.job.impl.JobImpl: job_1445144423722_0020Job Transitioned from NEW to INITED	hadoop	none
+hadoop	2015-10-18 18:01:51,650 INFO [main] org.apache.hadoop.mapreduce.v2.app.MRAppMaster: MRAppMaster launching normal, non-uberized, multi-container job job_1445144423722_0020.	hadoop	none
+hadoop	2015-10-18 18:01:51,713 INFO [main] org.apache.hadoop.ipc.CallQueueManager: Using callQueue class java.util.concurrent.LinkedBlockingQueue	hadoop	none
+hadoop	2015-10-18 18:01:51,775 INFO [Socket Reader #1 for port 62260] org.apache.hadoop.ipc.Server: Starting Socket Reader #1 for port 62260	hadoop	none
+hadoop	2015-10-18 18:01:51,791 INFO [main] org.apache.hadoop.yarn.factories.impl.pb.RpcServerFactoryPBImpl: Adding protocol org.apache.hadoop.mapreduce.v2.api.MRClientProtocolPB to the server	hadoop	none
+hadoop	2015-10-18 18:01:51,791 INFO [main] org.apache.hadoop.mapreduce.v2.app.client.MRClientService: Instantiated MRClientService at MININT-FNANLI5.fareast.corp.microsoft.com/10.86.169.121:62260	hadoop	none
+hadoop	2015-10-18 18:01:51,806 INFO [IPC Server Responder] org.apache.hadoop.ipc.Server: IPC Server Responder: starting	hadoop	none
+hadoop	2015-10-18 18:01:51,806 INFO [IPC Server listener on 62260] org.apache.hadoop.ipc.Server: IPC Server listener on 62260: starting	hadoop	none
+hadoop	2015-10-18 18:01:51,885 INFO [main] org.mortbay.log: Logging to org.slf4j.impl.Log4jLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog	hadoop	none
+hadoop	2015-10-18 18:01:51,900 INFO [main] org.apache.hadoop.http.HttpRequestLog: Http request log for http.requests.mapreduce is not defined	hadoop	none
+hadoop	2015-10-18 18:01:51,916 INFO [main] org.apache.hadoop.http.HttpServer2: Added global filter 'safety' (class=org.apache.hadoop.http.HttpServer2$QuotingInputFilter)	hadoop	none
+hadoop	2015-10-18 18:01:51,916 INFO [main] org.apache.hadoop.http.HttpServer2: Added filter AM_PROXY_FILTER (class=org.apache.hadoop.yarn.server.webproxy.amfilter.AmIpFilter) to context mapreduce	hadoop	none
+hadoop	2015-10-18 18:01:51,916 INFO [main] org.apache.hadoop.http.HttpServer2: Added filter AM_PROXY_FILTER (class=org.apache.hadoop.yarn.server.webproxy.amfilter.AmIpFilter) to context static	hadoop	none
+hadoop	2015-10-18 18:01:51,947 INFO [main] org.apache.hadoop.http.HttpServer2: adding path spec: /mapreduce/*	hadoop	none
+hadoop	2015-10-18 18:01:51,963 INFO [main] org.apache.hadoop.http.HttpServer2: Jetty bound to port 62267	hadoop	none
+hadoop	2015-10-18 18:01:51,963 INFO [main] org.mortbay.log: jetty-6.1.26	hadoop	none
+hadoop	2015-10-18 18:01:52,088 INFO [main] org.mortbay.log: Extract jar:file:/D:/hadoop-2.6.0-localbox/share/hadoop/yarn/hadoop-yarn-common-2.6.0-SNAPSHOT.jar!/webapps/mapreduce to C:\Users\msrabi\AppData\Local\Temp\Jetty_0_0_0_0_62267_mapreduce____.8n7xum\webapp	hadoop	none
+hadoop	2015-10-18 18:01:52,728 INFO [main] org.mortbay.log: Started HttpServer2$SelectChannelConnectorWithSafeStartup@0.0.0.0:62267	hadoop	none
+hadoop	2015-10-18 18:01:52,728 INFO [main] org.apache.hadoop.yarn.webapp.WebApps: Web app /mapreduce started at 62267	hadoop	none
+hadoop	2015-10-18 18:01:53,400 INFO [main] org.apache.hadoop.yarn.webapp.WebApps: Registered webapp guice modules	hadoop	none
+hadoop	2015-10-18 18:01:53,447 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.speculate.DefaultSpeculator: JOB_CREATE job_1445144423722_0020	hadoop	none
+hadoop	2015-10-18 18:01:53,447 INFO [main] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerRequestor: nodeBlacklistingEnabled:true	hadoop	none
+hadoop	2015-10-18 18:01:53,447 INFO [main] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerRequestor: maxTaskFailuresPerNode is 3	hadoop	none
+hadoop	2015-10-18 18:01:53,447 INFO [main] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerRequestor: blacklistDisablePercent is 33	hadoop	none
+hadoop	2015-10-18 18:01:53,557 INFO [main] org.apache.hadoop.yarn.client.RMProxy: Connecting to ResourceManager at msra-sa-41/10.190.173.170:8030	hadoop	none
+hadoop	2015-10-18 18:01:53,713 INFO [main] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: maxContainerCapability: <memory:8192, vCores:32>	hadoop	none
+hadoop	2015-10-18 18:01:53,713 INFO [main] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: queue: default	hadoop	none
+hadoop	2015-10-18 18:01:53,713 INFO [main] org.apache.hadoop.mapreduce.v2.app.launcher.ContainerLauncherImpl: Upper limit on the thread pool size is 500	hadoop	none
+hadoop	2015-10-18 18:01:53,713 INFO [main] org.apache.hadoop.yarn.client.api.impl.ContainerManagementProtocolProxy: yarn.client.max-cached-nodemanagers-proxies : 0	hadoop	none
+hadoop	2015-10-18 18:01:53,744 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.JobImpl: job_1445144423722_0020Job Transitioned from INITED to SETUP	hadoop	none
+hadoop	2015-10-18 18:01:53,775 INFO [CommitterEvent Processor #0] org.apache.hadoop.mapreduce.v2.app.commit.CommitterEventHandler: Processing the event EventType: JOB_SETUP	hadoop	none
+hadoop	2015-10-18 18:01:53,822 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.JobImpl: job_1445144423722_0020Job Transitioned from SETUP to RUNNING	hadoop	none
+hadoop	2015-10-18 18:01:53,838 INFO [AsyncDispatcher event handler] org.apache.hadoop.yarn.util.RackResolver: Resolved MSRA-SA-39.fareast.corp.microsoft.com to /default-rack	hadoop	none
+hadoop	2015-10-18 18:01:53,869 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskImpl: task_1445144423722_0020_m_000000 Task Transitioned from NEW to SCHEDULED	hadoop	none
+hadoop	2015-10-18 18:01:53,885 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskAttemptImpl: attempt_1445144423722_0020_m_000000_0 TaskAttempt Transitioned from NEW to UNASSIGNED	hadoop	none
+hadoop	2015-10-18 18:01:53,885 INFO [Thread-50] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: mapResourceRequest:<memory:1024, vCores:1>	hadoop	none
+hadoop	2015-10-18 18:01:53,900 INFO [eventHandlingThread] org.apache.hadoop.mapreduce.jobhistory.JobHistoryEventHandler: Event Writer setup for JobId: job_1445144423722_0020, File: hdfs://msra-sa-41:9000/tmp/hadoop-yarn/staging/msrabi/.staging/job_1445144423722_0020/job_1445144423722_0020_1.jhist	hadoop	none
+hadoop	2015-10-18 18:01:53,900 INFO [Thread-50] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: reduceResourceRequest:<memory:1024, vCores:1>	hadoop	none
+hadoop	2015-10-18 18:01:54,791 INFO [RMCommunicator Allocator] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: Before Scheduling: PendingReds:1 ScheduledMaps:10 ScheduledReds:0 AssignedMaps:0 AssignedReds:0 CompletedMaps:0 CompletedReds:0 ContAlloc:0 ContRel:0 HostLocal:0 RackLocal:0	hadoop	none
+hadoop	2015-10-18 18:01:54,838 INFO [RMCommunicator Allocator] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerRequestor: getResources() for application_1445144423722_0020: ask=4 release= 0 newContainers=0 finishedContainers=0 resourcelimit=<memory:10240, vCores:-17> knownNMs=4	hadoop	none
+hadoop	2015-10-18 18:01:54,853 INFO [RMCommunicator Allocator] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: Recalculating schedule, headroom=<memory:10240, vCores:-17>	hadoop	none
+hadoop	2015-10-18 18:01:54,853 INFO [RMCommunicator Allocator] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: Reduce slow start threshold not met. completedMapsForReduceSlowstart 1	hadoop	none
+hadoop	2015-10-18 18:01:56,916 INFO [RMCommunicator Allocator] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: Got allocated containers 1	hadoop	none
+hadoop	2015-10-18 18:01:56,916 INFO [RMCommunicator Allocator] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: Assigned container container_1445144423722_0020_01_000002 to attempt_1445144423722_0020_m_000000_0	hadoop	none
+hadoop	2015-10-18 18:01:56,916 INFO [RMCommunicator Allocator] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: After Scheduling: PendingReds:1 ScheduledMaps:9 ScheduledReds:0 AssignedMaps:1 AssignedReds:0 CompletedMaps:0 CompletedReds:0 ContAlloc:1 ContRel:0 HostLocal:0 RackLocal:1	hadoop	none
+hadoop	2015-10-18 18:01:57,104 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskAttemptImpl: The job-jar file on the remote FS is hdfs://msra-sa-41:9000/tmp/hadoop-yarn/staging/msrabi/.staging/job_1445144423722_0020/job.jar	hadoop	none
+hadoop	2015-10-18 18:01:57,119 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskAttemptImpl: The job-conf file on the remote FS is /tmp/hadoop-yarn/staging/msrabi/.staging/job_1445144423722_0020/job.xml	hadoop	none
+hadoop	2015-10-18 18:01:57,119 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskAttemptImpl: Adding #0 tokens and #1 secret keys for NM use for launching container	hadoop	none
+hadoop	2015-10-18 18:01:57,119 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskAttemptImpl: Size of containertokens_dob is 1	hadoop	none
+hadoop	2015-10-18 18:01:57,119 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskAttemptImpl: Putting shuffle token in serviceData	hadoop	none
+hadoop	2015-10-18 18:01:57,260 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskAttemptImpl: attempt_1445144423722_0020_m_000000_0 TaskAttempt Transitioned from UNASSIGNED to ASSIGNED	hadoop	none
+hadoop	2015-10-18 18:01:57,291 INFO [ContainerLauncher #0] org.apache.hadoop.mapreduce.v2.app.launcher.ContainerLauncherImpl: Processing the event EventType: CONTAINER_REMOTE_LAUNCH for container container_1445144423722_0020_01_000002 taskAttempt attempt_1445144423722_0020_m_000000_0	hadoop	none
+hadoop	2015-10-18 18:01:57,291 INFO [ContainerLauncher #0] org.apache.hadoop.mapreduce.v2.app.launcher.ContainerLauncherImpl: Launching attempt_1445144423722_0020_m_000000_0	hadoop	none
+hadoop	2015-10-18 18:01:57,291 INFO [ContainerLauncher #0] org.apache.hadoop.yarn.client.api.impl.ContainerManagementProtocolProxy: Opening proxy : 04DN8IQ.fareast.corp.microsoft.com:54883	hadoop	none
+hadoop	2015-10-18 18:01:57,447 INFO [ContainerLauncher #0] org.apache.hadoop.mapreduce.v2.app.launcher.ContainerLauncherImpl: Shuffle port returned by ContainerManager for attempt_1445144423722_0020_m_000000_0 : 13562	hadoop	none
+hadoop	2015-10-18 18:01:57,447 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskAttemptImpl: TaskAttempt: [attempt_1445144423722_0020_m_000000_0] using containerId: [container_1445144423722_0020_01_000002 on NM: [04DN8IQ.fareast.corp.microsoft.com:54883]	hadoop	none
+hadoop	2015-10-18 18:01:57,447 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskAttemptImpl: attempt_1445144423722_0020_m_000000_0 TaskAttempt Transitioned from ASSIGNED to RUNNING	hadoop	none
+hadoop	2015-10-18 18:01:57,447 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.speculate.DefaultSpeculator: ATTEMPT_START task_1445144423722_0020_m_000000	hadoop	none
+hadoop	2015-10-18 18:01:57,447 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskImpl: task_1445144423722_0020_m_000000 Task Transitioned from SCHEDULED to RUNNING	hadoop	none
+hadoop	2015-10-18 18:02:02,104 INFO [Socket Reader #1 for port 62270] SecurityLogger.org.apache.hadoop.ipc.Server: Auth successful for job_1445144423722_0020 (auth:SIMPLE)	hadoop	none
+hadoop	2015-10-18 18:02:02,510 INFO [IPC Server handler 13 on 62270] org.apache.hadoop.mapred.TaskAttemptListenerImpl: JVM with ID : jvm_1445144423722_0020_m_000002 asked for a task	hadoop	none
+hadoop	2015-10-18 18:02:02,510 INFO [IPC Server handler 13 on 62270] org.apache.hadoop.mapred.TaskAttemptListenerImpl: JVM with ID: jvm_1445144423722_0020_m_000002 given task: attempt_1445144423722_0020_m_000000_0	hadoop	none
+hadoop	2015-10-18 18:02:17,027 INFO [IPC Server handler 14 on 62270] org.apache.hadoop.mapred.TaskAttemptListenerImpl: Progress of TaskAttempt attempt_1445144423722_0020_m_000000_0 is : 0.023958297	hadoop	none
+hadoop	2015-10-18 18:04:10,002 INFO [RMCommunicator Allocator] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: Cannot assign container Container: [ContainerId: container_1445144423722_0020_01_000012, NodeId: MSRA-SA-39.fareast.corp.microsoft.com:28345, NodeHttpAddress: MSRA-SA-39.fareast.corp.microsoft.com:8042, Resource: <memory:1024, vCores:1>, Priority: 20, Token: Token { kind: ContainerToken, service: 172.22.149.145:28345 }, ] for a map as either  container memory less than required <memory:1024, vCores:1> or no pending map tasks - maps.isEmpty=true	hadoop	none
+hadoop	2015-10-18 18:04:11,034 INFO [RMCommunicator Allocator] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: Received completed container container_1445144423722_0020_01_000012	hadoop	none
+hadoop	2015-10-18 18:04:11,034 ERROR [RMCommunicator Allocator] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: Container complete event for unknown container id container_1445144423722_0020_01_000012	hadoop	errors
+hadoop	2015-10-18 18:04:50,208 INFO [IPC Server handler 26 on 62270] org.apache.hadoop.mapred.TaskAttemptListenerImpl: Done acknowledgement from attempt_1445144423722_0020_m_000003_0	hadoop	none
+hadoop	2015-10-18 18:04:50,208 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskAttemptImpl: attempt_1445144423722_0020_m_000003_0 TaskAttempt Transitioned from RUNNING to SUCCESS_CONTAINER_CLEANUP	hadoop	none
+hadoop	2015-10-18 18:04:50,208 INFO [ContainerLauncher #0] org.apache.hadoop.mapreduce.v2.app.launcher.ContainerLauncherImpl: KILLING attempt_1445144423722_0020_m_000003_0	hadoop	none
+hadoop	2015-10-18 18:04:50,755 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskAttemptImpl: attempt_1445144423722_0020_m_000003_0 TaskAttempt Transitioned from SUCCESS_CONTAINER_CLEANUP to SUCCEEDED	hadoop	none
+hadoop	2015-10-18 18:04:50,755 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskImpl: Task succeeded with attempt attempt_1445144423722_0020_m_000003_0	hadoop	none
+hadoop	2015-10-18 18:04:50,755 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskImpl: task_1445144423722_0020_m_000003 Task Transitioned from RUNNING to SUCCEEDED	hadoop	none
+hadoop	2015-10-18 18:04:50,770 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.JobImpl: Num completed Tasks: 1	hadoop	none
+hadoop	2015-10-18 18:04:51,114 INFO [RMCommunicator Allocator] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: Reduce slow start threshold reached. Scheduling reduces.	hadoop	none
+hadoop	2015-10-18 18:04:51,114 INFO [RMCommunicator Allocator] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: All maps assigned. Ramping up all remaining reduces:1	hadoop	none
+hadoop	2015-10-18 18:04:51,755 INFO [DefaultSpeculator background processing] org.apache.hadoop.mapreduce.v2.app.speculate.DefaultSpeculator: DefaultSpeculator.addSpeculativeAttempt -- we are speculating task_1445144423722_0020_m_000000	hadoop	none
+hadoop	2015-10-18 18:04:51,755 INFO [DefaultSpeculator background processing] org.apache.hadoop.mapreduce.v2.app.speculate.DefaultSpeculator: We launched 1 speculations.  Sleeping 15000 milliseconds.	hadoop	none
+hadoop	2015-10-18 18:04:51,755 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskImpl: Scheduling a redundant attempt for task task_1445144423722_0020_m_000000	hadoop	none
+hadoop	2015-10-18 18:04:52,552 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskAttemptImpl: Diagnostics report from attempt_1445144423722_0020_m_000003_0: Container killed by the ApplicationMaster.	hadoop	none
+hadoop	2015-10-18 18:05:27,570 WARN [LeaseRenewer:msrabi@msra-sa-41:9000] org.apache.hadoop.ipc.Client: Address change detected. Old: msra-sa-41/10.190.173.170:9000 New: msra-sa-41:9000	hadoop	none
+hadoop	2015-10-18 18:05:27,570 WARN [LeaseRenewer:msrabi@msra-sa-41:9000] org.apache.hadoop.hdfs.LeaseRenewer: Failed to renew lease for [DFSClient_NONMAPREDUCE_1537864556_1] for 30 seconds.  Will retry shortly ...	hadoop	retries
+hadoop	2015-10-18 18:05:57,009 WARN [ResponseProcessor for block BP-1347369012-10.190.173.170-1444972147527:blk_1073743512_2731] org.apache.hadoop.hdfs.DFSClient: Slow ReadProcessor read fields took 65020ms (threshold=30000ms); ack: seqno: -2 status: SUCCESS status: ERROR downstreamAckTimeNanos: 0, targets: [10.86.169.121:50010, 10.190.173.170:50010]	hadoop	slow
+hadoop	2015-10-18 18:05:57,009 WARN [ResponseProcessor for block BP-1347369012-10.190.173.170-1444972147527:blk_1073743512_2731] org.apache.hadoop.hdfs.DFSClient: DFSOutputStream ResponseProcessor exception  for block BP-1347369012-10.190.173.170-1444972147527:blk_1073743512_2731	hadoop	errors
+hadoop	2015-10-18 18:05:57,024 WARN [DataStreamer for file /tmp/hadoop-yarn/staging/msrabi/.staging/job_1445144423722_0020/job_1445144423722_0020_1.jhist block BP-1347369012-10.190.173.170-1444972147527:blk_1073743512_2731] org.apache.hadoop.hdfs.DFSClient: Error Recovery for block BP-1347369012-10.190.173.170-1444972147527:blk_1073743512_2731 in pipeline 10.86.169.121:50010, 10.190.173.170:50010: bad datanode 10.190.173.170:50010	hadoop	errors
+hadoop	2015-10-18 18:05:57,024 WARN [DataStreamer for file /tmp/hadoop-yarn/staging/msrabi/.staging/job_1445144423722_0020/job_1445144423722_0020_1.jhist block BP-1347369012-10.190.173.170-1444972147527:blk_1073743512_2731] org.apache.hadoop.hdfs.DFSClient: DataStreamer Exception	hadoop	errors
+hadoop	2015-10-18 18:06:01,840 ERROR [RMCommunicator Allocator] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: ERROR IN CONTACTING RM. 	hadoop	errors
+hadoop	2015-10-18 18:06:03,856 INFO [RMCommunicator Allocator] org.apache.hadoop.ipc.Client: Retrying connect to server: msra-sa-41:8030. Already tried 0 time(s); retry policy is RetryUpToMaximumCountWithFixedSleep(maxRetries=10, sleepTime=1000 MILLISECONDS)	hadoop	retries
+hadoop	2015-10-18 18:06:26,029 FATAL [IPC Server handler 13 on 62270] org.apache.hadoop.mapred.TaskAttemptListenerImpl: Task: attempt_1445144423722_0020_m_000002_0 - exited : java.net.NoRouteToHostException: No Route to Host from  MININT-FNANLI5/127.0.0.1 to msra-sa-41:9000 failed on socket timeout exception: java.net.NoRouteToHostException: No route to host: no further information; For more details see:  http://wiki.apache.org/hadoop/NoRouteToHost	hadoop	errors
+hadoop	2015-10-18 18:06:26,029 INFO [IPC Server handler 13 on 62270] org.apache.hadoop.mapred.TaskAttemptListenerImpl: Diagnostics report from attempt_1445144423722_0020_m_000002_0: Error: java.net.NoRouteToHostException: No Route to Host from  MININT-FNANLI5/127.0.0.1 to msra-sa-41:9000 failed on socket timeout exception: java.net.NoRouteToHostException: No route to host: no further information; For more details see:  http://wiki.apache.org/hadoop/NoRouteToHost	hadoop	none
+hadoop	2015-10-18 18:06:26,029 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskAttemptImpl: attempt_1445144423722_0020_m_000002_0 TaskAttempt Transitioned from RUNNING to FAIL_CONTAINER_CLEANUP	hadoop	none
+hadoop	2015-10-18 18:06:26,123 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskAttemptImpl: attempt_1445144423722_0020_m_000002_0 TaskAttempt Transitioned from FAIL_CONTAINER_CLEANUP to FAIL_TASK_CLEANUP	hadoop	none
+hadoop	2015-10-18 18:06:26,123 INFO [CommitterEvent Processor #1] org.apache.hadoop.mapreduce.v2.app.commit.CommitterEventHandler: Processing the event EventType: TASK_ABORT	hadoop	none
+hadoop	2015-10-18 18:06:26,139 WARN [CommitterEvent Processor #1] org.apache.hadoop.mapreduce.v2.app.commit.CommitterEventHandler: Task cleanup failed for attempt attempt_1445144423722_0020_m_000002_0	hadoop	errors
+hadoop	2015-10-18 18:06:26,139 INFO [AsyncDispatcher event handler] org.apache.hadoop.mapreduce.v2.app.job.impl.TaskAttemptImpl: attempt_1445144423722_0020_m_000002_0 TaskAttempt Transitioned from FAIL_TASK_CLEANUP to FAILED	hadoop	none
+hadoop	2015-10-18 18:06:26,139 ERROR [eventHandlingThread] org.apache.hadoop.mapreduce.jobhistory.JobHistoryEventHandler: Error writing History Event: org.apache.hadoop.mapreduce.jobhistory.TaskAttemptUnsuccessfulCompletionEvent@7317849d	hadoop	errors
+hadoop	2015-10-18 18:06:26,139 ERROR [eventHandlingThread] org.apache.hadoop.yarn.YarnUncaughtExceptionHandler: Thread Thread[eventHandlingThread,5,main] threw an Exception.	hadoop	errors
+hadoop	2015-10-18 18:06:26,139 INFO [Thread-50] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerRequestor: 1 failures on node MININT-FNANLI5.fareast.corp.microsoft.com	hadoop	none
+hadoop	2015-10-18 18:06:26,139 INFO [Thread-50] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: Added attempt_1445144423722_0020_m_000002_1 to list of failed maps	hadoop	none
+apache	[Sun Dec 04 04:47:44 2005] [notice] workerEnv.init() ok /etc/httpd/conf/workers2.properties	apache	none
+apache	[Sun Dec 04 04:47:44 2005] [error] mod_jk child workerEnv in error state 6	apache	none
+apache	[Sun Dec 04 04:51:08 2005] [notice] jk2_init() Found child 6725 in scoreboard slot 10	apache	none
+apache	[Sun Dec 04 05:15:09 2005] [error] [client 222.166.160.184] Directory index forbidden by rule: /var/www/html/	apache	none
+apache	[Sun Dec 04 17:43:08 2005] [error] jk2_init() Can't find child 1566 in scoreboard	apache	none
+apache	[Sun Dec 04 17:43:12 2005] [error] mod_jk child init 1 -2	apache	none
+openssh	Dec 10 06:55:46 LabSZ sshd[24200]: reverse mapping checking getaddrinfo for ns.marryaldkfaczcz.com [173.234.31.186] failed - POSSIBLE BREAK-IN ATTEMPT!	openssh	none
+openssh	Dec 10 06:55:46 LabSZ sshd[24200]: Invalid user webmaster from 173.234.31.186	openssh	none
+openssh	Dec 10 06:55:46 LabSZ sshd[24200]: input_userauth_request: invalid user webmaster [preauth]	openssh	none
+openssh	Dec 10 06:55:46 LabSZ sshd[24200]: pam_unix(sshd:auth): check pass; user unknown	openssh	none
+openssh	Dec 10 06:55:46 LabSZ sshd[24200]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=173.234.31.186 	openssh	none
+openssh	Dec 10 06:55:48 LabSZ sshd[24200]: Failed password for invalid user webmaster from 173.234.31.186 port 38926 ssh2	openssh	none
+openssh	Dec 10 06:55:48 LabSZ sshd[24200]: Connection closed by 173.234.31.186 [preauth]	openssh	none
+openssh	Dec 10 07:07:45 LabSZ sshd[24206]: Received disconnect from 52.80.34.196: 11: Bye Bye [preauth]	openssh	none
+openssh	Dec 10 07:13:31 LabSZ sshd[24227]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=5.36.59.76.dynamic-dsl-ip.omantel.net.om  user=root	openssh	none
+openssh	Dec 10 07:13:43 LabSZ sshd[24227]: Failed password for root from 5.36.59.76 port 42393 ssh2	openssh	none
+openssh	Dec 10 07:13:56 LabSZ sshd[24227]: message repeated 5 times: [ Failed password for root from 5.36.59.76 port 42393 ssh2]	openssh	none
+openssh	Dec 10 07:13:56 LabSZ sshd[24227]: Disconnecting: Too many authentication failures for root [preauth]	openssh	none
+openssh	Dec 10 07:13:56 LabSZ sshd[24227]: PAM 5 more authentication failures; logname= uid=0 euid=0 tty=ssh ruser= rhost=5.36.59.76.dynamic-dsl-ip.omantel.net.om  user=root	openssh	none
+openssh	Dec 10 07:13:56 LabSZ sshd[24227]: PAM service(sshd) ignoring max retries; 6 > 3	openssh	none
+openssh	Dec 10 07:34:33 LabSZ sshd[24301]: Did not receive identification string from 123.235.32.19	openssh	none
+openssh	Dec 10 07:51:15 LabSZ sshd[24324]: error: Received disconnect from 195.154.37.122: 3: com.jcraft.jsch.JSchException: Auth fail [preauth]	openssh	none
+openssh	Dec 10 07:56:15 LabSZ sshd[24334]: Received disconnect from 103.207.39.165: 11: Closed due to user request. [preauth]	openssh	none
+openssh	Dec 10 08:24:40 LabSZ sshd[24363]: Failed none for invalid user 0 from 5.188.10.180 port 49811 ssh2	openssh	none
+openssh	Dec 10 08:25:22 LabSZ sshd[24369]: PAM 4 more authentication failures; logname= uid=0 euid=0 tty=ssh ruser= rhost=5.188.10.180 	openssh	none
+openssh	Dec 10 08:26:04 LabSZ sshd[24375]: PAM 1 more authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=5.188.10.180 	openssh	none
+openssh	Dec 10 09:11:22 LabSZ sshd[24439]: error: Received disconnect from 103.99.0.122: 14: No more user authentication methods available. [preauth]	openssh	none
+openssh	Dec 10 09:32:20 LabSZ sshd[24680]: Accepted password for fztu from 119.137.62.142 port 49116 ssh2	openssh	none
+openssh	Dec 10 09:32:20 LabSZ sshd[24680]: pam_unix(sshd:session): session opened for user fztu by (uid=0)	openssh	none
+openssh	Dec 10 09:45:06 LabSZ sshd[24761]: Received disconnect from 119.137.62.142: 11: disconnected by user	openssh	none
+openssh	Dec 10 09:45:06 LabSZ sshd[24680]: pam_unix(sshd:session): session closed for user fztu	openssh	none
+openssh	Dec 10 10:14:13 LabSZ sshd[24833]: Disconnecting: Too many authentication failures for admin [preauth]	openssh	none
+openssh	Dec 10 11:03:53 LabSZ sshd[25457]: fatal: Write failed: Connection reset by peer [preauth]	openssh	none
+hdfs	081109 203615 148 INFO dfs.DataNode$PacketResponder: PacketResponder 1 for block blk_38865049064139660 terminating	hdfs	none
+hdfs	081109 204005 35 INFO dfs.FSNamesystem: BLOCK* NameSystem.addStoredBlock: blockMap updated: 10.251.73.220:50010 is added to blk_7128370237687728475 size 67108864	hdfs	none
+hdfs	081109 204655 556 INFO dfs.DataNode$PacketResponder: Received block blk_3587508140051953248 of size 67108864 from /10.251.42.84	hdfs	none
+hdfs	081109 204815 653 INFO dfs.DataNode$DataXceiver: Receiving block blk_5792489080791696128 src: /10.251.30.6:33145 dest: /10.251.30.6:50010	hdfs	none
+hdfs	081109 205035 28 INFO dfs.FSNamesystem: BLOCK* NameSystem.allocateBlock: /user/root/rand/_temporary/_task_200811092030_0001_m_000590_0/part-00590. blk_-1727475099218615100	hdfs	none
+hdfs	081109 205931 13 INFO dfs.DataBlockScanner: Verification succeeded for blk_-4980916519894289629	hdfs	none
+hdfs	081109 213837 19 INFO dfs.FSDataset: Deleting block blk_1781953582842324563 file /mnt/hadoop/dfs/data/current/subdir5/blk_1781953582842324563	hdfs	none
+hdfs	081109 213847 2552 INFO dfs.DataNode$DataXceiver: 10.251.194.213:50010 Served block blk_-7724713468912166542 to /10.251.203.80	hdfs	none
+hdfs	081109 214043 2561 WARN dfs.DataNode$DataXceiver: 10.251.30.85:50010:Got exception while serving blk_-2918118818249673980 to /10.251.90.64:	hdfs	none
+hdfs	081110 020724 29 INFO dfs.FSNamesystem: BLOCK* NameSystem.delete: blk_2568309208894455676 is added to invalidSet of 10.251.31.160:50010	hdfs	none
+hdfs	081110 211541 18 INFO dfs.DataNode: 10.250.15.198:50010 Starting thread to transfer block blk_4292382298896622412 to 10.250.15.240:50010	hdfs	none
+hdfs	081110 212510 19 INFO dfs.FSNamesystem: BLOCK* ask 10.250.18.114:50010 to delete  blk_-5140072410813878235	hdfs	none
+hdfs	081111 050334 20441 INFO dfs.DataNode$DataXceiver: Received block blk_-4411589101766563890 src: /10.250.14.38:37362 dest: /10.250.14.38:50010 of size 67108864	hdfs	none
+hdfs	081111 080934 19 INFO dfs.FSNamesystem: BLOCK* ask 10.250.14.38:50010 to replicate blk_-7571492020523929240 to datanode(s) 10.251.122.38:50010	hdfs	none
+checkout	2026-11-05T10:00:01Z ERROR HikariPool-1 - Connection is not available, request timed out after 30000ms.	db	slow
+checkout	2026-11-05T10:00:02Z ERROR org.postgresql.util.PSQLException: Connection to db:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.	db	down
+checkout	2026-11-05T10:00:03Z ERROR org.postgresql.util.PSQLException: FATAL: the database system is in recovery mode	db	errors
+checkout	2026-11-05T10:00:04Z ERROR org.postgresql.util.PSQLException: FATAL: sorry, too many clients already	db	errors
+db	2026-11-05 10:00:05.123 UTC [4242] FATAL:  could not write to file "pg_wal/xlogtemp.4242": No space left on device	db	errors
+db	2026-11-05 10:00:06.001 UTC [1] LOG:  database system is ready to accept connections	db	none
+web	2026/11/05 10:00:07 [error] 29#29: *1203 upstream prematurely closed connection while reading response header from upstream, client: 10.1.2.3, server: _, request: "GET /api/cart HTTP/1.1", upstream: "http://10.0.0.7:8080/api/cart", host: "shop"	web	errors
+web	2026/11/05 10:00:08 [error] 29#29: *1204 connect() failed (113: No route to host) while connecting to upstream, client: 10.1.2.3, server: _, upstream: "http://api:8080/", host: "shop"	api	down
+web	10.1.2.3 - - [05/Nov/2026:10:00:09 +0000] "POST /checkout HTTP/1.1" 504 167 "-" "Mozilla/5.0"	web	slow
+api	2026-11-05T10:00:10Z level=error msg="dial tcp 10.0.0.5:6379: connect: connection refused" component=redis	redis	down
+api	2026-11-05T10:00:11Z level=error msg="redis: connection pool timeout" target=redis	redis	slow
+api	2026-11-05T10:00:12Z ERROR rpc error: code = DeadlineExceeded desc = context deadline exceeded calling search	search	slow
+api	2026-11-05T10:00:13Z ERROR rpc error: code = Unavailable desc = connection error: desc = "transport: Error while dialing dial tcp: lookup auth on 10.96.0.10:53: no such host"	auth	down
+worker	2026-11-05T10:00:14Z ERROR kafka: client has run out of available brokers to talk to (Is your cluster reachable?)	kafka	down
+worker	2026-11-05T10:00:15Z WARN consumer group orders lag is 182344 messages on kafka topic orders	kafka	backlog
+checkout	2026-11-05T10:00:16Z ERROR redis.exceptions.ConnectionError: Error 111 connecting to redis:6379. Connection refused.	redis	down
+checkout	2026-11-05T10:00:17Z ERROR requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='payments', port=443): Read timed out. (read timeout=10)	payments	slow
+checkout	2026-11-05T10:00:18Z ERROR stripe error from payments: 500 Internal Server Error	payments	errors
+checkout	2026-11-05T10:00:19Z WARN payments unavailable, using fallback provider	payments	errors
+checkout	2026-11-05T10:00:20Z ERROR java.net.SocketTimeoutException: Read timed out calling http://search:9200/_search	search	slow
+search	[2026-11-05T10:00:21,000][WARN ][o.e.c.r.a.DiskThresholdMonitor] high disk watermark [90%] exceeded on [search-node-1], shards will be relocated away from this node	search	errors
+search	[2026-11-05T10:00:22,000][INFO ][o.e.c.r.a.AllocationService] Cluster health status changed from [RED] to [GREEN]	search	none
+auth	2026-11-05T10:00:23Z ERROR x509: certificate has expired or is not yet valid: current time 2026-11-05T10:00:23Z is after 2026-11-04T23:59:59Z	auth	errors
+api	2026-11-05T10:00:24Z ERROR Get "https://auth/oauth/token": x509: certificate has expired or is not yet valid	auth	errors
+worker	2026-11-05T10:00:25Z Back-off restarting failed container worker in pod worker-7d9f-abcde	worker	down
+worker	2026-11-05T10:00:26Z Container worker was OOMKilled (exit code 137)	worker	down
+api	2026-11-05T10:00:27Z Liveness probe failed: Get "http://10.0.0.9:8080/healthz": context deadline exceeded	api	slow
+api	2026-11-05T10:00:28Z Readiness probe failed: HTTP probe failed with statuscode: 503	api	errors
+checkout	2026-11-05T10:00:29Z INFO Successfully pulled image "registry/checkout:2.4.1"; started container checkout	checkout	deploy
+checkout	2026-11-05T10:00:30Z INFO configmap checkout-config updated, reloading	checkout	config
+web	2026-11-05T10:00:31Z WARN circuit breaker 'checkout' is OPEN, failing fast	checkout	errors
+web	2026-11-05T10:00:32Z WARN serving stale cart for user 42: checkout timed out	checkout	slow
+api	2026-11-05T10:00:33Z ERROR Error: connect ECONNREFUSED 10.0.0.12:5432 (db)	db	down
+api	2026-11-05T10:00:34Z ERROR MongoNetworkError: failed to connect to server [db:27017] on first connect	db	down
+api	2026-11-05T10:00:35Z ERROR SequelizeConnectionAcquireTimeoutError: Operation timeout acquiring a connection to db	db	slow
+worker	2026-11-05T10:00:36Z ERROR ERROR 1040 (HY000): Too many connections to db	db	errors
+redis	1:M 05 Nov 2026 10:00:37.000 # Can't save in background: fork: Cannot allocate memory	redis	errors
+redis	1:M 05 Nov 2026 10:00:38.000 * Ready to accept connections tcp	redis	none
+kafka	[2026-11-05 10:00:39,000] ERROR [ReplicaFetcher replicaId=1, leaderId=2, fetcherId=0] Error for partition orders-0 at offset 100 (kafka.server.ReplicaFetcherThread)	kafka	errors
+web	2026-11-05T10:00:40Z INFO GET /health 200 2ms	web	none
